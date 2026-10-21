@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  seedInitialDataIfEmpty,
+  isStoreConfigured,
   getStoreProfile,
   DEFAULT_STORE_PROFILE,
   db,
@@ -15,9 +15,11 @@ import { ShiftReportModal } from './components/Reports/ShiftReportModal';
 import { HoldCartModal } from './components/POS/HoldCartModal';
 import { LoginScreen } from './components/Auth/LoginScreen';
 import { AdminPinModal } from './components/Auth/AdminPinModal';
+import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
   const [currentUser, setCurrentUser] = useState<Employee | null>(null);
   const [currentTab, setCurrentTab] = useState<'pos' | 'stock' | 'reports' | 'settings'>('pos');
   const [storeProfile, setStoreProfile] = useState<StoreProfile>(DEFAULT_STORE_PROFILE);
@@ -32,7 +34,14 @@ export default function App() {
   // Initialize DB and load global state
   const initializeApp = async () => {
     try {
-      await seedInitialDataIfEmpty();
+      const configured = await isStoreConfigured();
+      setIsConfigured(configured);
+
+      if (!configured) {
+        setIsReady(true);
+        return;
+      }
+
       const profile = await getStoreProfile();
       setStoreProfile(profile);
 
@@ -52,18 +61,7 @@ export default function App() {
       if (latestShift) {
         setActiveShift(latestShift);
       } else {
-        // Create new active shift if none open
-        const newShift: Shift = {
-          id: 1,
-          cashierId: 1,
-          cashierName: 'Budi Santoso (Kasir 1)',
-          startTime: new Date().toISOString(),
-          openingCash: 250000,
-          expectedCash: 250000,
-          isClosed: false,
-        };
-        await db.shifts.add(newShift);
-        setActiveShift(newShift);
+        setActiveShift(null);
       }
 
       // Load held carts
@@ -81,9 +79,37 @@ export default function App() {
     initializeApp();
   }, []);
 
-  const handleLoginSuccess = (employee: Employee) => {
+  const handleSetupComplete = (adminEmployee: Employee, profile: StoreProfile) => {
+    setStoreProfile(profile);
+    setCurrentUser(adminEmployee);
+    localStorage.setItem('sparkpos_current_user', JSON.stringify(adminEmployee));
+    setIsConfigured(true);
+    setIsReady(true);
+    setCurrentTab('pos');
+  };
+
+  const handleLoginSuccess = async (employee: Employee) => {
     setCurrentUser(employee);
     localStorage.setItem('sparkpos_current_user', JSON.stringify(employee));
+
+    // Check active shift or create shift for this cashier
+    const latestShift = await db.shifts.where('isClosed').equals(0 as any).last();
+    if (latestShift) {
+      setActiveShift(latestShift);
+    } else {
+      const newShift: Shift = {
+        id: 1,
+        cashierId: employee.id,
+        cashierName: employee.fullName,
+        startTime: new Date().toISOString(),
+        openingCash: 0,
+        expectedCash: 0,
+        isClosed: false,
+      };
+      await db.shifts.add(newShift);
+      setActiveShift(newShift);
+    }
+
     // Default to POS terminal upon login
     setCurrentTab('pos');
   };
@@ -145,6 +171,11 @@ export default function App() {
     );
   }
 
+  // Jika toko belum dikonfigurasi / database awal masih kosong, tampilkan Setup Awal / Restore
+  if (isConfigured === false) {
+    return <FirstTimeSetup onSetupComplete={handleSetupComplete} />;
+  }
+
   // If not logged in, show Touch PIN Login Screen
   if (!currentUser) {
     return (
@@ -187,6 +218,7 @@ export default function App() {
 
         {currentTab === 'stock' && (
           <StockManagement
+            storeProfile={storeProfile}
             currentUser={currentUser}
             onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
           />
@@ -195,35 +227,53 @@ export default function App() {
         {currentTab === 'reports' && (
           <TransactionHistory
             storeProfile={storeProfile}
+            currentUser={currentUser}
+            onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
           />
         )}
 
         {currentTab === 'settings' && (
           <StoreSettings
             storeProfile={storeProfile}
-            onUpdateProfile={setStoreProfile}
+            onUpdateProfile={(newProfile) => setStoreProfile(newProfile)}
             currentUser={currentUser}
             onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
           />
         )}
       </main>
 
-      {/* Shift Report / Close Shift Modal */}
+      {/* Global Shift Summary Modal */}
       {isShiftModalOpen && (
         <ShiftReportModal
           activeShift={activeShift}
-          onShiftClosed={refreshShift}
+          storeProfile={storeProfile}
           onClose={() => setIsShiftModalOpen(false)}
+          onShiftUpdated={refreshShift}
         />
       )}
 
-      {/* Admin PIN Elevation Modal */}
+      {/* Global Parked / Held Carts Modal */}
+      {isHeldModalOpen && (
+        <HoldCartModal
+          heldCarts={heldCarts}
+          onClose={() => setIsHeldModalOpen(false)}
+          onRestoreCart={async (restored) => {
+            await db.heldCarts.delete(restored.id);
+            await refreshHeldCarts();
+            setIsHeldModalOpen(false);
+          }}
+          onDeleteCart={async (cartId) => {
+            await db.heldCarts.delete(cartId);
+            await refreshHeldCarts();
+          }}
+        />
+      )}
+
+      {/* Supervisor / Admin PIN Elevate Modal */}
       {isAdminPinModalOpen && (
         <AdminPinModal
-          title="Verifikasi Akses Administrator"
-          description="Masukkan PIN Admin (123456) untuk membuka menu pengaturan toko, kustomisasi logo, atau manajemen stok lanjutan."
+          onClose={() => setIsAdminPinModalOpen(false)}
           onSuccess={handleAdminElevationSuccess}
-          onCancel={() => setIsAdminPinModalOpen(false)}
         />
       )}
     </div>

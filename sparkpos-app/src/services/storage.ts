@@ -40,288 +40,111 @@ export class SparkPOSDatabase extends Dexie {
 
 export const db = new SparkPOSDatabase();
 
-// Default Store Profile
+// Profil Toko Default (Bersih untuk Toko Baru)
 export const DEFAULT_STORE_PROFILE: StoreProfile = {
   appName: 'SparkPOS',
   appLogo: '',
   showLogoOnReceipt: true,
-  storeName: 'TOKO BERKAH JAYA',
-  branchName: 'Cabang Utama Retail',
-  address: 'Jl. Merdeka No. 45, Jakarta Selatan',
-  phone: '0812-3456-7890',
+  storeName: 'Nama Toko Saya',
+  branchName: 'Cabang Utama',
+  address: '',
+  phone: '',
   receiptFooter: 'Terima kasih atas kunjungan Anda!\nBarang yang sudah dibeli tidak dapat ditukar/dikembalikan.',
   paperWidth: '80mm',
-  taxPercent: 11,
+  taxPercent: 0,
   isTaxInclusive: false,
   autoKickDrawer: true,
   autoPrintReceipt: true,
   currencySymbol: 'Rp',
 };
 
-// Seed initial realistic retail products & users if empty
-export async function seedInitialDataIfEmpty() {
+/**
+ * Cek apakah toko sudah dikonfigurasi / database sudah di-setup.
+ * Mengembalikan false jika belum ada akun Admin atau profil toko belum disimpan.
+ */
+export async function isStoreConfigured(): Promise<boolean> {
+  try {
+    const adminCount = await db.employees.where('role').equals('admin').count();
+    const profile = await db.settings.get('store_profile');
+    return adminCount > 0 && !!profile;
+  } catch (err) {
+    console.error('Error checking isStoreConfigured', err);
+    return false;
+  }
+}
+
+/**
+ * Setup Toko Baru dari awal (Fresh Start):
+ * - Menyimpan profil toko & nama brand
+ * - Membuat akun Admin utama dengan PIN rahasia sendiri
+ * - Inisialisasi satuan standar ritel (opsional)
+ * - Database produk, transaksi, shift, dan kasir dummy 100% KOSONG dan BERSIH!
+ */
+export async function initializeStore(
+  profile: StoreProfile,
+  adminData: { username: string; pin: string; fullName: string },
+  seedDefaultUnits: boolean = true,
+  seedDefaultCategories: boolean = true
+): Promise<Employee> {
   const now = new Date().toISOString();
 
-  // 1. Employees (Admin & Kasir)
-  const empCount = await db.employees.count();
-  if (empCount === 0) {
-    const defaultEmployees: Omit<Employee, 'id'>[] = [
-      {
-        username: 'admin',
-        fullName: 'Administrator (Owner)',
-        pin: '123456',
-        role: 'admin',
-        isActive: true,
-        createdAt: now,
-      },
-      {
-        username: 'kasir',
-        fullName: 'Budi Santoso (Kasir 1)',
-        pin: '1234',
-        role: 'cashier',
-        isActive: true,
-        createdAt: now,
-      },
-    ];
-    await db.employees.bulkAdd(defaultEmployees as any);
+  // 1. Simpan Profil Toko
+  await db.settings.put({ key: 'store_profile', value: profile });
+
+  // 2. Buat Akun Administrator Utama
+  const adminEmployee: Omit<Employee, 'id'> = {
+    username: adminData.username.trim() || 'admin',
+    fullName: adminData.fullName.trim() || 'Administrator Utama',
+    pin: adminData.pin.trim() || '123456',
+    role: 'admin',
+    isActive: true,
+    createdAt: now,
+  };
+  const adminId = await db.employees.add(adminEmployee as any);
+
+  // 3. Inisialisasi Satuan Standar Ritel (Opsional)
+  if (seedDefaultUnits) {
+    const unitCount = await db.units.count();
+    if (unitCount === 0) {
+      const standardUnits: Unit[] = [
+        { id: 1, name: 'Pieces', symbol: 'PCS' },
+        { id: 2, name: 'Pack / Bungkus', symbol: 'PCK' },
+        { id: 3, name: 'Botol', symbol: 'BTL' },
+        { id: 4, name: 'Kilogram', symbol: 'KG' },
+        { id: 5, name: 'Dus / Karton', symbol: 'DUS' },
+      ];
+      await db.units.bulkAdd(standardUnits);
+    }
   }
 
-  const productCount = await db.products.count();
-  if (productCount > 0) return;
+  // 4. Inisialisasi Kategori Dasar (Opsional)
+  if (seedDefaultCategories) {
+    const catCount = await db.categories.count();
+    if (catCount === 0) {
+      const standardCategories: Category[] = [
+        { id: 1, name: 'Makanan & Minuman', icon: 'Coffee' },
+        { id: 2, name: 'Kebutuhan Pokok', icon: 'ShoppingBag' },
+        { id: 3, name: 'Lainnya', icon: 'Tag' },
+      ];
+      await db.categories.bulkAdd(standardCategories);
+    }
+  }
 
-  // 2. Categories
-  const categoryData: Category[] = [
-    { id: 1, name: 'Sembako & Kebutuhan Pokok', icon: 'ShoppingBag' },
-    { id: 2, name: 'Minuman Dingin & Hangat', icon: 'Coffee' },
-    { id: 3, name: 'Makanan Ringan & Snack', icon: 'Cookie' },
-    { id: 4, name: 'Bumbu Dapur & Masak', icon: 'Flame' },
-    { id: 5, name: 'Sabun & Kebersihan', icon: 'Sparkles' },
-    { id: 6, name: 'Rokok & Tembakau', icon: 'Cigarette' },
-  ];
-  await db.categories.bulkAdd(categoryData);
+  // NOTE: Produk, Kasir Dummy (Budi Santoso), dan Shift awal 100% KOSONG!
 
-  // 3. Units
-  const unitData: Unit[] = [
-    { id: 1, name: 'Pieces', symbol: 'PCS' },
-    { id: 2, name: 'Pack', symbol: 'PCK' },
-    { id: 3, name: 'Botol', symbol: 'BTL' },
-    { id: 4, name: 'Kilogram', symbol: 'KG' },
-    { id: 5, name: 'Dus / Karton', symbol: 'DUS' },
-  ];
-  await db.units.bulkAdd(unitData);
-
-  // 4. Products
-  const sampleProducts: Omit<Product, 'id'>[] = [
-    {
-      sku: 'PRD-001',
-      barcode: '899999900101',
-      name: 'Indomie Goreng Original 85g',
-      categoryId: 1,
-      categoryName: 'Sembako & Kebutuhan Pokok',
-      unitId: 1,
-      unitName: 'PCS',
-      buyPrice: 2800,
-      sellPrice: 3500,
-      stock: 120,
-      minStock: 20,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-002',
-      barcode: '899999900102',
-      name: 'Indomie Kuah Ayam Bawang 75g',
-      categoryId: 1,
-      categoryName: 'Sembako & Kebutuhan Pokok',
-      unitId: 1,
-      unitName: 'PCS',
-      buyPrice: 2750,
-      sellPrice: 3500,
-      stock: 85,
-      minStock: 15,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-003',
-      barcode: '899276100101',
-      name: 'Aqua Air Mineral Botol 600ml',
-      categoryId: 2,
-      categoryName: 'Minuman Dingin & Hangat',
-      unitId: 3,
-      unitName: 'BTL',
-      buyPrice: 2500,
-      sellPrice: 4000,
-      stock: 48,
-      minStock: 12,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-004',
-      barcode: '899276100102',
-      name: 'Le Minerale 600ml Segar',
-      categoryId: 2,
-      categoryName: 'Minuman Dingin & Hangat',
-      unitId: 3,
-      unitName: 'BTL',
-      buyPrice: 2400,
-      sellPrice: 3500,
-      stock: 36,
-      minStock: 10,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-005',
-      barcode: '899886610201',
-      name: 'Minyak Goreng Sania Pouch 2 Liter',
-      categoryId: 1,
-      categoryName: 'Sembako & Kebutuhan Pokok',
-      unitId: 2,
-      unitName: 'PCK',
-      buyPrice: 32000,
-      sellPrice: 36500,
-      stock: 24,
-      minStock: 6,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-006',
-      barcode: '899886610202',
-      name: 'Beras Ramos Setra Premium 5 Kg',
-      categoryId: 1,
-      categoryName: 'Sembako & Kebutuhan Pokok',
-      unitId: 2,
-      unitName: 'PCK',
-      buyPrice: 65000,
-      sellPrice: 74000,
-      stock: 18,
-      minStock: 5,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-007',
-      barcode: '899600130101',
-      name: 'Kopi Kapal Api Special Mix 10x24g',
-      categoryId: 2,
-      categoryName: 'Minuman Dingin & Hangat',
-      unitId: 2,
-      unitName: 'PCK',
-      buyPrice: 13500,
-      sellPrice: 16000,
-      stock: 4,
-      minStock: 10,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-008',
-      barcode: '899100140101',
-      name: 'Chitato Sapi Panggang 68g',
-      categoryId: 3,
-      categoryName: 'Makanan Ringan & Snack',
-      unitId: 1,
-      unitName: 'PCS',
-      buyPrice: 8500,
-      sellPrice: 11500,
-      stock: 32,
-      minStock: 8,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-009',
-      barcode: '899100140102',
-      name: 'Oreo Vanilla Sandwich Biscuit 133g',
-      categoryId: 3,
-      categoryName: 'Makanan Ringan & Snack',
-      unitId: 1,
-      unitName: 'PCS',
-      buyPrice: 7200,
-      sellPrice: 9500,
-      stock: 0,
-      minStock: 10,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-010',
-      barcode: '899234550101',
-      name: 'Rinso Anti Noda Cair 750ml',
-      categoryId: 5,
-      categoryName: 'Sabun & Kebersihan',
-      unitId: 2,
-      unitName: 'PCK',
-      buyPrice: 17000,
-      sellPrice: 21500,
-      stock: 15,
-      minStock: 5,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-011',
-      barcode: '899234550102',
-      name: 'Sunlight Pencuci Piring Jeruk Nipis 700ml',
-      categoryId: 5,
-      categoryName: 'Sabun & Kebersihan',
-      unitId: 2,
-      unitName: 'PCK',
-      buyPrice: 12500,
-      sellPrice: 15500,
-      stock: 40,
-      minStock: 10,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      sku: 'PRD-012',
-      barcode: '899312360101',
-      name: 'Telur Ayam Negeri Fresh 1 Kg',
-      categoryId: 1,
-      categoryName: 'Sembako & Kebutuhan Pokok',
-      unitId: 4,
-      unitName: 'KG',
-      buyPrice: 25000,
-      sellPrice: 29000,
-      stock: 50,
-      minStock: 10,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-  ];
-
-  await db.products.bulkAdd(sampleProducts as any);
-
-  // 5. Initial Shift
-  const initialShift: Shift = {
-    id: 1,
-    cashierId: 2,
-    cashierName: 'Budi Santoso (Kasir 1)',
-    startTime: now,
-    openingCash: 250000,
-    expectedCash: 250000,
-    isClosed: false,
+  return {
+    id: adminId as number,
+    ...adminEmployee,
   };
-  await db.shifts.add(initialShift);
+}
 
-  // 6. Store Settings
-  await db.settings.put({ key: 'store_profile', value: DEFAULT_STORE_PROFILE });
+// Kompatibilitas fungsi lama: tidak menyuntik data dummy Budi atau Indomie
+export async function seedInitialDataIfEmpty() {
+  const configured = await isStoreConfigured();
+  if (!configured) {
+    // Biarkan wizard setup awal yang menangani inisialisasi
+    return;
+  }
 }
 
 export async function getStoreProfile(): Promise<StoreProfile> {

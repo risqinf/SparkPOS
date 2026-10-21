@@ -13,10 +13,19 @@ import {
   Sparkles,
   ShieldCheck,
   Lock,
+  Database,
+  HardDrive,
+  DownloadCloud,
+  UploadCloud,
 } from 'lucide-react';
 import { StoreProfile, Employee } from '../../types/pos';
-import { updateStoreProfile, db, seedInitialDataIfEmpty } from '../../services/storage';
+import { updateStoreProfile, db } from '../../services/storage';
 import { printReceiptSilent } from '../../services/printer';
+import {
+  saveDatabaseToFile,
+  importDatabaseFromJson,
+  resetDatabase,
+} from '../../services/databaseBackup';
 
 interface StoreSettingsProps {
   storeProfile: StoreProfile;
@@ -113,6 +122,59 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     printReceiptSilent(dummyTx, profile);
   };
 
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const restoreFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveDatabaseToFolder = async () => {
+    if (!isAdmin) return;
+    setIsBackingUp(true);
+    try {
+      const res = await saveDatabaseToFile();
+      if (res.success) {
+        alert(res.message || 'Database berhasil dicadangkan!');
+      } else if (res.message && res.message !== 'Pemilihan folder dibatalkan.') {
+        alert(res.message);
+      }
+    } catch (err: any) {
+      alert(`Gagal mencadangkan database: ${err?.message || err}`);
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleRestoreDatabaseFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (
+      !confirm(
+        `Yakin ingin memulihkan database dari file "${file.name}"? Seluruh data saat ini akan digantikan oleh data cadangan.`
+      )
+    ) {
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const res = await importDatabaseFromJson(text);
+        if (res.success) {
+          alert('Database berhasil dipulihkan! Halaman akan dimuat ulang.');
+          window.location.reload();
+        } else {
+          alert(res.message);
+        }
+      } catch (err: any) {
+        alert(`Gagal memulihkan database: ${err?.message || err}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleResetData = async () => {
     if (!isAdmin) {
       alert('Hanya Administrator yang dapat me-reset data sistem.');
@@ -120,17 +182,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     }
     if (
       confirm(
-        'PERINGATAN: Semua data produk, transaksi, dan riwayat akan di-reset ke data demo awal. Lanjutkan?'
+        'PERINGATAN: Seluruh database (produk, transaksi, riwayat shift, akun) akan dikosongkan dan sistem akan kembali ke wizard setup awal. Lanjutkan?'
       )
     ) {
-      await db.products.clear();
-      await db.categories.clear();
-      await db.units.clear();
-      await db.transactions.clear();
-      await db.stockMovements.clear();
-      await db.shifts.clear();
-      await db.heldCarts.clear();
-      await seedInitialDataIfEmpty();
+      await resetDatabase();
       window.location.reload();
     }
   };
@@ -525,6 +580,84 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
           </div>
 
+          {/* Card 5: Pencadangan & Pemulihan Database (Drive D:, USB, Restore) */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                  5. Pencadangan & Penyimpanan Database (Drive D: / Eksternal)
+                </h2>
+              </div>
+              <span className="text-[11px] text-slate-500">
+                Pilih lokasi penyimpanan cadangan
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Anda dapat mencadangkan seluruh data transaksi, master produk, pelanggan, dan pengaturan ke Drive D:, flashdisk, atau folder mana pun di komputer Anda agar data tetap aman saat instal ulang Windows.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <HardDrive className="w-4 h-4 text-emerald-400" />
+                  <span>Simpan / Cadangkan ke File (Pilih Drive D:)</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Menyimpan file cadangan (.sparkdb). Jendela Windows akan terbuka untuk memilih Drive D:\ atau folder tujuan Anda.
+                </p>
+                <button
+                  type="button"
+                  disabled={!isAdmin || isBackingUp}
+                  onClick={handleSaveDatabaseToFolder}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-semibold transition shadow-sm"
+                >
+                  <DownloadCloud className="w-4 h-4" />
+                  <span>{isBackingUp ? 'Menyimpan...' : 'Cadangkan Database (Pilih Folder / Drive D:)'}</span>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <UploadCloud className="w-4 h-4 text-blue-400" />
+                  <span>Pulihkan (Restore) dari File Cadangan</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Memulihkan data toko dan transaksi dari file cadangan .sparkdb atau .json yang ada di Drive D:\ atau USB.
+                </p>
+                <input
+                  ref={restoreFileInputRef}
+                  type="file"
+                  accept=".sparkdb,.json"
+                  onChange={handleRestoreDatabaseFile}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  disabled={!isAdmin}
+                  onClick={() => restoreFileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-850 hover:bg-slate-800 disabled:opacity-60 text-slate-200 text-xs font-semibold transition border border-slate-700"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Pilih File Cadangan & Pulihkan</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Info Lokasi Database Lokal */}
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 flex items-start gap-2.5">
+              <HardDrive className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-slate-300">Lokasi Database Aktif Windows: </span>
+                <span className="font-mono text-emerald-400">%LOCALAPPDATA%\com.sparkpos.desktop\EBWebView</span>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  Aplikasi menggunakan database lokal IndexedDB berkecepatan tinggi. Lakukan backup berkala ke Drive D: untuk arsip cadangan.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Action Bar */}
           <div className="flex items-center justify-between pt-2">
             {isAdmin ? (
@@ -534,7 +667,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset ke Data Demo Awal</span>
+                <span>Kosongkan / Reset Database (Mulai Baru)</span>
               </button>
             ) : <div />}
 

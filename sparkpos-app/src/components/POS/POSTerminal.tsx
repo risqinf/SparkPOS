@@ -394,7 +394,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
 
             {/* Hardware Scanner Status Pill */}
-            <div className="absolute right-2.5 top-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-mono">
+            <div
+              title="Scanner Barcode USB / Wireless Plug & Play siap menerima scan tanpa perlu klik mouse"
+              className="absolute right-2.5 top-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-400 font-mono font-semibold"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Scanner Siap</span>
             </div>
@@ -443,9 +446,18 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         {/* Product Cards Grid */}
         <div className="flex-1 overflow-y-auto pr-1">
           {filteredProducts.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-500 py-12">
+            <div className="h-full flex flex-col items-center justify-center text-slate-500 py-12 space-y-2">
               <ShoppingCart className="w-12 h-12 opacity-20 mb-2" />
-              <p className="text-sm font-medium">Tidak ada produk yang cocok dengan pencarian.</p>
+              <p className="text-sm font-semibold text-slate-300">
+                {products.length === 0
+                  ? 'Katalog Produk Masih Kosong'
+                  : 'Tidak ada produk yang cocok dengan pencarian.'}
+              </p>
+              {products.length === 0 && (
+                <p className="text-xs text-slate-500 max-w-sm text-center">
+                  Buka tab <strong>Manajemen Stok (F3)</strong> untuk mulai mendaftarkan produk baru atau import katalog toko Anda.
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
