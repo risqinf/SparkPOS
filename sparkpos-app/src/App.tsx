@@ -12,7 +12,6 @@ import { StockManagement } from './components/Stock/StockManagement';
 import { TransactionHistory } from './components/Reports/TransactionHistory';
 import { StoreSettings } from './components/Settings/StoreSettings';
 import { ShiftReportModal } from './components/Reports/ShiftReportModal';
-import { HoldCartModal } from './components/POS/HoldCartModal';
 import { LoginScreen } from './components/Auth/LoginScreen';
 import { AdminPinModal } from './components/Auth/AdminPinModal';
 import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
@@ -218,7 +217,6 @@ export default function App() {
 
         {currentTab === 'stock' && (
           <StockManagement
-            storeProfile={storeProfile}
             currentUser={currentUser}
             onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
           />
@@ -227,8 +225,6 @@ export default function App() {
         {currentTab === 'reports' && (
           <TransactionHistory
             storeProfile={storeProfile}
-            currentUser={currentUser}
-            onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
           />
         )}
 
@@ -246,34 +242,18 @@ export default function App() {
       {isShiftModalOpen && (
         <ShiftReportModal
           activeShift={activeShift}
-          storeProfile={storeProfile}
+          onShiftClosed={refreshShift}
           onClose={() => setIsShiftModalOpen(false)}
-          onShiftUpdated={refreshShift}
-        />
-      )}
-
-      {/* Global Parked / Held Carts Modal */}
-      {isHeldModalOpen && (
-        <HoldCartModal
-          heldCarts={heldCarts}
-          onClose={() => setIsHeldModalOpen(false)}
-          onRestoreCart={async (restored) => {
-            await db.heldCarts.delete(restored.id);
-            await refreshHeldCarts();
-            setIsHeldModalOpen(false);
-          }}
-          onDeleteCart={async (cartId) => {
-            await db.heldCarts.delete(cartId);
-            await refreshHeldCarts();
-          }}
         />
       )}
 
       {/* Supervisor / Admin PIN Elevate Modal */}
       {isAdminPinModalOpen && (
         <AdminPinModal
-          onClose={() => setIsAdminPinModalOpen(false)}
+          title="Verifikasi Akses Administrator"
+          description="Masukkan PIN Admin untuk membuka menu pengaturan toko, kustomisasi logo, atau manajemen stok lanjutan."
           onSuccess={handleAdminElevationSuccess}
+          onCancel={() => setIsAdminPinModalOpen(false)}
         />
       )}
     </div>
