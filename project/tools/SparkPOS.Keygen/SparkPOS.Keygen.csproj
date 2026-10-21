@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\POS.Domain\POS.Domain.csproj" />
+    <ProjectReference Include="..\..\src\POS.License\POS.License.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SparkPOS.Keygen</AssemblyName>
+    <Product>Spark POS Keygen (Developer Only)</Product>
+    <AssemblyTitle>Spark POS Keygen</AssemblyTitle>
+    <Company>SparkPOS</Company>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+</Project>

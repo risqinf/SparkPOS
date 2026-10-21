@@ -1,0 +1,19 @@
+# Build and cache directories
+target/
+src-tauri/target/
+node_modules/
+dist/
+sparkpos-app/dist/
+sparkpos-app/src-tauri/target/
+sparkpos-app/node_modules/
+.vscode/
+.idea/
+*.log
+*.tmp
+SIAP_COPY_KE_FLASHDISK/
+
+# .NET artifacts
+**/bin/
+**/obj/
+project/**/bin/
+project/**/obj/

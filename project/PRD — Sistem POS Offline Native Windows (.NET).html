@@ -1,0 +1,465 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>PRD — Sistem POS Offline Native Windows (.NET Stack)</h1>
+<p><strong>Versi:</strong> 1.0 · <strong>Status:</strong> Draft untuk Development · <strong>Tujuan Dokumen:</strong> Spesifikasi teknis lengkap sebagai input untuk tim developer maupun AI coding agent (Antigravity/agentic IDE) agar implementasi konsisten tanpa ambiguitas.</p>
+<hr>
+<h2>1. Ringkasan Eksekutif</h2>
+<p>Aplikasi kasir (POS) <strong>offline-first</strong>, <strong>native Windows</strong>, dibangun dengan <strong>.NET</strong> untuk efisiensi RAM dan kecepatan. Didistribusikan dengan <strong>model sewa/lisensi (subscription)</strong>, sehingga aplikasi wajib memiliki sistem proteksi lisensi yang solid meski berjalan offline. Target pasar: UMKM retail &amp; F&amp;B di Indonesia dengan spek PC kasir rendah-menengah.</p>
+<h2>2. Tujuan Produk</h2>
+<ul>
+<li>Software kasir ringan (idle RAM &lt; 100 MB) yang tetap penuh fitur setara software POS komersial.</li>
+<li>Berjalan 100% offline untuk operasional harian; koneksi internet hanya dibutuhkan untuk validasi lisensi &amp; sinkronisasi opsional.</li>
+<li>Mendukung model bisnis rental: aktivasi, perpanjangan, dan penguncian otomatis saat masa sewa habis.</li>
+</ul>
+<h2>3. Target Pengguna</h2>
+<table>
+<thead>
+<tr>
+<th>Peran</th>
+<th>Kebutuhan Utama</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kasir</td>
+<td>Transaksi cepat, UI sederhana, minim klik</td>
+</tr>
+<tr>
+<td>Owner/Admin</td>
+<td>Kontrol penuh data master, laporan, multi-user</td>
+</tr>
+<tr>
+<td>Supervisor</td>
+<td>Approval void/diskon, tutup shift, rekonsiliasi kas</td>
+</tr>
+<tr>
+<td>Penyewa (kamu)</td>
+<td>Kontrol lisensi, aktivasi/nonaktivasi remote</td>
+</tr>
+</tbody>
+</table>
+<h2>4. Ruang Lingkup</h2>
+<p><strong>Fase 1 (MVP):</strong> Auth &amp; shift, produk &amp; stok, transaksi penjualan, cetak struk, laporan dasar, lisensi &amp; proteksi, backup/restore.</p>
+<p><strong>Fase 2:</strong> Purchasing/supplier, CRM member &amp; poin, promo lanjutan, multi-outlet sync, export laporan Excel/PDF, customer display.</p>
+<p><strong>Di luar cakupan (v1):</strong> Akuntansi penuh (jurnal umum), integrasi marketplace, e-commerce, mobile app.</p>
+<h2>5. Tech Stack Final</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Pilihan</th>
+<th>Alasan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UI Framework</td>
+<td><strong>WinForms (.NET 8/9)</strong></td>
+<td>Lebih hemat RAM dari WPF; native Win32, cocok PC kasir low-end</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td><strong>Native AOT</strong> (<code>PublishAot=true</code>)</td>
+<td>Startup cepat, tanpa JIT overhead, RAM lebih kecil dari mode JIT biasa</td>
+</tr>
+<tr>
+<td>Database lokal</td>
+<td><strong>SQLite</strong> + <strong>SQLCipher</strong></td>
+<td>Ringan, file-based, cocok offline; SQLCipher untuk enkripsi data transaksi</td>
+</tr>
+<tr>
+<td>Data access</td>
+<td><strong>Dapper</strong> (micro-ORM)</td>
+<td>Overhead jauh lebih kecil dari EF Core, cocok untuk aplikasi RAM-sensitive</td>
+</tr>
+<tr>
+<td>Migrasi skema</td>
+<td><strong>DbUp</strong> atau script SQL manual bervers</td>
+<td>EF Core Migrations dihindari agar tidak perlu bawa EF Core runtime</td>
+</tr>
+<tr>
+<td>Printer thermal</td>
+<td><strong>ESCPOS_NET</strong></td>
+<td>ESC/POS raw command, ringan, tidak perlu driver tambahan</td>
+</tr>
+<tr>
+<td>Barcode scan/generate</td>
+<td><strong>ZXing.Net</strong></td>
+<td>Support generate &amp; baca barcode/QR</td>
+</tr>
+<tr>
+<td>Reporting cetak</td>
+<td><strong>FastReport.NET</strong> (opsional) atau layout custom</td>
+<td>Untuk laporan kompleks; struk pakai ESC/POS langsung</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td><strong>Serilog</strong> (file sink, rolling)</td>
+<td>Untuk audit trail &amp; debugging di lapangan</td>
+</tr>
+<tr>
+<td>DI Container</td>
+<td><code>Microsoft.Extensions.DependencyInjection</code></td>
+<td>Standar, ringan</td>
+</tr>
+<tr>
+<td>License server (cloud)</td>
+<td><strong>ASP.NET Core Minimal API</strong></td>
+<td>Untuk aktivasi &amp; validasi berkala</td>
+</tr>
+<tr>
+<td>Installer</td>
+<td><strong>Inno Setup</strong></td>
+<td>Ringan, standar industri Windows</td>
+</tr>
+<tr>
+<td>Auto-update</td>
+<td><strong>Velopack</strong></td>
+<td>Update binary tanpa reinstall manual</td>
+</tr>
+</tbody>
+</table>
+<h2>6. Arsitektur Sistem</h2>
+<p>Pola: <strong>Layered Architecture</strong> (Presentation → Application → Domain → Infrastructure), single project boleh dipecah per-folder untuk MVP, dipisah per-project di Fase 2.</p>
+<pre class="mermaid">graph TD
+    A[Presentation - WinForms UI] --&gt; B[Application - Services/UseCases]
+    B --&gt; C[Domain - Entities &amp; Business Rules]
+    B --&gt; D[Infrastructure - SQLite/Dapper]
+    B --&gt; E[Infrastructure - Hardware ESC/POS, Scanner]
+    B --&gt; F[Infrastructure - License Module]
+    F --&gt; G[(License Server API - Cloud)]
+    D --&gt; H[(SQLite Encrypted DB - Lokal)]
+</pre>
+<p><strong>Prinsip wajib untuk AI agent:</strong></p>
+<ul>
+<li>Business logic (hitung total, pajak, diskon, stok) TIDAK BOLEH ditulis di code-behind form — wajib di layer Application/Domain agar testable.</li>
+<li>Semua akses database lewat Repository pattern, tidak ada raw SQL di form.</li>
+</ul>
+<h2>7. Entitas Data Inti</h2>
+<table>
+<thead>
+<tr>
+<th>Entitas</th>
+<th>Deskripsi Singkat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Product</code></td>
+<td>Nama, SKU, barcode, kategori, satuan, harga beli/jual, stok</td>
+</tr>
+<tr>
+<td><code>Category</code>, <code>Unit</code></td>
+<td>Master kategori &amp; satuan (dengan konversi unit)</td>
+</tr>
+<tr>
+<td><code>StockMovement</code></td>
+<td>Log mutasi stok (in/out/opname/retur) dengan referensi transaksi</td>
+</tr>
+<tr>
+<td><code>Transaction</code>, <code>TransactionDetail</code></td>
+<td>Header &amp; detail penjualan</td>
+</tr>
+<tr>
+<td><code>Payment</code></td>
+<td>Metode bayar (cash/debit/QRIS/e-wallet), split payment</td>
+</tr>
+<tr>
+<td><code>Customer</code></td>
+<td>Data member, poin loyalti</td>
+</tr>
+<tr>
+<td><code>Employee</code>, <code>Role</code>, <code>Permission</code></td>
+<td>User, RBAC (role-based access control)</td>
+</tr>
+<tr>
+<td><code>Shift</code>, <code>CashDrawerLog</code></td>
+<td>Buka/tutup kasir, selisih kas</td>
+</tr>
+<tr>
+<td><code>Discount</code>, <code>Promo</code></td>
+<td>Aturan diskon &amp; promo</td>
+</tr>
+<tr>
+<td><code>Tax</code></td>
+<td>Konfigurasi pajak (PPN %, inklusif/eksklusif)</td>
+</tr>
+<tr>
+<td><code>Supplier</code>, <code>PurchaseOrder</code></td>
+<td>Data pembelian (Fase 2)</td>
+</tr>
+<tr>
+<td><code>Outlet</code></td>
+<td>Cabang (Fase 2, multi-outlet)</td>
+</tr>
+<tr>
+<td><code>License</code></td>
+<td>Key, fingerprint hardware, masa berlaku, fitur aktif</td>
+</tr>
+</tbody>
+</table>
+<h2>8. Daftar Fitur Lengkap (Standar POS)</h2>
+<h3>8.1 Autentikasi &amp; Manajemen User</h3>
+<ul>
+<li>Login PIN/password per kasir, multi-role (Admin/Manager/Kasir)</li>
+<li>Buka/tutup shift dengan input kas awal &amp; rekonsiliasi kas akhir</li>
+<li>Log aktivitas user (audit trail)</li>
+</ul>
+<h3>8.2 Produk &amp; Inventori</h3>
+<ul>
+<li>CRUD produk, kategori, satuan (dengan konversi, mis. dus→pcs)</li>
+<li>Varian produk (ukuran/warna), generate &amp; scan barcode</li>
+<li>Stok minimum + notifikasi stok menipis</li>
+<li>Kartu stok (histori mutasi per produk), stock opname</li>
+<li>Multi-gudang (Fase 2)</li>
+</ul>
+<h3>8.3 Transaksi Penjualan (Kasir)</h3>
+<ul>
+<li>Pencarian produk cepat (barcode/nama/kode)</li>
+<li>Hold/park transaksi (transaksi tertunda)</li>
+<li>Diskon per item &amp; per nota (persen/nominal)</li>
+<li>Split payment (cash + non-cash dalam satu transaksi)</li>
+<li>Pembulatan otomatis, kembalian</li>
+<li>Retur/void dengan approval supervisor (PIN)</li>
+<li>Cetak &amp; cetak ulang struk, buka cash drawer otomatis</li>
+</ul>
+<h3>8.4 Pembelian &amp; Supplier (Fase 2)</h3>
+<ul>
+<li>Data supplier, Purchase Order, penerimaan barang → update stok otomatis</li>
+<li>Retur pembelian</li>
+</ul>
+<h3>8.5 Pelanggan / CRM Ringan</h3>
+<ul>
+<li>Data member, histori transaksi, poin reward</li>
+<li>Harga khusus member (Fase 2)</li>
+</ul>
+<h3>8.6 Promosi</h3>
+<ul>
+<li>Diskon persentase/nominal per periode, promo bundling (Fase 2)</li>
+</ul>
+<h3>8.7 Laporan</h3>
+<ul>
+<li>Penjualan harian/per-periode/per-kasir/per-produk</li>
+<li>Laba rugi sederhana (margin kotor)</li>
+<li>Produk terlaris, laporan stok, laporan kas per shift</li>
+<li>Export Excel/PDF (Fase 2)</li>
+</ul>
+<h3>8.8 Hardware Integration</h3>
+<ul>
+<li>Printer thermal 58mm/80mm (ESC/POS)</li>
+<li>Cash drawer (trigger via printer)</li>
+<li>Barcode scanner (USB HID/keyboard wedge — plug and play, tanpa driver khusus)</li>
+<li>Customer display &amp; timbangan digital (opsional, Fase 2)</li>
+</ul>
+<h3>8.9 Lisensi &amp; Proteksi (Kritis untuk Model Rental)</h3>
+<ul>
+<li>Aktivasi via <strong>hardware fingerprint</strong> (CPU ID + motherboard serial + MAC)</li>
+<li>File lisensi lokal terenkripsi (AES-256), signature RSA agar tidak bisa diedit manual</li>
+<li>Cek masa berlaku lokal setiap start (independen dari koneksi internet)</li>
+<li><strong>Grace period</strong> 7–14 hari saat offline sebelum lock</li>
+<li>Phone-home berkala ke license server saat online untuk validasi status pembayaran</li>
+<li>Anti-tamper: validasi expiry dibandingkan timestamp transaksi terakhir di DB, bukan hanya system clock (mencegah mundur jam)</li>
+<li>Mode &quot;locked/read-only&quot; saat expired — data tetap bisa dilihat, transaksi baru diblok</li>
+</ul>
+<h3>8.10 Backup &amp; Restore</h3>
+<ul>
+<li>Backup manual &amp; terjadwal (lokal/cloud), restore dari file backup</li>
+</ul>
+<h3>8.11 Pengaturan</h3>
+<ul>
+<li>Info toko, konfigurasi pajak, kustomisasi header/footer struk, setup printer</li>
+</ul>
+<h2>9. Kebutuhan Non-Fungsional</h2>
+<table>
+<thead>
+<tr>
+<th>Aspek</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RAM idle</td>
+<td>&lt; 100 MB (Native AOT + WinForms)</td>
+</tr>
+<tr>
+<td>Waktu startup</td>
+<td>&lt; 2 detik</td>
+</tr>
+<tr>
+<td>Operasi</td>
+<td>Offline-first, tanpa internet wajib untuk transaksi harian</td>
+</tr>
+<tr>
+<td>Keamanan data</td>
+<td>Enkripsi DB (SQLCipher) + enkripsi file lisensi</td>
+</tr>
+<tr>
+<td>Kompatibilitas</td>
+<td>Windows 10/11 64-bit, .NET 8/9 runtime ter-bundle (self-contained)</td>
+</tr>
+<tr>
+<td>Kapasitas</td>
+<td>Minimal 100.000 transaksi tanpa degradasi performa signifikan</td>
+</tr>
+</tbody>
+</table>
+<h2>10. Panduan Implementasi untuk AI Coding Agent (Antigravity)</h2>
+<ul>
+<li><strong>Struktur folder disarankan:</strong> <code>/src/POS.UI</code> (WinForms), <code>/src/POS.Application</code>, <code>/src/POS.Domain</code>, <code>/src/POS.Infrastructure</code>, <code>/src/POS.License</code>, <code>/tests/POS.Tests</code>.</li>
+<li><strong>Konvensi:</strong> business rule (pajak, diskon, validasi stok) wajib punya unit test di <code>POS.Tests</code>.</li>
+<li><strong>Tidak boleh</strong> hardcode connection string, key enkripsi, atau logic lisensi di file yang mudah dibaca plain text.</li>
+<li>Setiap fitur pada §8 dianggap &quot;Done&quot; jika: (1) ada test untuk logic inti, (2) UI berfungsi end-to-end dengan DB lokal, (3) tidak menambah leak memory saat idle &gt; 30 menit.</li>
+<li>Bangun modul lisensi (§8.9) <strong>paling awal</strong>, karena semua modul lain bergantung pada status aktivasi.</li>
+</ul>
+<h2>11. Roadmap Pengembangan</h2>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Cakupan</th>
+<th>Estimasi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fase 1 – MVP</td>
+<td>§8.1, 8.2, 8.3, 8.9, 8.10, 8.11 + laporan dasar</td>
+<td>6–10 minggu</td>
+</tr>
+<tr>
+<td>Fase 2</td>
+<td>§8.4, 8.5, 8.6, export laporan, multi-outlet</td>
+<td>4–6 minggu</td>
+</tr>
+<tr>
+<td>Fase 3</td>
+<td>Customer display, timbangan, sync cloud lanjutan</td>
+<td>Sesuai kebutuhan</td>
+</tr>
+</tbody>
+</table>
+<h2>12. Lampiran — Rekomendasi NuGet Packages</h2>
+<table>
+<thead>
+<tr>
+<th>Kebutuhan</th>
+<th>Package</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data access</td>
+<td><code>Dapper</code>, <code>Microsoft.Data.Sqlite</code>, <code>SQLitePCLRaw.bundle_e_sqlcipher</code></td>
+</tr>
+<tr>
+<td>Printer ESC/POS</td>
+<td><code>ESCPOS_NET</code></td>
+</tr>
+<tr>
+<td>Barcode</td>
+<td><code>ZXing.Net</code></td>
+</tr>
+<tr>
+<td>Logging</td>
+<td><code>Serilog</code>, <code>Serilog.Sinks.File</code></td>
+</tr>
+<tr>
+<td>Enkripsi</td>
+<td><code>System.Security.Cryptography</code> (built-in)</td>
+</tr>
+<tr>
+<td>HTTP (license check)</td>
+<td><code>System.Net.Http.Json</code> (built-in)</td>
+</tr>
+<tr>
+<td>DI</td>
+<td><code>Microsoft.Extensions.DependencyInjection</code></td>
+</tr>
+<tr>
+<td>Auto-update</td>
+<td><code>Velopack</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>Dokumen ini adalah spesifikasi hidup — update seiring keputusan teknis berubah selama development.</em></p>
+
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+</body></html>

@@ -1,0 +1,3 @@
+@echo off
+title Hapus Instalasi Spark POS...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Uninstall_SparkPOS.ps1"
