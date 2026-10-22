@@ -1117,6 +1117,9 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
       {/* MODAL PEMINDAHAN LOKASI DATABASE (DRIVE D: / HDD) */}
       {isMoveDbModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
