@@ -330,6 +330,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 />
               </div>
             </div>
+          </div>
+
           {/* Spesifikasi Khusus Komputer & Laptop: Kondisi, Kelengkapan, Garansi, SN */}
           {!isServiceCategory && (
             <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
