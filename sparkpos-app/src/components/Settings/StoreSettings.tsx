@@ -135,9 +135,6 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     printReceiptSilent(dummyTx, profile);
   };
 
-  const [isBackingUp, setIsBackingUp] = useState(false);
-  const restoreFileInputRef = useRef<HTMLInputElement>(null);
-
   const handleSaveDatabaseToFolder = async () => {
     if (!isAdmin) return;
     setIsBackingUp(true);

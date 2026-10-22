@@ -6,19 +6,28 @@ import { playSuccessBeep, playErrorBeep } from '../../services/scanner';
 
 interface BreakTimeModalProps {
   currentUser: Employee | null;
-  startTime: Date;
-  onResume: () => void;
+  startTime?: Date;
+  isOpen?: boolean;
+  onEndBreak?: () => void;
+  onResume?: () => void;
 }
 
 export const BreakTimeModal: React.FC<BreakTimeModalProps> = ({
   currentUser,
   startTime,
+  isOpen,
+  onEndBreak,
   onResume,
 }) => {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [pin, setPin] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
+
+  const handleResume = () => {
+    if (onEndBreak) onEndBreak();
+    if (onResume) onResume();
+  };
 
   // Live timer for break duration
   useEffect(() => {
@@ -71,7 +80,7 @@ export const BreakTimeModal: React.FC<BreakTimeModalProps> = ({
 
       if (matched) {
         playSuccessBeep();
-        onResume();
+        handleResume();
       } else {
         playErrorBeep();
         setErrorMessage('PIN salah! Hanya kasir aktif atau Owner yang dapat membuka istirahat.');

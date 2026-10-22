@@ -159,7 +159,9 @@ export async function isStoreConfigured(): Promise<boolean> {
  */
 export async function initializeStore(
   profile: StoreProfile,
-  adminData: { username: string; pin: string; fullName: string }
+  adminData: { username: string; pin: string; fullName: string },
+  seedUnits: boolean = true,
+  seedCategories: boolean = true
 ): Promise<Employee> {
   const now = new Date().toISOString();
 
@@ -178,12 +180,16 @@ export async function initializeStore(
   const adminId = await db.employees.add(adminEmployee as any);
 
   // 3. Inisialisasi Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart)
-  await db.categories.clear();
-  await db.categories.bulkAdd(DEFAULT_CATEGORIES);
+  if (seedCategories) {
+    await db.categories.clear();
+    await db.categories.bulkAdd(DEFAULT_CATEGORIES);
+  }
 
   // 4. Inisialisasi Satuan Baru (PCS, Meter, Roll)
-  await db.units.clear();
-  await db.units.bulkAdd(DEFAULT_UNITS);
+  if (seedUnits) {
+    await db.units.clear();
+    await db.units.bulkAdd(DEFAULT_UNITS);
+  }
 
   return {
     id: adminId as number,

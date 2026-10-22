@@ -7,8 +7,9 @@ import { CashFlowType, Shift, Employee } from '../../types/pos';
 interface CashFlowModalProps {
   activeShift: Shift | null;
   currentUser: Employee | null;
+  isOpen?: boolean;
   onClose: () => void;
-  onSuccess: (message: string) => void;
+  onSuccess?: (message: string) => void;
 }
 
 const DEFAULT_EXPENSE_CATEGORIES = [
@@ -30,6 +31,7 @@ const DEFAULT_INCOME_CATEGORIES = [
 export const CashFlowModal: React.FC<CashFlowModalProps> = ({
   activeShift,
   currentUser,
+  isOpen,
   onClose,
   onSuccess,
 }) => {
@@ -74,7 +76,9 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
       });
 
       const typeLabel = flowType === 'OUT' ? 'Uang Keluar' : 'Uang Masuk';
-      onSuccess(`${typeLabel} sebesar ${formatRupiah(amount)} berhasil dicatat!`);
+      if (onSuccess) {
+        onSuccess(`${typeLabel} sebesar ${formatRupiah(amount)} berhasil dicatat!`);
+      }
       onClose();
     } catch (err: any) {
       alert(`Gagal mencatat arus kas: ${err?.message || err}`);
