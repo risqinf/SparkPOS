@@ -110,9 +110,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      <div className="w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150 max-h-[95vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-emerald-400" />
             <h2 className="text-lg font-bold text-white">Pembayaran Kasir</h2>
@@ -126,7 +126,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Grand Total Display */}
           <div className="p-4 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
             <span className="text-slate-400 font-medium">Total yang Harus Dibayar:</span>
