@@ -89,11 +89,26 @@ export function onThemeChange(listener: ThemeChangeListener): () => void {
   };
 }
 
-// Listen to OS system theme changes
-if (typeof window !== 'undefined' && window.matchMedia) {
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (getSavedTheme() === 'system') {
-      applyTheme('system');
+/**
+ * Initialize listener for OS system theme changes
+ */
+export function initThemeListener() {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => {
+      if (getSavedTheme() === 'system') {
+        applyTheme('system');
+      }
+    };
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handler);
+    } else {
+      // Fallback for older browsers
+      (mediaQuery as any).addListener?.(handler);
     }
-  });
+  }
 }
+
+// Auto-run listener upon module load
+initThemeListener();
+

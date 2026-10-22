@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Lock,
   User,
@@ -56,15 +57,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
 
   // Matching employee based on current username input
   const matchedUser = employees.find(
-    (e) => e.username.toLowerCase() === username.trim().toLowerCase()
+    (e: Employee) => e.username.toLowerCase() === username.trim().toLowerCase()
   );
 
   const handleNumpadClick = (digit: string) => {
     if (activeFocusField === 'username') {
-      setUsername((prev) => prev + digit);
+      setUsername((prev: string) => prev + digit);
     } else {
       if (pin.length < 6) {
-        setPin((prev) => prev + digit);
+        setPin((prev: string) => prev + digit);
         setErrorMessage(null);
       }
     }
@@ -72,9 +73,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
 
   const handleBackspace = () => {
     if (activeFocusField === 'username') {
-      setUsername((prev) => prev.slice(0, -1));
+      setUsername((prev: string) => prev.slice(0, -1));
     } else {
-      setPin((prev) => prev.slice(0, -1));
+      setPin((prev: string) => prev.slice(0, -1));
       setErrorMessage(null);
     }
   };
@@ -117,7 +118,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
     try {
       // 1. Cek keberadaan username
       const existingUser = employees.find(
-        (emp) => emp.username.toLowerCase() === username.trim().toLowerCase()
+        (emp: Employee) => emp.username.toLowerCase() === username.trim().toLowerCase()
       );
 
       if (!existingUser) {
@@ -302,7 +303,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {employees.map((emp) => {
+                {employees.map((emp: Employee) => {
                   const isSelected = username.trim().toLowerCase() === emp.username.toLowerCase();
                   const isOwner = emp.role === 'owner' || emp.role === 'admin';
                   const isTeknisi = emp.role === 'teknisi' || emp.role === 'supervisor';
@@ -324,7 +325,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   );
                 })}
 
-                {employees.filter((e) => e.role === 'kasir' || e.role === 'cashier').length === 0 && (
+                {employees.filter((e: Employee) => e.role === 'kasir' || e.role === 'cashier').length === 0 && (
                   <div className="w-full p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px]">
                     💡 Baru ada akun Owner. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir atau teknisi baru.
                   </div>
