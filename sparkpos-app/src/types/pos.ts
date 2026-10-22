@@ -211,6 +211,8 @@ export interface HeldCart {
   customerName?: string;
   shippingCost?: number;
   shippingCourier?: string;
+  shippingTrackingNumber?: string;
+  shippingAddress?: string;
   heldAt: string;
 }
 
