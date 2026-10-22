@@ -15,6 +15,9 @@ export interface DatabaseBackupPayload {
     settings: any[];
     employees: any[];
     cashFlows?: any[];
+    suppliers?: any[];
+    serviceOrders?: any[];
+    serviceItems?: any[];
   };
 }
 
@@ -33,6 +36,9 @@ export async function exportDatabaseToJson(): Promise<string> {
     settings,
     employees,
     cashFlows,
+    suppliers,
+    serviceOrders,
+    serviceItems,
   ] = await Promise.all([
     db.products.toArray(),
     db.categories.toArray(),
@@ -44,10 +50,13 @@ export async function exportDatabaseToJson(): Promise<string> {
     db.settings.toArray(),
     db.employees.toArray(),
     db.cashFlows.toArray(),
+    db.suppliers.toArray(),
+    db.serviceOrders.toArray(),
+    db.serviceItems.toArray(),
   ]);
 
   const payload: DatabaseBackupPayload = {
-    version: 3,
+    version: 4,
     appName: 'SparkPOS',
     exportedAt: new Date().toISOString(),
     data: {
@@ -61,6 +70,9 @@ export async function exportDatabaseToJson(): Promise<string> {
       settings,
       employees,
       cashFlows,
+      suppliers,
+      serviceOrders,
+      serviceItems,
     },
   };
 
@@ -171,6 +183,9 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       settings = [],
       employees = [],
       cashFlows = [],
+      suppliers = [],
+      serviceOrders = [],
+      serviceItems = [],
     } = parsed.data;
 
     // Bersihkan semua tabel lama dalam satu transaksi database
@@ -185,6 +200,9 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       db.settings,
       db.employees,
       db.cashFlows,
+      db.suppliers,
+      db.serviceOrders,
+      db.serviceItems,
     ], async () => {
       await Promise.all([
         db.products.clear(),
@@ -197,6 +215,9 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
         db.settings.clear(),
         db.employees.clear(),
         db.cashFlows.clear(),
+        db.suppliers.clear(),
+        db.serviceOrders.clear(),
+        db.serviceItems.clear(),
       ]);
 
       if (products.length > 0) await db.products.bulkAdd(products);
@@ -209,6 +230,9 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       if (settings.length > 0) await db.settings.bulkAdd(settings);
       if (employees.length > 0) await db.employees.bulkAdd(employees);
       if (cashFlows.length > 0) await db.cashFlows.bulkAdd(cashFlows);
+      if (suppliers.length > 0) await db.suppliers.bulkAdd(suppliers);
+      if (serviceOrders.length > 0) await db.serviceOrders.bulkAdd(serviceOrders);
+      if (serviceItems.length > 0) await db.serviceItems.bulkAdd(serviceItems);
     });
 
     return {
@@ -219,6 +243,8 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
         categories: categories.length,
         transactions: transactions.length,
         employees: employees.length,
+        suppliers: suppliers.length,
+        serviceOrders: serviceOrders.length,
       },
     };
   } catch (err: any) {

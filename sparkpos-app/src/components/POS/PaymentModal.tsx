@@ -16,6 +16,7 @@ import { playSuccessBeep } from '../../services/scanner';
 
 interface PaymentModalProps {
   summary: CartSummary;
+  customerName?: string;
   onClose: () => void;
   onConfirmPayment: (payments: PaymentEntry[], paidAmount: number, changeAmount: number, autoPrint: boolean) => void;
   defaultAutoPrint: boolean;
@@ -23,6 +24,7 @@ interface PaymentModalProps {
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   summary,
+  customerName,
   onClose,
   onConfirmPayment,
   defaultAutoPrint,
@@ -134,6 +136,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               {formatRupiah(summary.grandTotal)}
             </span>
           </div>
+
+          {/* Customer Name info if entered */}
+          {customerName && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700/80 text-xs">
+              <span className="text-slate-400">Nama Pelanggan (Nota):</span>
+              <span className="font-bold text-white">{customerName}</span>
+            </div>
+          )}
 
           {/* Payment Method Selector */}
           <div>

@@ -8,11 +8,13 @@ import {
   DollarSign,
   ShoppingCart,
   TrendingUp,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Transaction, StoreProfile } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
 import { db } from '../../services/storage';
 import { ReceiptModal } from '../POS/ReceiptModal';
+import { exportTransactionsToExcel } from '../../services/excelExport';
 
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
@@ -106,15 +108,27 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari no. faktur / invoice atau nama kasir..."
+            placeholder="Cari no. faktur / invoice, nama kasir, atau pelanggan..."
             className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
           />
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
         </div>
 
-        <span className="text-xs text-slate-400">
-          Total: <strong className="text-slate-200">{filtered.length}</strong> transaksi
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-400">
+            Total: <strong className="text-slate-200">{filtered.length}</strong> transaksi
+          </span>
+
+          <button
+            onClick={() => exportTransactionsToExcel(filtered, storeProfile.storeName)}
+            disabled={filtered.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-sm active:scale-95"
+            title="Export riwayat transaksi ke format Microsoft Excel (.csv)"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Export Excel</span>
+          </button>
+        </div>
       </div>
 
       {/* Transaction Table */}
@@ -125,6 +139,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
               <tr>
                 <th className="px-4 py-3 font-semibold">No. Invoice / Faktur</th>
                 <th className="px-4 py-3 font-semibold">Waktu Transaksi</th>
+                <th className="px-4 py-3 font-semibold">Pelanggan</th>
                 <th className="px-4 py-3 font-semibold">Kasir</th>
                 <th className="px-4 py-3 font-semibold">Item Belanja</th>
                 <th className="px-4 py-3 font-semibold">Metode Bayar</th>
@@ -135,7 +150,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
             <tbody className="divide-y divide-slate-800/60">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-500">
+                  <td colSpan={8} className="text-center py-12 text-slate-500">
                     Belum ada riwayat transaksi penjualan.
                   </td>
                 </tr>
@@ -157,6 +172,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
 
                       {/* Date */}
                       <td className="px-4 py-3 text-slate-400">{dateStr}</td>
+
+                      {/* Customer Name */}
+                      <td className="px-4 py-3 text-slate-300 font-medium">
+                        {tx.customerName || (
+                          <span className="text-slate-500 italic">Pelanggan Umum</span>
+                        )}
+                      </td>
 
                       {/* Cashier */}
                       <td className="px-4 py-3 text-slate-300 font-medium">{tx.cashierName}</td>

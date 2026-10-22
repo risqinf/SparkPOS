@@ -11,6 +11,9 @@ import {
   Employee,
   CashFlow,
   WorkShiftTemplate,
+  Supplier,
+  ServiceOrder,
+  ServiceItem,
 } from '../types/pos';
 
 export class SparkPOSDatabase extends Dexie {
@@ -24,6 +27,9 @@ export class SparkPOSDatabase extends Dexie {
   settings!: Table<{ key: string; value: any }, string>;
   employees!: Table<Employee, number>;
   cashFlows!: Table<CashFlow, number>;
+  suppliers!: Table<Supplier, number>;
+  serviceOrders!: Table<ServiceOrder, number>;
+  serviceItems!: Table<ServiceItem, string>;
 
   constructor() {
     super('SparkPOS_LocalDB');
@@ -38,6 +44,22 @@ export class SparkPOSDatabase extends Dexie {
       settings: 'key',
       employees: '++id, username, pin, role, isActive',
       cashFlows: '++id, shiftId, cashierId, type, category, createdAt',
+    });
+
+    this.version(4).stores({
+      products: '++id, sku, barcode, name, categoryId, supplierId, stock, minStock, isActive',
+      categories: '++id, name',
+      units: '++id, name',
+      stockMovements: '++id, productId, type, createdAt',
+      transactions: '++id, invoiceNumber, shiftId, cashierId, customerName, status, createdAt',
+      shifts: '++id, cashierId, isClosed, startTime',
+      heldCarts: 'id, heldAt',
+      settings: 'key',
+      employees: '++id, username, pin, role, isActive',
+      cashFlows: '++id, shiftId, cashierId, type, category, createdAt',
+      suppliers: '++id, name, phone, createdAt',
+      serviceOrders: '++id, ticketNumber, customerName, status, assignedTechId, isPaid, receivedAt, createdAt',
+      serviceItems: 'id, serviceOrderId, type, name, productId',
     });
   }
 }
@@ -119,6 +141,19 @@ export async function ensureDatabaseCompatibility(): Promise<void> {
     for (const k of legacyKasir) {
       await db.employees.delete(k.id);
     }
+
+    // 4. Migrasi otomatis Role lama -> Baru ('admin' -> 'owner', 'cashier' -> 'kasir', 'supervisor' -> 'teknisi')
+    const employees = await db.employees.toArray();
+    for (const emp of employees) {
+      let updatedRole = emp.role;
+      if (emp.role === 'admin') updatedRole = 'owner';
+      else if (emp.role === 'cashier') updatedRole = 'kasir';
+      else if (emp.role === 'supervisor') updatedRole = 'teknisi';
+
+      if (updatedRole !== emp.role) {
+        await db.employees.update(emp.id, { role: updatedRole });
+      }
+    }
   } catch (err) {
     console.warn('Gagal menjalankan ensureDatabaseCompatibility:', err);
   }
@@ -142,9 +177,11 @@ export async function getActiveProducts(): Promise<Product[]> {
  */
 export async function isStoreConfigured(): Promise<boolean> {
   try {
-    const adminCount = await db.employees.where('role').equals('admin').count();
+    const ownerCount = await db.employees
+      .filter((e) => e.role === 'owner' || e.role === 'admin')
+      .count();
     const profile = await db.settings.get('store_profile');
-    return adminCount > 0 && !!profile;
+    return ownerCount > 0 && !!profile;
   } catch (err) {
     console.error('Error checking isStoreConfigured', err);
     return false;
@@ -178,12 +215,12 @@ export async function initializeStore(
   // 1. Simpan Profil Toko
   await db.settings.put({ key: 'store_profile', value: profile });
 
-  // 2. Buat Akun Owner / Administrator Utama
+  // 2. Buat Akun Owner Utama
   const adminEmployee: Omit<Employee, 'id'> = {
     username: adminData.username.trim() || 'owner',
     fullName: adminData.fullName.trim() || 'Pemilik Toko (Owner)',
     pin: adminData.pin.trim() || '123456',
-    role: 'admin',
+    role: 'owner',
     isActive: true,
     createdAt: now,
   };
@@ -196,7 +233,7 @@ export async function initializeStore(
       username: cashierData.username.trim() || 'kasir1',
       fullName: cashierData.fullName.trim() || 'Kasir 1',
       pin: cashierData.pin.trim() || '1234',
-      role: 'cashier',
+      role: 'kasir',
       shiftSchedule: cashierData.shiftSchedule || 'Shift Pagi (08:00 - 16:00)',
       shiftStart: cashierData.shiftStart,
       shiftEnd: cashierData.shiftEnd,
@@ -264,7 +301,11 @@ export async function verifyAdminSupervisorPin(pin: string): Promise<boolean> {
     .where('pin')
     .equals(pin.trim())
     .first();
-  return !!(emp && (emp.role === 'admin' || emp.role === 'supervisor') && emp.isActive);
+  return !!(
+    emp &&
+    (emp.role === 'owner' || emp.role === 'admin' || emp.role === 'supervisor' || emp.role === 'teknisi') &&
+    emp.isActive
+  );
 }
 
 // Cash Flow Services (Uang Masuk & Keluar Kasir)
@@ -306,4 +347,81 @@ export async function getWorkShiftTemplates(): Promise<WorkShiftTemplate[]> {
 
 export async function saveWorkShiftTemplates(templates: WorkShiftTemplate[]): Promise<void> {
   await db.settings.put({ key: 'work_shifts', value: templates });
+}
+
+// ==========================================
+// SUPPLIER MANAGEMENT SERVICES
+// ==========================================
+
+export async function getSuppliers(): Promise<Supplier[]> {
+  try {
+    return await db.suppliers.orderBy('name').toArray();
+  } catch (err) {
+    console.error('Error getSuppliers:', err);
+    return [];
+  }
+}
+
+export async function addSupplier(supplier: Omit<Supplier, 'id'>): Promise<number> {
+  return (await db.suppliers.add({
+    ...supplier,
+    createdAt: supplier.createdAt || new Date().toISOString(),
+  } as any)) as number;
+}
+
+export async function updateSupplier(id: number, supplier: Partial<Supplier>): Promise<void> {
+  await db.suppliers.update(id, supplier);
+}
+
+export async function deleteSupplier(id: number): Promise<void> {
+  await db.suppliers.delete(id);
+}
+
+// ==========================================
+// SERVICE MANAGEMENT SERVICES (TRACKING PERBAIKAN)
+// ==========================================
+
+export async function generateServiceTicketNumber(): Promise<string> {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(2, 10).replace(/-/g, ''); // e.g. "261022"
+  const countToday = await db.serviceOrders.count();
+  const seq = String(countToday + 1).padStart(4, '0');
+  return `SRV-${dateStr}-${seq}`;
+}
+
+export async function getServiceOrders(): Promise<ServiceOrder[]> {
+  try {
+    const orders = await db.serviceOrders.toArray();
+    return orders.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+  } catch (err) {
+    console.error('Error getServiceOrders:', err);
+    return [];
+  }
+}
+
+export async function getServiceOrderById(id: number): Promise<ServiceOrder | undefined> {
+  return await db.serviceOrders.get(id);
+}
+
+export async function addServiceOrder(order: Omit<ServiceOrder, 'id'>): Promise<number> {
+  const now = new Date().toISOString();
+  const ticketNumber = order.ticketNumber || (await generateServiceTicketNumber());
+  const newOrder: Omit<ServiceOrder, 'id'> = {
+    ...order,
+    ticketNumber,
+    createdAt: order.createdAt || now,
+    updatedAt: now,
+  };
+  return (await db.serviceOrders.add(newOrder as any)) as number;
+}
+
+export async function updateServiceOrder(id: number, order: Partial<ServiceOrder>): Promise<void> {
+  await db.serviceOrders.update(id, {
+    ...order,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function deleteServiceOrder(id: number): Promise<void> {
+  await db.serviceOrders.delete(id);
 }

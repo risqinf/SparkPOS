@@ -51,6 +51,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
+  const [staffRole, setStaffRole] = useState<'kasir' | 'teknisi' | 'owner'>('kasir');
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Shift assignment state for cashier
@@ -96,6 +97,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
     setFullName('');
     setUsername('');
     setPin('');
+    setStaffRole('kasir');
     setShiftMode('template');
     setSelectedTemplateId(shiftTemplates[0]?.id || 'shift-pagi');
     setCustomStart('08:00');
@@ -117,6 +119,13 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
     setFullName(emp.fullName);
     setUsername(emp.username);
     setPin(emp.pin);
+    const mappedRole =
+      emp.role === 'admin' || emp.role === 'owner'
+        ? 'owner'
+        : emp.role === 'teknisi' || emp.role === 'supervisor'
+        ? 'teknisi'
+        : 'kasir';
+    setStaffRole(mappedRole);
 
     if (emp.isFlexibleShift) {
       setShiftMode('flexible');
@@ -204,18 +213,19 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
           fullName: fullName.trim(),
           username: username.trim().toLowerCase(),
           pin: pin.trim(),
+          role: staffRole,
           shiftSchedule: finalSchedule,
           shiftStart: finalStart || undefined,
           shiftEnd: finalEnd || undefined,
           isFlexibleShift: isFlex,
         });
-        setSuccessMessage(`Data staf "${fullName}" berhasil diperbarui!`);
+        setSuccessMessage(`Data staf "${fullName}" (${staffRole.toUpperCase()}) berhasil diperbarui!`);
       } else {
         await db.employees.add({
           fullName: fullName.trim(),
           username: username.trim().toLowerCase(),
           pin: pin.trim(),
-          role: 'cashier',
+          role: staffRole,
           shiftSchedule: finalSchedule,
           shiftStart: finalStart || undefined,
           shiftEnd: finalEnd || undefined,
@@ -223,18 +233,19 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
           isActive: true,
           createdAt: now,
         } as any);
-        setSuccessMessage(`Kasir baru "${fullName}" berhasil ditambahkan!`);
+        setSuccessMessage(`Staf baru "${fullName}" (${staffRole.toUpperCase()}) berhasil ditambahkan!`);
       }
 
       resetCashierForm();
       await loadData();
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Gagal menyimpan data kasir.');
+      setErrorMessage(err?.message || 'Gagal menyimpan data staf.');
     }
   };
 
   const handleToggleActive = async (emp: Employee) => {
-    if (emp.role === 'admin' && emp.id === currentUser.id) {
+    const isOwner = emp.role === 'owner' || emp.role === 'admin';
+    if (isOwner && emp.id === currentUser.id) {
       alert('Anda tidak dapat menonaktifkan akun Owner Anda sendiri!');
       return;
     }
@@ -471,6 +482,53 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                   />
                 </div>
 
+                {/* Pilihan Peran / Role Staf (Owner, Kasir, Teknisi) */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Peran / Hak Akses Staf <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800 text-[10px] font-bold text-center">
+                    <button
+                      type="button"
+                      onClick={() => setStaffRole('kasir')}
+                      className={`py-1.5 rounded-lg transition ${
+                        staffRole === 'kasir'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      💼 Kasir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStaffRole('teknisi')}
+                      className={`py-1.5 rounded-lg transition ${
+                        staffRole === 'teknisi'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      🔧 Teknisi
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStaffRole('owner')}
+                      className={`py-1.5 rounded-lg transition ${
+                        staffRole === 'owner'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      👑 Owner
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-500 block mt-1">
+                    {staffRole === 'kasir' && 'Kasir: Melayani transaksi penjualan POS dan melihat stok barang.'}
+                    {staffRole === 'teknisi' && 'Teknisi: Mengelola antrean tiket servis komputer & melayani kasir jika diperlukan.'}
+                    {staffRole === 'owner' && 'Owner: Akses penuh semua menu, keuangan toko, dan pengaturan.'}
+                  </span>
+                </div>
+
                 {/* Pengaturan Jam Kerja Shift Kasir */}
                 <div className="pt-2 border-t border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
@@ -612,7 +670,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
               <div className="space-y-2.5 overflow-y-auto max-h-[460px] pr-1">
                 {cashiers.map((emp) => {
-                  const isOwner = emp.role === 'admin';
+                  const isOwner = emp.role === 'owner' || emp.role === 'admin';
+                  const isTeknisi = emp.role === 'teknisi' || emp.role === 'supervisor';
                   const isActive = emp.isActive !== false;
 
                   return (
@@ -621,6 +680,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       className={`p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${
                         isOwner
                           ? 'bg-slate-850/80 border-emerald-500/30'
+                          : isTeknisi
+                          ? 'bg-slate-850/60 border-amber-500/30'
                           : isActive
                           ? 'bg-slate-900 border-slate-800 hover:border-slate-700'
                           : 'bg-slate-950 border-slate-850 opacity-60'
@@ -631,7 +692,9 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
                             isOwner
                               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-slate-800 text-slate-300 border border-slate-700'
+                              : isTeknisi
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                           }`}
                         >
                           {isOwner ? <Shield className="w-5 h-5" /> : emp.fullName.slice(0, 2).toUpperCase()}
@@ -643,11 +706,13 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                             <span
                               className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                 isOwner
-                                  ? 'bg-emerald-500/20 text-emerald-400'
-                                  : 'bg-blue-500/20 text-blue-300'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : isTeknisi
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                               }`}
                             >
-                              {isOwner ? 'Owner' : 'Kasir'}
+                              {isOwner ? '👑 Owner' : isTeknisi ? '🔧 Teknisi' : '💼 Kasir'}
                             </span>
                             {!isActive && (
                               <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">

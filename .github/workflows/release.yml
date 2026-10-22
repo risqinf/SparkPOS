@@ -57,7 +57,18 @@ jobs:
           projectPath: sparkpos-app
           tagName: v__VERSION__
           releaseName: 'SparkPOS Desktop v__VERSION__'
-          releaseBody: 'SparkPOS Native Desktop Application Release.'
+          releaseBody: |
+            ### 🚀 SparkPOS v2.0 — Major Desktop Release
+
+            Rilis pembaruan besar untuk operasional retail toko komputer & jasa servis laptop:
+
+            - 🔧 **Modul Service Komputer & Laptop**: Pencatatan unit masuk, diagnosa kerusakan, alokasi sparepart & biaya jasa, status pengerjaan (Diterima, Dikerjakan, Selesai, Diambil), serta cetak nota tanda terima termal 58mm/80mm.
+            - 💾 **Relokasi Lokasi Database Dinamis**: Database tidak lagi terkunci di folder default apps. Bebas dipindahkan ke Harddisk (HDD) eksternal atau Drive D: dengan penyalinan data otomatis tanpa resiko data hilang (*zero data loss*).
+            - 👥 **Sistem 3 Role**: Owner, Teknisi, dan Kasir dengan filter akses menu yang disesuaikan untuk kenyamanan kerja tim toko.
+            - 🚚 **Manajemen Supplier**: Pencatatan distributor dan pemasok komponen/hardware (HDD, SSD, RAM, sparepart).
+            - 👤 **Nama Pelanggan di Struk**: Input nama pelanggan langsung di kasir & tercetak otomatis pada struk belanja maupun nota servis.
+            - 📊 **Export Excel Offline**: Ekspor Laporan Penjualan Kasir, Valuasi Aset Stok HPP, dan Rekapitulasi Jasa Servis ke format spreadsheet Excel (*UTF-8 BOM*).
+            - 🖥️ **UI Layout Ultra Fleksibel**: Mendukung resolusi layar beragam dari monitor desktop modern hingga laptop klasik (ThinkPad X201, resolusi 1280x800).
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

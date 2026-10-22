@@ -194,25 +194,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
             {/* Role Explanation Note */}
             <div className="space-y-2 text-xs text-slate-400">
               <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">
-                Panduan Login Akun:
+                Panduan Hak Akses Role:
               </span>
               <div className="p-2.5 rounded-lg bg-slate-850/50 border border-slate-800 text-[11px] space-y-1">
                 <div className="text-slate-300 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span>1. Login sebagai Owner / Admin:</span>
+                  <span>1. Owner:</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Gunakan username Admin (misal: <code>admin</code>) dan PIN Admin untuk membuka pengaturan, stok, dan kelola kasir.
+                  Akses penuh: Kasir, Servis, Stok, Pengaturan Toko, Hardware, Relokasi DB, dan Kelola Staf.
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-slate-850/50 border border-slate-800 text-[11px] space-y-1">
+                <div className="text-slate-300 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  <span>2. Teknisi:</span>
+                </div>
+                <p className="text-slate-400 pl-2.5">
+                  Fokus Servis & Reparasi unit, diagnosa, sparepart, status servis, serta alternatif kasir jika kasir libur.
                 </p>
               </div>
 
               <div className="p-2.5 rounded-lg bg-slate-850/50 border border-slate-800 text-[11px] space-y-1">
                 <div className="text-slate-300 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                  <span>2. Login sebagai Kasir:</span>
+                  <span>3. Kasir:</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Gunakan username Kasir (misal: <code>kasir1</code>) dan PIN Kasir untuk melayani transaksi kasir.
+                  Fokus penjualan POS, penerimaan servis masuk dari pelanggan, cetak nota, dan cek stok produk.
                 </p>
               </div>
             </div>
@@ -224,7 +234,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Sistem Kasir Aman & Offline</span>
             </span>
-            <span className="font-mono text-slate-400">v1.4.0</span>
+            <span className="font-mono text-emerald-400 font-bold">v2.0.0</span>
           </div>
         </div>
 
@@ -236,7 +246,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                 <h2 className="text-base font-bold text-white">Login Masuk ke SparkPOS</h2>
                 <p className="text-xs text-slate-400">Masukkan Username & PIN akun yang ingin digunakan</p>
               </div>
-              <span className="text-xs text-slate-400 font-mono">v1.4.0</span>
+              <span className="text-xs text-emerald-400 font-mono font-bold">v2.0.0</span>
             </div>
 
             {/* Error Message Alert */}
@@ -260,7 +270,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <div className="flex flex-wrap gap-2">
                 {employees.map((emp) => {
                   const isSelected = username.trim().toLowerCase() === emp.username.toLowerCase();
-                  const isAdmin = emp.role === 'admin';
+                  const isOwner = emp.role === 'owner' || emp.role === 'admin';
+                  const isTeknisi = emp.role === 'teknisi' || emp.role === 'supervisor';
                   return (
                     <button
                       key={emp.id}
@@ -272,16 +283,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                           : 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
                       }`}
                     >
-                      <span>{isAdmin ? '👑' : '👤'}</span>
+                      <span>{isOwner ? '👑' : isTeknisi ? '🔧' : '👤'}</span>
                       <span className="font-bold">{emp.fullName}</span>
                       <span className="text-[10px] text-slate-400 font-mono">(@{emp.username})</span>
                     </button>
                   );
                 })}
 
-                {employees.filter((e) => e.role === 'cashier').length === 0 && (
+                {employees.filter((e) => e.role === 'kasir' || e.role === 'cashier').length === 0 && (
                   <div className="w-full p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
-                    💡 Baru ada akun Owner. Login sebagai Owner (@admin) terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir baru.
+                    💡 Baru ada akun Owner. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir atau teknisi baru.
                   </div>
                 )}
               </div>
@@ -298,7 +309,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   </span>
                   {matchedUser && (
                     <span className="text-[11px] text-emerald-400 font-medium">
-                      ✓ Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'admin' ? 'Owner' : 'Kasir'})
+                      ✓ Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'owner' || matchedUser.role === 'admin' ? 'Owner' : matchedUser.role === 'teknisi' || matchedUser.role === 'supervisor' ? 'Teknisi' : 'Kasir'})
                     </span>
                   )}
                 </label>
@@ -339,7 +350,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                     <span>PIN Akses (4 - 6 Angka):</span>
                   </span>
                   <span className="text-[11px] text-slate-500">
-                    {matchedUser?.role === 'admin' ? 'PIN Admin 6 Digit' : 'PIN Kasir 4 Digit'}
+                    {matchedUser?.role === 'owner' || matchedUser?.role === 'admin' ? 'PIN Owner 6 Digit' : 'PIN Masuk 4 Digit'}
                   </span>
                 </div>
 

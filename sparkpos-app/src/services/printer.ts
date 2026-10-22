@@ -106,3 +106,83 @@ export function printReceiptSilent(tx: Transaction, profile: StoreProfile) {
   // Trigger browser print dialog styled specifically for thermal printer
   window.print();
 }
+
+/**
+ * Format Nota / Tanda Terima Servis Komputer & Laptop untuk Printer Thermal (58mm/80mm)
+ */
+export function generateServiceReceiptText(
+  order: import('../types/pos').ServiceOrder,
+  profile: StoreProfile
+): string {
+  const width = profile.paperWidth === '58mm' ? 32 : 42;
+  const divider = '-'.repeat(width);
+  const doubleDivider = '='.repeat(width);
+  const lines: string[] = [];
+
+  // Header Toko
+  lines.push(centerText(profile.storeName.toUpperCase(), width));
+  if (profile.branchName) lines.push(centerText(profile.branchName, width));
+  if (profile.address) lines.push(centerText(profile.address, width));
+  if (profile.phone) lines.push(centerText(`Telp/WA: ${profile.phone}`, width));
+  lines.push(doubleDivider);
+
+  // Judul Nota Servis
+  lines.push(centerText('TANDA TERIMA SERVIS', width));
+  lines.push(divider);
+
+  // Informasi Tiket
+  lines.push(`No. Tiket : ${order.ticketNumber}`);
+  const dateStr = new Date(order.receivedAt || order.createdAt).toLocaleString('id-ID', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+  lines.push(`Tgl Masuk : ${dateStr}`);
+  lines.push(`Pelanggan : ${order.customerName}`);
+  if (order.customerPhone) lines.push(`No. HP/WA : ${order.customerPhone}`);
+  lines.push(`Perangkat : ${order.deviceType}`);
+  if (order.deviceSerial) lines.push(`No. Seri  : ${order.deviceSerial}`);
+  if (order.assignedTechName) lines.push(`Teknisi   : ${order.assignedTechName}`);
+  lines.push(divider);
+
+  // Keluhan & Diagnosa
+  lines.push('Keluhan:');
+  lines.push(` ${order.complaint || '-'}`);
+  if (order.diagnosis) {
+    lines.push('Diagnosa:');
+    lines.push(` ${order.diagnosis}`);
+  }
+  lines.push(divider);
+
+  // Rincian Komponen / Jasa jika sudah ada
+  if (order.items && order.items.length > 0) {
+    lines.push('Rincian Pengerjaan:');
+    for (const item of order.items) {
+      lines.push(`${item.type === 'PART' ? '[PART]' : '[JASA]'} ${item.name}`);
+      const left = ` ${item.quantity} x ${formatRupiah(item.sellPrice)}`;
+      const right = formatRupiah(item.subtotal);
+      lines.push(padBetween(left, right, width));
+    }
+    lines.push(divider);
+  }
+
+  // Total Finansial
+  lines.push(padBetween('Total Tagihan:', formatRupiah(order.grandTotal), width));
+  lines.push(padBetween('Status Bayar :', order.isPaid ? 'LUNAS' : 'BELUM LUNAS', width));
+  if (order.paidAmount > 0) {
+    lines.push(padBetween('Dibayar      :', formatRupiah(order.paidAmount), width));
+  }
+  lines.push(doubleDivider);
+
+  // Ketentuan & Tanda Tangan
+  lines.push(centerText('Syarat Pengambilan Servis:', width));
+  lines.push('1. Wajib membawa nota tanda terima ini.');
+  lines.push('2. Barang tidak diambil >30 hari di luar');
+  lines.push('   tanggung jawab toko.');
+  lines.push('');
+  lines.push(padBetween('( Pelanggan )', '( Teknisi )', width));
+  lines.push('');
+  lines.push(centerText('* Terimakasih Atas Kepercayaan Anda *', width));
+  lines.push('');
+
+  return lines.join('\n');
+}

@@ -1,4 +1,4 @@
-export type RoleType = 'admin' | 'supervisor' | 'cashier';
+export type RoleType = 'owner' | 'kasir' | 'teknisi' | 'admin' | 'supervisor' | 'cashier';
 
 export interface WorkShiftTemplate {
   id: string;
@@ -23,6 +23,59 @@ export interface Employee {
   createdAt: string;
 }
 
+export interface Supplier {
+  id?: number;
+  name: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export type ServiceStatus = 'DITERIMA' | 'DIKERJAKAN' | 'SELESAI' | 'DIAMBIL' | 'DIBATALKAN';
+
+export interface ServiceItem {
+  id: string;
+  serviceOrderId?: number;
+  type: 'PART' | 'SERVICE';   // Sparepart atau Jasa Servis
+  name: string;               // e.g. "Ganti Pasta Thermal" atau "SSD NVMe 512GB"
+  productId?: number;         // Tautkan ke ID produk jika memotong stok
+  supplierName?: string;      // Supplier suku cadang
+  costPrice: number;          // Modal (HPP)
+  sellPrice: number;          // Biaya yang ditagihkan ke pelanggan
+  quantity: number;
+  subtotal: number;           // sellPrice * quantity
+}
+
+export interface ServiceOrder {
+  id?: number;
+  ticketNumber: string;       // e.g. "SRV-20261022-0001"
+  customerName: string;
+  customerPhone?: string;
+  deviceType: string;         // e.g. "Laptop Lenovo ThinkPad X201"
+  deviceSerial?: string;      // No seri / IMEI / SN
+  complaint: string;          // Keluhan awal pelanggan
+  diagnosis?: string;         // Diagnosa & analisa teknisi
+  status: ServiceStatus;
+  assignedTechId?: number;    // ID teknisi penanggung jawab
+  assignedTechName?: string;  // Nama teknisi
+  items: ServiceItem[];       // Rincian sparepart & biaya jasa
+  totalPartsCost: number;     // Total modal sparepart
+  totalServiceFee: number;    // Total jasa kerja
+  discountAmount: number;     // Diskon servis
+  grandTotal: number;         // Total akhir tagihan servis
+  paidAmount: number;         // Nominal yang sudah dibayar
+  isPaid: boolean;            // Lunas atau belum
+  estimatedDate?: string;     // Estimasi tanggal selesai
+  receivedAt: string;         // Tanggal masuk
+  startedAt?: string;         // Waktu mulai pengerjaan
+  completedAt?: string;       // Waktu selesai
+  pickedUpAt?: string;        // Waktu diambil oleh pelanggan
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -45,6 +98,8 @@ export interface Product {
   categoryName?: string;
   unitId: number;
   unitName?: string;
+  supplierId?: number;
+  supplierName?: string;
   buyPrice: number;   // HPP (Harga Pokok Penjualan)
   sellPrice: number;  // Harga Jual
   stock: number;
@@ -65,6 +120,7 @@ export interface StockMovement {
   type: StockMovementType;
   quantity: number;
   balanceAfter: number;
+  supplierName?: string;
   referenceNo?: string;
   notes?: string;
   createdAt: string;
@@ -182,4 +238,19 @@ export interface StoreProfile {
   autoPrintReceipt: boolean;
   currencySymbol: string;
   backupFolderPath?: string; // Path folder cadangan yang dipilih user (Drive D: dll)
+  customDatabasePath?: string; // Path folder database operasional kustom aktif (D:\SparkPOS_Data dll)
+}
+
+export interface DatabasePathInfo {
+  activePath: string;
+  isCustom: boolean;
+  status: 'CONNECTED' | 'DEFAULT' | 'OFFLINE' | 'MIGRATING';
+  lastSyncedAt?: string;
+  driveLetter?: string;
+  itemCounts?: {
+    products: number;
+    transactions: number;
+    serviceOrders: number;
+    employees: number;
+  };
 }

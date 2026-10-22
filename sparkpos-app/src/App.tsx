@@ -19,12 +19,13 @@ import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
 import { CashierManagementModal } from './components/Owner/CashierManagementModal';
 import { CashFlowModal } from './components/POS/CashFlowModal';
 import { BreakTimeModal } from './components/POS/BreakTimeModal';
+import { ServiceDashboard } from './components/Service/ServiceDashboard';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
   const [currentUser, setCurrentUser] = useState<Employee | null>(null);
-  const [currentTab, setCurrentTab] = useState<'pos' | 'stock' | 'reports' | 'settings'>('pos');
+  const [currentTab, setCurrentTab] = useState<'pos' | 'service' | 'stock' | 'reports' | 'settings'>('pos');
   const [storeProfile, setStoreProfile] = useState<StoreProfile>(DEFAULT_STORE_PROFILE);
   const [activeShift, setActiveShift] = useState<Shift | null>(null);
   const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
@@ -127,8 +128,12 @@ export default function App() {
       setActiveShift(newShift);
     }
 
-    // Default to POS terminal upon login
-    setCurrentTab('pos');
+    // Default tab based on role: Teknisi goes to Service dashboard, others to POS
+    if (employee.role === 'teknisi' || employee.role === 'supervisor') {
+      setCurrentTab('service');
+    } else {
+      setCurrentTab('pos');
+    }
   };
 
   const handleLogout = () => {
@@ -172,6 +177,9 @@ export default function App() {
         if (e.key === 'F1') {
           e.preventDefault();
           setCurrentTab('pos');
+        } else if (e.key === 'F2') {
+          e.preventDefault();
+          setCurrentTab('service');
         } else if (e.key === 'F3') {
           e.preventDefault();
           setCurrentTab('stock');
@@ -244,6 +252,13 @@ export default function App() {
             currentUser={currentUser}
             onLogout={handleLogout}
             onOpenCashierManagement={() => setIsCashierManagementOpen(true)}
+          />
+        )}
+
+        {currentTab === 'service' && (
+          <ServiceDashboard
+            currentUser={currentUser}
+            storeProfile={storeProfile}
           />
         )}
 

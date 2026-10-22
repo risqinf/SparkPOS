@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles } from 'lucide-react';
-import { Product, Category, Unit } from '../../types/pos';
-import { db } from '../../services/storage';
+import React, { useState, useEffect } from 'react';
+import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck } from 'lucide-react';
+import { Product, Category, Unit, Supplier } from '../../types/pos';
+import { db, getSuppliers } from '../../services/storage';
 
 interface ProductFormModalProps {
   product: Product | null; // null if adding new
@@ -27,13 +27,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     product?.categoryId || (categories[0]?.id || 1)
   );
   const [unitId, setUnitId] = useState<number>(product?.unitId || (units[0]?.id || 1));
+  const [supplierId, setSupplierId] = useState<number | undefined>(product?.supplierId);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [buyPrice, setBuyPrice] = useState<string>(product?.buyPrice?.toString() || '0');
   const [sellPrice, setSellPrice] = useState<string>(product?.sellPrice?.toString() || '0');
   const [stock, setStock] = useState<string>(product?.stock?.toString() || '0');
   const [minStock, setMinStock] = useState<string>(product?.minStock?.toString() || '5');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    getSuppliers().then((items) => setSuppliers(items));
+  }, []);
+
   const selectedCategory = categories.find((c) => c.id === categoryId);
+  const selectedSupplier = suppliers.find((s) => s.id === supplierId);
   const isServiceCategory = selectedCategory?.name.toLowerCase() === 'jasa';
 
   // Generate random 12-digit EAN-13 style barcode
@@ -70,6 +77,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         categoryName: selectedCategory?.name || 'Umum',
         unitId,
         unitName: selectedUnit?.symbol || 'PCS',
+        supplierId: selectedSupplier ? selectedSupplier.id : undefined,
+        supplierName: selectedSupplier ? selectedSupplier.name : undefined,
         buyPrice: buy,
         sellPrice: sell,
         stock: currentStock,
@@ -87,6 +96,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         categoryName: selectedCategory?.name || 'Umum',
         unitId,
         unitName: selectedUnit?.symbol || 'PCS',
+        supplierId: selectedSupplier ? selectedSupplier.id : undefined,
+        supplierName: selectedSupplier ? selectedSupplier.name : undefined,
         buyPrice: buy,
         sellPrice: sell,
         stock: currentStock,
@@ -233,6 +244,35 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Supplier / Distributor */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              Supplier / Pemasok (Opsional)
+            </label>
+            <div className="relative">
+              <select
+                value={supplierId ?? ''}
+                onChange={(e) =>
+                  setSupplierId(e.target.value === '' ? undefined : parseInt(e.target.value))
+                }
+                className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-medium"
+              >
+                <option value="">-- Tanpa Supplier / Pemasok Umum --</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.contactPerson ? `(${s.contactPerson})` : ''}
+                  </option>
+                ))}
+              </select>
+              <Truck className="w-4 h-4 text-slate-500 absolute left-3 top-2.5 pointer-events-none" />
+            </div>
+            {suppliers.length === 0 && (
+              <p className="text-[10px] text-slate-500 mt-1">
+                Belum ada supplier tersimpan. Anda dapat menambahkannya lewat tombol "Kelola Supplier" di menu Stok.
+              </p>
+            )}
           </div>
 
           {/* Price (Buy vs Sell) */}

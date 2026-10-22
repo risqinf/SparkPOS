@@ -17,12 +17,13 @@ import {
   ArrowDownUp,
   Coffee,
   Users,
+  Wrench,
 } from 'lucide-react';
 import { Shift, StoreProfile, Employee } from '../types/pos';
 
 interface NavbarProps {
-  currentTab: 'pos' | 'stock' | 'reports' | 'settings';
-  setCurrentTab: (tab: 'pos' | 'stock' | 'reports' | 'settings') => void;
+  currentTab: 'pos' | 'service' | 'stock' | 'reports' | 'settings';
+  setCurrentTab: (tab: 'pos' | 'service' | 'stock' | 'reports' | 'settings') => void;
   activeShift: Shift | null;
   heldCount: number;
   openHeldModal: () => void;
@@ -61,9 +62,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'owner' || currentUser?.role === 'admin';
+  const isTechnician = currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor';
 
-  const handleTabClick = (tab: 'pos' | 'stock' | 'reports' | 'settings') => {
+  const handleTabClick = (tab: 'pos' | 'service' | 'stock' | 'reports' | 'settings') => {
     if (tab === 'settings' && !isAdmin) {
       if (onRequestAdminAccess) {
         onRequestAdminAccess();
@@ -118,9 +120,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* ================= MAIN NAVIGATION TABS ================= */}
       <nav className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-xl border border-slate-800">
+        {/* Tab 1: Kasir POS */}
         <button
           onClick={() => handleTabClick('pos')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
             currentTab === 'pos'
               ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -134,9 +137,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           </kbd>
         </button>
 
+        {/* Tab 2: Service Komputer & Laptop */}
+        <button
+          onClick={() => handleTabClick('service')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            currentTab === 'service'
+              ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+          title="Kelola Servis Komputer & Laptop (F2)"
+        >
+          <Wrench className="w-4 h-4 text-cyan-400" />
+          <span>Service</span>
+          <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] bg-slate-900 rounded text-slate-400 font-mono border border-slate-800">
+            F2
+          </kbd>
+        </button>
+
+        {/* Tab 3: Stok & Produk */}
         <button
           onClick={() => handleTabClick('stock')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
             currentTab === 'stock'
               ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -144,15 +165,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Katalog Produk & Manajemen Stok (F3)"
         >
           <Boxes className="w-4 h-4 text-slate-300" />
-          <span>Stok & Produk</span>
+          <span>Stok</span>
           <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] bg-slate-900 rounded text-slate-400 font-mono border border-slate-800">
             F3
           </kbd>
         </button>
 
+        {/* Tab 4: Riwayat Penjualan */}
         <button
           onClick={() => handleTabClick('reports')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
             currentTab === 'reports'
               ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -160,7 +182,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Riwayat Transaksi Penjualan (F7)"
         >
           <Receipt className="w-4 h-4 text-slate-300" />
-          <span>Riwayat Penjualan</span>
+          <span>Laporan</span>
           <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] bg-slate-900 rounded text-slate-400 font-mono border border-slate-800">
             F7
           </kbd>
@@ -169,12 +191,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Settings Tab - Restricted to Admin */}
         <button
           onClick={() => handleTabClick('settings')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
             currentTab === 'settings'
               ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
           }`}
-          title={isAdmin ? 'Pengaturan Brand, Logo & Hardware' : 'Khusus Administrator (Terkunci)'}
+          title={isAdmin ? 'Pengaturan Brand, Logo, Hardware & Relokasi Database' : 'Khusus Administrator (Terkunci)'}
         >
           <Settings className="w-4 h-4 text-slate-300" />
           <span>Pengaturan</span>
@@ -262,10 +284,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </button>
 
-        {/* Current User Badge (Admin vs Non-Admin) */}
+        {/* Current User Badge (Owner vs Teknisi vs Kasir) */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800">
           {isAdmin ? (
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          ) : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor' ? (
+            <Users className="w-3.5 h-3.5 text-blue-400" />
           ) : (
             <User className="w-3.5 h-3.5 text-slate-400" />
           )}
@@ -274,7 +298,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {currentUser?.fullName?.split(' ')[0] || 'User'}
             </span>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
-              {isAdmin ? '👑 Owner' : '👤 Kasir'}
+              {isAdmin
+                ? '👑 Owner'
+                : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor'
+                ? '🔧 Teknisi'
+                : '👤 Kasir'}
             </span>
           </div>
         </div>

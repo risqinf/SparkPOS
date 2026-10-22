@@ -30,6 +30,13 @@ import {
   importDatabaseFromJson,
   resetDatabase,
 } from '../../services/databaseBackup';
+import {
+  getCurrentDatabasePathInfo,
+  migrateDatabaseToPath,
+  resetDatabasePathToDefault,
+  openFolderPicker,
+} from '../../services/databasePathService';
+import { DatabasePathInfo } from '../../types/pos';
 
 interface StoreSettingsProps {
   storeProfile: StoreProfile;
@@ -52,6 +59,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const restoreFileInputRef = useRef<HTMLInputElement>(null);
 
+  // State untuk Pemindahan Lokasi Database (Drive D: / HDD Kustom)
+  const [dbPathInfo, setDbPathInfo] = useState<DatabasePathInfo | null>(null);
+  const [isMoveDbModalOpen, setIsMoveDbModalOpen] = useState(false);
+  const [targetFolderPath, setTargetFolderPath] = useState('D:\\SparkPOS_Database');
+  const [selectedDirHandle, setSelectedDirHandle] = useState<any>(null);
+  const [autoCopyData, setAutoCopyData] = useState(true);
+  const [isMigratingDb, setIsMigratingDb] = useState(false);
+
   // State untuk Modal Uninstall & Hapus Total
   const [isUninstallModalOpen, setIsUninstallModalOpen] = useState(false);
   const [uninstallWipeMode, setUninstallWipeMode] = useState<'backup_first' | 'wipe_only'>('backup_first');
@@ -60,7 +75,17 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
   const [confirmWipeText, setConfirmWipeText] = useState('');
   const [isWiping, setIsWiping] = useState(false);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'owner' || currentUser?.role === 'admin';
+
+  // Load database path info saat mount
+  React.useEffect(() => {
+    getCurrentDatabasePathInfo().then((info) => {
+      setDbPathInfo(info);
+      if (info.isCustom) {
+        setTargetFolderPath(info.activePath);
+      }
+    });
+  }, [profile.customDatabasePath]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isAdmin) return;
@@ -186,6 +211,71 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handlePickFolder = async () => {
+    try {
+      const res = await openFolderPicker();
+      if (res.success && res.folderPath) {
+        setTargetFolderPath(res.folderPath);
+        if (res.directoryHandle) {
+          setSelectedDirHandle(res.directoryHandle);
+        }
+      } else if (res.message && res.message !== 'NATIVE_PICKER_UNSUPPORTED' && res.message !== 'Pemilihan folder dibatalkan.') {
+        alert(res.message);
+      }
+    } catch (err: any) {
+      console.warn('Folder picker failed, user can still type manually:', err);
+    }
+  };
+
+  const handleMigrateDatabasePath = async () => {
+    if (!isAdmin) return;
+    if (!targetFolderPath.trim()) {
+      alert('Harap tentukan path folder tujuan.');
+      return;
+    }
+
+    setIsMigratingDb(true);
+    try {
+      const res = await migrateDatabaseToPath(targetFolderPath, selectedDirHandle);
+      if (res.success) {
+        const updatedProfile = { ...profile, customDatabasePath: targetFolderPath.trim() };
+        setProfile(updatedProfile);
+        onUpdateProfile(updatedProfile);
+
+        const info = await getCurrentDatabasePathInfo();
+        setDbPathInfo(info);
+        setIsMoveDbModalOpen(false);
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    } catch (err: any) {
+      alert(`Gagal memindahkan database: ${err?.message || err}`);
+    } finally {
+      setIsMigratingDb(false);
+    }
+  };
+
+  const handleResetToDefaultPath = async () => {
+    if (!isAdmin) return;
+    if (!confirm('Kembalikan lokasi penyimpanan database ke default sistem Windows (%LOCALAPPDATA%)?')) {
+      return;
+    }
+
+    const res = await resetDatabasePathToDefault();
+    if (res.success) {
+      const updatedProfile = { ...profile, customDatabasePath: '' };
+      setProfile(updatedProfile);
+      onUpdateProfile(updatedProfile);
+
+      const info = await getCurrentDatabasePathInfo();
+      setDbPathInfo(info);
+      alert(res.message);
+    } else {
+      alert(res.message);
+    }
   };
 
   const handleResetData = async () => {
@@ -710,15 +800,81 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
             </div>
 
-            {/* Info Lokasi Database Lokal */}
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 flex items-start gap-2.5">
-              <HardDrive className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-semibold text-slate-300">Lokasi Database Aktif Windows: </span>
-                <span className="font-mono text-emerald-400">%LOCALAPPDATA%\com.sparkpos.desktop\EBWebView</span>
-                <p className="text-[10px] text-slate-500 mt-0.5">
-                  Aplikasi menggunakan database lokal IndexedDB berkecepatan tinggi. Lakukan backup berkala ke Drive D: untuk arsip cadangan.
-                </p>
+            {/* Info & Pengaturan Lokasi Database Aktif */}
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2.5">
+                  <div className={`p-2 rounded-xl border mt-0.5 ${
+                    dbPathInfo?.isCustom 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                      : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400'
+                  }`}>
+                    <HardDrive className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white text-xs">Lokasi Database Aktif:</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        dbPathInfo?.isCustom
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}>
+                        {dbPathInfo?.isCustom ? `HDD / Drive ${dbPathInfo.driveLetter || 'Kustom'}` : 'Sistem Standar (Drive C:)'}
+                      </span>
+                    </div>
+                    <p className="font-mono text-emerald-400 text-[11px] mt-1 break-all bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      {dbPathInfo?.activePath || '%LOCALAPPDATA%\\com.sparkpos.desktop\\EBWebView'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1.5">
+                      {dbPathInfo?.isCustom
+                        ? 'Database aktif tersimpan di Drive terpisah pilihan Anda. Aman saat install ulang Windows.'
+                        : 'Database saat ini di folder lokal sistem. Anda dapat memindahkannya ke Drive D: atau HDD eksternal.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Ringkasan Data Aktif */}
+              {dbPathInfo?.itemCounts && (
+                <div className="grid grid-cols-3 gap-2 py-2 px-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-[11px]">
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Produk Katalog</span>
+                    <span className="font-bold text-white">{dbPathInfo.itemCounts.products} item</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Riwayat Penjualan</span>
+                    <span className="font-bold text-white">{dbPathInfo.itemCounts.transactions} transaksi</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Order Servis</span>
+                    <span className="font-bold text-white">{dbPathInfo.itemCounts.serviceOrders} tiket</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tombol Aksi Pemindahan Path */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={!isAdmin}
+                  onClick={() => setIsMoveDbModalOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs transition shadow-sm"
+                >
+                  <HardDrive className="w-3.5 h-3.5" />
+                  <span>Pindahkan Lokasi Database (Drive D: / HDD)</span>
+                </button>
+
+                {dbPathInfo?.isCustom && (
+                  <button
+                    type="button"
+                    disabled={!isAdmin}
+                    onClick={handleResetToDefaultPath}
+                    className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white text-xs font-medium transition"
+                    title="Kembalikan lokasi penyimpanan ke Drive C: default"
+                  >
+                    Reset ke Default
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -958,6 +1114,149 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               >
                 <Trash2 className="w-4 h-4" />
                 <span>{isWiping ? 'Sedang Membersihkan...' : 'Hapus Total Sekarang'}</span>
+              </button>
+            </div>
+          </div>
+      {/* MODAL PEMINDAHAN LOKASI DATABASE (DRIVE D: / HDD) */}
+      {isMoveDbModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                  <HardDrive className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Pindahkan Lokasi Database
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Simpan database di Drive D:, HDD, atau folder eksternal
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMoveDbModalOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+                <span className="font-bold text-slate-200 block text-[11px] uppercase tracking-wider">
+                  Lokasi Aktif Saat Ini:
+                </span>
+                <p className="font-mono text-emerald-400 text-xs break-all bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  {dbPathInfo?.activePath || '%LOCALAPPDATA%\\com.sparkpos.desktop\\EBWebView'}
+                </p>
+              </div>
+
+              {/* Tentukan Path Folder Tujuan */}
+              <div className="space-y-2">
+                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
+                  Pilih Folder / Drive Tujuan Baru:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={targetFolderPath}
+                    onChange={(e) => setTargetFolderPath(e.target.value)}
+                    placeholder="Contoh: D:\SparkPOS_Database"
+                    className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePickFolder}
+                    className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition whitespace-nowrap"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Pilih Folder</span>
+                  </button>
+                </div>
+
+                {/* Quick Path Preset Suggestions */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-500 self-center">Contoh cepat:</span>
+                  {['D:\\SparkPOS_Data', 'D:\\Data_Kasir', 'E:\\SparkPOS_Database'].map((path) => (
+                    <button
+                      key={path}
+                      type="button"
+                      onClick={() => setTargetFolderPath(path)}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition"
+                    >
+                      {path}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Box Opsi Auto-Copy (Zero Data Loss) */}
+              <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/30 space-y-2.5">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoCopyData}
+                    onChange={(e) => setAutoCopyData(e.target.checked)}
+                    className="mt-0.5 text-indigo-500 focus:ring-0 rounded"
+                  />
+                  <div>
+                    <span className="font-bold text-white block">
+                      Otomatis Salin Seluruh Data ke Lokasi Baru (Zero Data Loss)
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Seluruh produk, riwayat transaksi, data kasir, dan order servis saat ini akan langsung dicopy ke folder baru secara utuh.
+                    </span>
+                  </div>
+                </label>
+
+                {dbPathInfo?.itemCounts && (
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-indigo-900/40 text-[11px]">
+                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="text-slate-400">Produk: </span>
+                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.products} item</strong>
+                    </div>
+                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="text-slate-400">Transaksi: </span>
+                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.transactions} struk</strong>
+                    </div>
+                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="text-slate-400">Servis: </span>
+                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.serviceOrders} tiket</strong>
+                    </div>
+                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="text-slate-400">Karyawan: </span>
+                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.employees} akun</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+              <button
+                type="button"
+                disabled={isMigratingDb}
+                onClick={() => setIsMoveDbModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition disabled:opacity-50"
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                disabled={isMigratingDb || !targetFolderPath.trim()}
+                onClick={handleMigrateDatabasePath}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 transition shadow-md shadow-indigo-950/50"
+              >
+                <HardDrive className="w-4 h-4" />
+                <span>{isMigratingDb ? 'Menyalin & Memindahkan...' : 'Salin & Pindahkan Database'}</span>
               </button>
             </div>
           </div>

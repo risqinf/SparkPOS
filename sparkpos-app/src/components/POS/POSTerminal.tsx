@@ -15,6 +15,7 @@ import {
   Sparkles,
   LogOut,
   Users,
+  User,
 } from 'lucide-react';
 import {
   Product,
@@ -69,6 +70,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
   // Cart State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [customerName, setCustomerName] = useState('');
   const [orderDiscountPercent, setOrderDiscountPercent] = useState<number>(0);
   const [orderDiscountNominal, setOrderDiscountNominal] = useState<number>(0);
 
@@ -257,12 +259,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       items: [...cartItems],
       orderDiscountNominal,
       orderDiscountPercent,
+      customerName: customerName.trim() || undefined,
       heldAt: new Date().toISOString(),
     };
     await db.heldCarts.add(newHeld);
     setCartItems([]);
     setOrderDiscountPercent(0);
     setOrderDiscountNominal(0);
+    setCustomerName('');
     onUpdateHeldCarts();
     showToast(`Transaksi diparkir: ${label}`, 'success');
   };
@@ -277,6 +281,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setCartItems(cart.items);
     setOrderDiscountPercent(cart.orderDiscountPercent);
     setOrderDiscountNominal(cart.orderDiscountNominal);
+    setCustomerName(cart.customerName || '');
     await db.heldCarts.delete(cart.id);
     onUpdateHeldCarts();
     setIsHeldModalOpen(false);
@@ -301,6 +306,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       shiftId: activeShift?.id || 1,
       cashierId: activeShift?.cashierId || 1,
       cashierName: activeShift?.cashierName || 'Kasir',
+      customerName: customerName.trim() || undefined,
       subtotal: cartSummary.subtotal,
       discountOrderAmount: cartSummary.discountOrderAmount,
       taxAmount: cartSummary.taxAmount,
@@ -387,7 +393,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       )}
 
       {/* Banner Khusus bila Login sebagai Owner / Administrator */}
-      {currentUser?.role === 'admin' && (
+      {(currentUser?.role === 'owner' || currentUser?.role === 'admin') && (
         <div className="bg-slate-900 border-b border-emerald-500/30 px-4 py-2 flex items-center justify-between text-xs text-emerald-300 shrink-0 z-20">
           <div className="flex items-center gap-2">
             <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
@@ -683,6 +689,28 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
         {/* Financial Summary & Large Checkout Button (Fixed at Bottom) */}
         <div className="p-4 bg-slate-900 border-t border-slate-800 shrink-0 space-y-3 shadow-lg">
+          {/* Input Nama Pelanggan (Opsional - Dicetak di Struk) */}
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition">
+            <User className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5" />
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Nama Pelanggan (Opsional - dicetak di nota)..."
+              className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
+            />
+            {customerName && (
+              <button
+                type="button"
+                onClick={() => setCustomerName('')}
+                className="text-slate-500 hover:text-slate-300 text-xs px-1.5"
+                title="Hapus nama pelanggan"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           {/* Subtotal, Diskon & Pajak Rows */}
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-400">
@@ -760,6 +788,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       {isPaymentOpen && (
         <PaymentModal
           summary={cartSummary}
+          customerName={customerName}
           onClose={() => setIsPaymentOpen(false)}
           onConfirmPayment={handlePaymentSuccess}
           defaultAutoPrint={storeProfile.autoPrintReceipt}

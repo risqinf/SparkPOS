@@ -12,6 +12,8 @@ import {
   DollarSign,
   PackageX,
   Lock,
+  Truck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Product, Category, Unit, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
@@ -19,6 +21,8 @@ import { db, getActiveProducts } from '../../services/storage';
 import { ProductFormModal } from './ProductFormModal';
 import { StockOpnameModal } from './StockOpnameModal';
 import { StockHistoryModal } from './StockHistoryModal';
+import { SupplierManagementModal } from '../Supplier/SupplierManagementModal';
+import { exportStockToExcel } from '../../services/excelExport';
 
 interface StockManagementProps {
   currentUser?: Employee | null;
@@ -46,7 +50,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [selectedProductForHistory, setSelectedProductForHistory] = useState<Product | null>(null);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+
+  const isAdmin = currentUser?.role === 'owner' || currentUser?.role === 'admin';
 
   const loadData = async () => {
     const prods = await getActiveProducts();
@@ -271,6 +277,27 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <span>Riwayat Mutasi</span>
           </button>
 
+          {/* Supplier Management */}
+          <button
+            onClick={() => setIsSupplierModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 text-xs font-medium transition"
+            title="Kelola data distributor & pemasok hardware/sparepart"
+          >
+            <Truck className="w-4 h-4 text-emerald-400" />
+            <span>Supplier</span>
+          </button>
+
+          {/* Export Excel */}
+          <button
+            onClick={() => exportStockToExcel(filteredProducts)}
+            disabled={filteredProducts.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 disabled:opacity-50 text-slate-300 hover:text-white text-xs font-medium transition"
+            title="Unduh laporan daftar stok produk & valuasi aset ke Excel (.csv)"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <span>Export Excel</span>
+          </button>
+
           {/* Add Product Button */}
           <button
             onClick={handleOpenAddProduct}
@@ -318,10 +345,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       {/* Name & Barcode */}
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-200 text-xs">{p.name}</div>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                          <span className="font-mono text-slate-400">{p.barcode}</span>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5 flex-wrap">
+                          <span className="font-mono text-slate-400">{p.barcode || '-'}</span>
                           <span>•</span>
                           <span className="font-mono">{p.sku}</span>
+                          {p.supplierName && (
+                            <>
+                              <span>•</span>
+                              <span className="text-emerald-400 font-medium">📦 {p.supplierName}</span>
+                            </>
+                          )}
                         </div>
                       </td>
 
@@ -469,6 +502,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         <StockHistoryModal
           product={selectedProductForHistory}
           onClose={() => setIsHistoryOpen(false)}
+        />
+      )}
+
+      {isSupplierModalOpen && (
+        <SupplierManagementModal
+          isOpen={isSupplierModalOpen}
+          onClose={() => {
+            setIsSupplierModalOpen(false);
+            loadData();
+          }}
         />
       )}
     </div>
