@@ -1,6 +1,6 @@
 /**
  * SparkPOS Excel / Spreadsheet Export Service
- * Produces native Excel-compatible files (.csv with UTF-8 BOM or HTML spreadsheet)
+ * Produces native Excel-compatible files (.csv with UTF-8 BOM)
  * 100% offline, zero external binary dependency, opens cleanly in Microsoft Excel.
  */
 
@@ -34,7 +34,7 @@ export function exportTransactionsToExcel(
 ) {
   const bom = '\uFEFF';
   const headers = [
-    'No. Nota',
+    'No. Invoice',
     'Tanggal & Waktu',
     'Kasir',
     'Nama Pelanggan',
@@ -50,10 +50,10 @@ export function exportTransactionsToExcel(
 
   const rows = transactions.map((t) => {
     const itemsSummary = t.items
-      .map((i) => `${i.productName} (${i.quantity}x @${i.unitPrice})`)
+      .map((i) => `${i.name} (${i.quantity}x @${i.unitPrice})`)
       .join('; ');
 
-    const dateStr = new Date(t.timestamp).toLocaleString('id-ID', {
+    const dateStr = new Date(t.createdAt).toLocaleString('id-ID', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -61,17 +61,19 @@ export function exportTransactionsToExcel(
       minute: '2-digit',
     });
 
+    const totalQty = t.items.reduce((sum, item) => sum + item.quantity, 0);
+
     return [
-      escapeCsvCell(t.id),
+      escapeCsvCell(t.invoiceNumber),
       escapeCsvCell(dateStr),
       escapeCsvCell(t.cashierName || 'Kasir'),
-      escapeCsvCell(t.customerName || 'Umum'),
-      escapeCsvCell(t.paymentMethod.toUpperCase()),
-      escapeCsvCell(t.totalItems),
+      escapeCsvCell(t.customerName || 'Pelanggan Umum'),
+      escapeCsvCell(t.paymentMethod?.toUpperCase() || 'CASH'),
+      escapeCsvCell(totalQty),
       escapeCsvCell(t.subtotal),
-      escapeCsvCell(t.discount),
-      escapeCsvCell(t.finalTotal),
-      escapeCsvCell(t.paymentAmount),
+      escapeCsvCell(t.discountOrderAmount),
+      escapeCsvCell(t.grandTotal),
+      escapeCsvCell(t.paidAmount),
       escapeCsvCell(t.changeAmount),
       escapeCsvCell(itemsSummary),
     ].join(',');
@@ -156,13 +158,15 @@ export function exportServicesToExcel(
 ) {
   const bom = '\uFEFF';
   const headers = [
-    'No. Nota Servis',
+    'No. Tiket Servis',
     'Tanggal Masuk',
     'Nama Pelanggan',
     'No. WhatsApp / HP',
     'Tipe Perangkat',
-    'Merek / Model',
+    'No. Seri / Serial',
     'Keluhan Kerusakan',
+    'Diagnosa Teknisi',
+    'Catatan / Info Proses',
     'Status Servis',
     'Teknisi Penanggung Jawab',
     'Biaya Sparepart (Rp)',
@@ -175,7 +179,7 @@ export function exportServicesToExcel(
   ];
 
   const rows = orders.map((o) => {
-    const dateIn = new Date(o.createdAt).toLocaleString('id-ID', {
+    const dateIn = new Date(o.receivedAt || o.createdAt).toLocaleString('id-ID', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -190,23 +194,25 @@ export function exportServicesToExcel(
         })
       : '-';
 
-    const netLaborProfit = Math.max(0, o.totalServiceFee - o.discount);
+    const netLaborProfit = Math.max(0, o.totalServiceFee - o.discountAmount);
 
     return [
-      escapeCsvCell(o.serviceNumber),
+      escapeCsvCell(o.ticketNumber),
       escapeCsvCell(dateIn),
       escapeCsvCell(o.customerName),
       escapeCsvCell(o.customerPhone || '-'),
-      escapeCsvCell(o.deviceType.toUpperCase()),
-      escapeCsvCell(o.deviceModel),
+      escapeCsvCell(o.deviceType),
+      escapeCsvCell(o.deviceSerial || '-'),
       escapeCsvCell(o.complaint),
-      escapeCsvCell(o.status.toUpperCase()),
-      escapeCsvCell(o.technicianName || '-'),
+      escapeCsvCell(o.diagnosis || '-'),
+      escapeCsvCell(o.notes || '-'),
+      escapeCsvCell(o.status),
+      escapeCsvCell(o.assignedTechName || '-'),
       escapeCsvCell(o.totalPartsCost),
       escapeCsvCell(o.totalServiceFee),
-      escapeCsvCell(o.discount),
+      escapeCsvCell(o.discountAmount),
       escapeCsvCell(o.grandTotal),
-      escapeCsvCell(o.paymentStatus === 'paid' ? 'LUNAS' : 'BELUM LUNAS'),
+      escapeCsvCell(o.isPaid ? 'LUNAS' : 'BELUM LUNAS'),
       escapeCsvCell(dateOut),
       escapeCsvCell(netLaborProfit),
     ].join(',');

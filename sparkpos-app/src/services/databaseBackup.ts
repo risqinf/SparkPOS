@@ -163,6 +163,8 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
     categories: number;
     transactions: number;
     employees: number;
+    suppliers?: number;
+    serviceOrders?: number;
   };
 }> {
   try {

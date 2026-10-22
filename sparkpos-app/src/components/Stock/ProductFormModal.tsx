@@ -261,8 +261,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               >
                 <option value="">-- Tanpa Supplier / Pemasok Umum --</option>
                 {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} {s.contactPerson ? `(${s.contactPerson})` : ''}
+                  <option key={s.id || s.name} value={s.id}>
+                    {s.name} {s.phone ? `(${s.phone})` : ''}
                   </option>
                 ))}
               </select>
