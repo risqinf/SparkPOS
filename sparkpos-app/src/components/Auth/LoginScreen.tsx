@@ -27,7 +27,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
 
   useEffect(() => {
     const loadEmps = async () => {
-      const list = await db.employees.where('isActive').equals(1 as any).toArray();
+      const all = await db.employees.toArray();
+      const list = all.filter((e) => e.isActive !== false);
       setEmployees(list);
       if (list.length > 0) {
         // default select cashier or admin
@@ -175,11 +176,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
             </div>
           </div>
 
-          {/* Quick Demo Credentials Footer */}
-          <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
-            <span>PIN Admin: <strong className="text-slate-300 font-mono">123456</strong></span>
-            <span>•</span>
-            <span>PIN Kasir: <strong className="text-slate-300 font-mono">1234</strong></span>
+          {/* Offline Security Info Footer */}
+          <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Sistem Kasir Aman & Offline</span>
+            </span>
+            <span className="font-mono text-slate-400">v1.1.0</span>
           </div>
         </div>
 
@@ -188,7 +191,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-white">Pilih Akun & Masukkan PIN</h2>
-              <span className="text-xs text-slate-400">SparkPOS v1.0.4</span>
+              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.1.0</span>
             </div>
 
             {/* Select User Role Buttons */}

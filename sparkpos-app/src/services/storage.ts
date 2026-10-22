@@ -9,6 +9,7 @@ import {
   StoreProfile,
   HeldCart,
   Employee,
+  CashFlow,
 } from '../types/pos';
 
 export class SparkPOSDatabase extends Dexie {
@@ -21,10 +22,11 @@ export class SparkPOSDatabase extends Dexie {
   heldCarts!: Table<HeldCart, string>;
   settings!: Table<{ key: string; value: any }, string>;
   employees!: Table<Employee, number>;
+  cashFlows!: Table<CashFlow, number>;
 
   constructor() {
     super('SparkPOS_LocalDB');
-    this.version(2).stores({
+    this.version(3).stores({
       products: '++id, sku, barcode, name, categoryId, stock, minStock, isActive',
       categories: '++id, name',
       units: '++id, name',
@@ -34,11 +36,27 @@ export class SparkPOSDatabase extends Dexie {
       heldCarts: 'id, heldAt',
       settings: 'key',
       employees: '++id, username, pin, role, isActive',
+      cashFlows: '++id, shiftId, cashierId, type, category, createdAt',
     });
   }
 }
 
 export const db = new SparkPOSDatabase();
+
+// 4 Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart)
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: 1, name: 'Aksesoris', icon: 'Headphones', description: 'Kabel, charger, mouse, keyboard, headphone' },
+  { id: 2, name: 'Jasa', icon: 'Wrench', description: 'Servis laptop, instalasi OS, maintenance (Stok ∞)' },
+  { id: 3, name: 'Laptop', icon: 'Laptop', description: 'Unit laptop baru & second' },
+  { id: 4, name: 'Sparepart', icon: 'Cpu', description: 'RAM, SSD, LCD, baterai, motherboard' },
+];
+
+// 3 Satuan Baru (PCS, Meter, Roll)
+export const DEFAULT_UNITS: Unit[] = [
+  { id: 1, name: 'Pieces', symbol: 'PCS' },
+  { id: 2, name: 'Meter', symbol: 'MTR' },
+  { id: 3, name: 'Roll', symbol: 'ROL' },
+];
 
 // Profil Toko Default (Bersih untuk Toko Baru)
 export const DEFAULT_STORE_PROFILE: StoreProfile = {
@@ -56,11 +74,70 @@ export const DEFAULT_STORE_PROFILE: StoreProfile = {
   autoKickDrawer: true,
   autoPrintReceipt: true,
   currencySymbol: 'Rp',
+  backupFolderPath: '',
 };
 
 /**
+ * Memastikan kompatibilitas database dari instalasi versi sebelumnya:
+ * - Mengganti kategori lama (makanan/sembako) ke 4 kategori baru (Aksesoris, Jasa, Laptop, Sparepart)
+ * - Mengganti satuan lama ke (PCS, Meter, Roll)
+ * - Membersihkan sisa data dummy kasir Budi jika ada
+ */
+export async function ensureDatabaseCompatibility(): Promise<void> {
+  try {
+    // 1. Periksa kategori lama
+    const existingCats = await db.categories.toArray();
+    const hasOldCategories = existingCats.some((c) =>
+      ['sembako', 'minuman', 'makanan', 'bumbu', 'sabun', 'rokok'].some((keyword) =>
+        c.name.toLowerCase().includes(keyword)
+      )
+    );
+
+    if (hasOldCategories || existingCats.length === 0) {
+      await db.categories.clear();
+      await db.categories.bulkAdd(DEFAULT_CATEGORIES);
+    }
+
+    // 2. Periksa satuan lama
+    const existingUnits = await db.units.toArray();
+    const hasOldUnits = existingUnits.some((u) =>
+      ['kardus', 'dus', 'botol', 'kilogram', 'kg', 'pack'].some((kw) =>
+        u.name.toLowerCase().includes(kw) || u.symbol.toLowerCase() === kw
+      )
+    );
+
+    if (hasOldUnits || existingUnits.length === 0) {
+      await db.units.clear();
+      await db.units.bulkAdd(DEFAULT_UNITS);
+    }
+
+    // 3. Bersihkan kasir legacy Budi Santoso jika masih tertinggal
+    const legacyKasir = await db.employees
+      .filter((e) => e.username === 'kasir' && e.fullName.toLowerCase().includes('budi'))
+      .toArray();
+    for (const k of legacyKasir) {
+      await db.employees.delete(k.id);
+    }
+  } catch (err) {
+    console.warn('Gagal menjalankan ensureDatabaseCompatibility:', err);
+  }
+}
+
+/**
+ * Mengambil produk aktif secara universal (Bebas dari bug perbandingan tipe IndexedDB)
+ */
+export async function getActiveProducts(): Promise<Product[]> {
+  try {
+    const all = await db.products.toArray();
+    return all.filter((p) => p.isActive !== false);
+  } catch (err) {
+    console.error('Error getActiveProducts:', err);
+    return [];
+  }
+}
+
+/**
  * Cek apakah toko sudah dikonfigurasi / database sudah di-setup.
- * Mengembalikan false jika belum ada akun Admin atau profil toko belum disimpan.
  */
 export async function isStoreConfigured(): Promise<boolean> {
   try {
@@ -76,25 +153,23 @@ export async function isStoreConfigured(): Promise<boolean> {
 /**
  * Setup Toko Baru dari awal (Fresh Start):
  * - Menyimpan profil toko & nama brand
- * - Membuat akun Admin utama dengan PIN rahasia sendiri
- * - Inisialisasi satuan standar ritel (opsional)
- * - Database produk, transaksi, shift, dan kasir dummy 100% KOSONG dan BERSIH!
+ * - Membuat akun Owner / Administrator utama
+ * - Menginisialisasi kategori & satuan standar komputer/ritel
+ * - Database produk, transaksi, shift, dan data kasir 100% KOSONG dan BERSIH!
  */
 export async function initializeStore(
   profile: StoreProfile,
-  adminData: { username: string; pin: string; fullName: string },
-  seedDefaultUnits: boolean = true,
-  seedDefaultCategories: boolean = true
+  adminData: { username: string; pin: string; fullName: string }
 ): Promise<Employee> {
   const now = new Date().toISOString();
 
   // 1. Simpan Profil Toko
   await db.settings.put({ key: 'store_profile', value: profile });
 
-  // 2. Buat Akun Administrator Utama
+  // 2. Buat Akun Owner / Administrator Utama (TANPA DATA KASIR)
   const adminEmployee: Omit<Employee, 'id'> = {
-    username: adminData.username.trim() || 'admin',
-    fullName: adminData.fullName.trim() || 'Administrator Utama',
+    username: adminData.username.trim() || 'owner',
+    fullName: adminData.fullName.trim() || 'Pemilik Toko (Owner)',
     pin: adminData.pin.trim() || '123456',
     role: 'admin',
     isActive: true,
@@ -102,49 +177,18 @@ export async function initializeStore(
   };
   const adminId = await db.employees.add(adminEmployee as any);
 
-  // 3. Inisialisasi Satuan Standar Ritel (Opsional)
-  if (seedDefaultUnits) {
-    const unitCount = await db.units.count();
-    if (unitCount === 0) {
-      const standardUnits: Unit[] = [
-        { id: 1, name: 'Pieces', symbol: 'PCS' },
-        { id: 2, name: 'Pack / Bungkus', symbol: 'PCK' },
-        { id: 3, name: 'Botol', symbol: 'BTL' },
-        { id: 4, name: 'Kilogram', symbol: 'KG' },
-        { id: 5, name: 'Dus / Karton', symbol: 'DUS' },
-      ];
-      await db.units.bulkAdd(standardUnits);
-    }
-  }
+  // 3. Inisialisasi Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart)
+  await db.categories.clear();
+  await db.categories.bulkAdd(DEFAULT_CATEGORIES);
 
-  // 4. Inisialisasi Kategori Dasar (Opsional)
-  if (seedDefaultCategories) {
-    const catCount = await db.categories.count();
-    if (catCount === 0) {
-      const standardCategories: Category[] = [
-        { id: 1, name: 'Makanan & Minuman', icon: 'Coffee' },
-        { id: 2, name: 'Kebutuhan Pokok', icon: 'ShoppingBag' },
-        { id: 3, name: 'Lainnya', icon: 'Tag' },
-      ];
-      await db.categories.bulkAdd(standardCategories);
-    }
-  }
-
-  // NOTE: Produk, Kasir Dummy (Budi Santoso), dan Shift awal 100% KOSONG!
+  // 4. Inisialisasi Satuan Baru (PCS, Meter, Roll)
+  await db.units.clear();
+  await db.units.bulkAdd(DEFAULT_UNITS);
 
   return {
     id: adminId as number,
     ...adminEmployee,
   };
-}
-
-// Kompatibilitas fungsi lama: tidak menyuntik data dummy Budi atau Indomie
-export async function seedInitialDataIfEmpty() {
-  const configured = await isStoreConfigured();
-  if (!configured) {
-    // Biarkan wizard setup awal yang menangani inisialisasi
-    return;
-  }
 }
 
 export async function getStoreProfile(): Promise<StoreProfile> {
@@ -186,4 +230,18 @@ export async function verifyAdminSupervisorPin(pin: string): Promise<boolean> {
     .equals(pin.trim())
     .first();
   return !!(emp && (emp.role === 'admin' || emp.role === 'supervisor') && emp.isActive);
+}
+
+// Cash Flow Services (Uang Masuk & Keluar Kasir)
+export async function addCashFlow(flow: Omit<CashFlow, 'id'>): Promise<number> {
+  return (await db.cashFlows.add(flow as any)) as number;
+}
+
+export async function getCashFlowsByShift(shiftId: number): Promise<CashFlow[]> {
+  try {
+    return await db.cashFlows.where('shiftId').equals(shiftId).toArray();
+  } catch (err) {
+    console.error('Error getCashFlowsByShift:', err);
+    return [];
+  }
 }

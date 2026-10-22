@@ -17,6 +17,9 @@ import {
   HardDrive,
   DownloadCloud,
   UploadCloud,
+  AlertTriangle,
+  X,
+  FileText,
 } from 'lucide-react';
 import { StoreProfile, Employee } from '../../types/pos';
 import { updateStoreProfile, db } from '../../services/storage';
@@ -42,7 +45,17 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 }) => {
   const [profile, setProfile] = useState<StoreProfile>({ ...storeProfile });
   const [isSaved, setIsSaved] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const restoreFileInputRef = useRef<HTMLInputElement>(null);
+
+  // State untuk Modal Uninstall & Hapus Total
+  const [isUninstallModalOpen, setIsUninstallModalOpen] = useState(false);
+  const [uninstallWipeMode, setUninstallWipeMode] = useState<'backup_first' | 'wipe_only'>('backup_first');
+  const [uninstallReason, setUninstallReason] = useState('Pindah ke komputer / kasir baru');
+  const [customReason, setCustomReason] = useState('');
+  const [confirmWipeText, setConfirmWipeText] = useState('');
+  const [isWiping, setIsWiping] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -187,6 +200,38 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     ) {
       await resetDatabase();
       window.location.reload();
+    }
+  };
+
+  const handleExecuteUninstallWipe = async () => {
+    if (confirmWipeText !== 'HAPUS') {
+      alert('Ketik kata "HAPUS" secara tepat (huruf besar) untuk konfirmasi.');
+      return;
+    }
+
+    setIsWiping(true);
+    try {
+      const finalReason = uninstallReason === 'Lainnya' ? customReason : uninstallReason;
+
+      // Jika user memilih simpan cadangan terlebih dahulu
+      if (uninstallWipeMode === 'backup_first') {
+        const backupRes = await saveDatabaseToFile();
+        if (!backupRes.success && backupRes.message !== 'Pemilihan folder dibatalkan.') {
+          if (!confirm(`Pencadangan belum selesai (${backupRes.message}). Tetap lanjutkan hapus total data?`)) {
+            setIsWiping(false);
+            return;
+          }
+        }
+      }
+
+      await resetDatabase(finalReason);
+      alert(
+        'Seluruh basis data SparkPOS telah dibersihkan secara total!\n\nAlasan telah dicatat. Anda sekarang dapat melanjutkan proses uninstall dari Windows Control Panel / Settings.'
+      );
+      window.location.reload();
+    } catch (err: any) {
+      alert(`Gagal membersihkan data: ${err?.message || err}`);
+      setIsWiping(false);
     }
   };
 
@@ -658,6 +703,47 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
           </div>
 
+          {/* Card 6: Persiapan Uninstall & Pembersihan Bersih Database */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-rose-900/40 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                  6. Persiapan Uninstall Aplikasi & Hapus Bersih Database
+                </h2>
+              </div>
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                Pembersihan Total
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Sebelum Anda menghapus / uninstall aplikasi SparkPOS melalui <strong>Windows Settings atau Control Panel</strong>, Anda dapat memilih apakah ingin menghapus total seluruh riwayat database atau mencadangkannya terlebih dahulu beserta mencatat alasan penghapusan aplikasi.
+            </p>
+
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <div>
+                <h3 className="text-xs font-bold text-white">Opsi Hapus Total Database & Alasan Uninstall</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Pilihan wipe bersih total data toko, kasir, dan stok sebelum di-uninstall dari komputer.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={!isAdmin}
+                onClick={() => {
+                  setConfirmWipeText('');
+                  setIsUninstallModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs transition disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Buka Opsi Hapus Bersih</span>
+              </button>
+            </div>
+          </div>
+
           {/* Action Bar */}
           <div className="flex items-center justify-between pt-2">
             {isAdmin ? (
@@ -667,7 +753,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Kosongkan / Reset Database (Mulai Baru)</span>
+                <span>Reset Database (Kembali ke Setup Awal)</span>
               </button>
             ) : <div />}
 
@@ -683,6 +769,165 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
         </form>
       </div>
+
+      {/* MODAL UNINSTALL & HAPUS BERSIH DATABASE */}
+      {isUninstallModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Pembersihan Database Sebelum Uninstall
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Konfirmasi penghapusan data dan pencatatan alasan
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsUninstallModalOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+              {/* Mode Pilihan: Backup First atau Direct Wipe */}
+              <div className="space-y-2">
+                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
+                  1. Pilihan Tindakan Database:
+                </label>
+
+                <div className="grid grid-cols-1 gap-2">
+                  <label
+                    className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
+                      uninstallWipeMode === 'backup_first'
+                        ? 'bg-slate-850 border-emerald-500/50 text-white'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="wipeMode"
+                      checked={uninstallWipeMode === 'backup_first'}
+                      onChange={() => setUninstallWipeMode('backup_first')}
+                      className="mt-0.5 text-emerald-500 focus:ring-0"
+                    />
+                    <div>
+                      <span className="font-bold block text-white">
+                        Simpan Cadangan (.sparkdb) ke Drive D: lalu Hapus Bersih
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Direkomendasikan agar data riwayat penjualan dan stok tetap bisa dipulihkan kembali jika Anda menginstall ulang nanti.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
+                      uninstallWipeMode === 'wipe_only'
+                        ? 'bg-slate-850 border-rose-500/50 text-white'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="wipeMode"
+                      checked={uninstallWipeMode === 'wipe_only'}
+                      onChange={() => setUninstallWipeMode('wipe_only')}
+                      className="mt-0.5 text-rose-500 focus:ring-0"
+                    />
+                    <div>
+                      <span className="font-bold block text-rose-300">
+                        Hapus Bersih Total Tanpa Membuat Cadangan (Wipe Permanen)
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Seluruh produk, data kasir, transaksi penjualan, dan pengaturan toko akan dihapus permanen.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Alasan Dihapus / Uninstall */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>2. Alasan Penghapusan / Uninstall:</span>
+                </label>
+
+                <select
+                  value={uninstallReason}
+                  onChange={(e) => setUninstallReason(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="Pindah ke komputer / kasir baru">Pindah ke komputer / mesin kasir baru</option>
+                  <option value="Toko tutup / berhenti operasional">Toko tutup / berhenti operasional</option>
+                  <option value="Ingin mulai dari database kosong baru">Ingin mulai dari database kosong baru</option>
+                  <option value="Hanya coba-coba / evaluasi sistem kasir">Hanya coba-coba / evaluasi sistem kasir</option>
+                  <option value="Ganti software kasir lain">Ganti software kasir lain</option>
+                  <option value="Lainnya">Lainnya (Tulis alasan sendiri)...</option>
+                </select>
+
+                {uninstallReason === 'Lainnya' && (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Tuliskan alasan Anda..."
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mt-2"
+                  />
+                )}
+              </div>
+
+              {/* Konfirmasi Teks */}
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-2">
+                <span className="text-rose-300 font-semibold block text-[11px]">
+                  Ketik kata <strong className="text-white font-mono bg-rose-950/80 px-1.5 py-0.5 rounded">HAPUS</strong> untuk mengonfirmasi pembersihan data:
+                </span>
+                <input
+                  type="text"
+                  placeholder="Ketik HAPUS"
+                  value={confirmWipeText}
+                  onChange={(e) => setConfirmWipeText(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-950 border border-rose-500/40 rounded-xl text-xs text-white font-bold tracking-widest focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsUninstallModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                disabled={isWiping || confirmWipeText !== 'HAPUS'}
+                onClick={handleExecuteUninstallWipe}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 transition shadow-md shadow-rose-950/50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isWiping ? 'Sedang Membersihkan...' : 'Hapus Total Sekarang'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

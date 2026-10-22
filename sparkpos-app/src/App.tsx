@@ -3,6 +3,7 @@ import {
   isStoreConfigured,
   getStoreProfile,
   DEFAULT_STORE_PROFILE,
+  ensureDatabaseCompatibility,
   db,
 } from './services/storage';
 import { StoreProfile, Shift, HeldCart, Employee } from './types/pos';
@@ -15,6 +16,9 @@ import { ShiftReportModal } from './components/Reports/ShiftReportModal';
 import { LoginScreen } from './components/Auth/LoginScreen';
 import { AdminPinModal } from './components/Auth/AdminPinModal';
 import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
+import { CashierManagementModal } from './components/Owner/CashierManagementModal';
+import { CashFlowModal } from './components/POS/CashFlowModal';
+import { BreakTimeModal } from './components/POS/BreakTimeModal';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -29,10 +33,16 @@ export default function App() {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
+  const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
+  const [isBreakTimeOpen, setIsBreakTimeOpen] = useState(false);
+  const [isCashierManagementOpen, setIsCashierManagementOpen] = useState(false);
 
   // Initialize DB and load global state
   const initializeApp = async () => {
     try {
+      // 1. Pastikan kompatibilitas skema database & upgrade kategori/satuan otomatis
+      await ensureDatabaseCompatibility();
+
       const configured = await isStoreConfigured();
       setIsConfigured(configured);
 
@@ -56,9 +66,10 @@ export default function App() {
       }
 
       // Load active shift
-      const latestShift = await db.shifts.where('isClosed').equals(0 as any).last();
-      if (latestShift) {
-        setActiveShift(latestShift);
+      const allShifts = await db.shifts.toArray();
+      const openShifts = allShifts.filter((s) => !s.isClosed);
+      if (openShifts.length > 0) {
+        setActiveShift(openShifts[openShifts.length - 1]);
       } else {
         setActiveShift(null);
       }
@@ -92,12 +103,13 @@ export default function App() {
     localStorage.setItem('sparkpos_current_user', JSON.stringify(employee));
 
     // Check active shift or create shift for this cashier
-    const latestShift = await db.shifts.where('isClosed').equals(0 as any).last();
-    if (latestShift) {
-      setActiveShift(latestShift);
+    const allShifts = await db.shifts.toArray();
+    const openShifts = allShifts.filter((s) => !s.isClosed);
+    if (openShifts.length > 0) {
+      setActiveShift(openShifts[openShifts.length - 1]);
     } else {
       const newShift: Shift = {
-        id: 1,
+        id: (allShifts.length || 0) + 1,
         cashierId: employee.id,
         cashierName: employee.fullName,
         startTime: new Date().toISOString(),
@@ -135,24 +147,32 @@ export default function App() {
   };
 
   const refreshShift = async () => {
-    const latest = await db.shifts.where('isClosed').equals(0 as any).last();
-    setActiveShift(latest || null);
+    const allShifts = await db.shifts.toArray();
+    const openShifts = allShifts.filter((s) => !s.isClosed);
+    setActiveShift(openShifts.length > 0 ? openShifts[openShifts.length - 1] : null);
   };
 
-  // Global Keyboard Navigation (F1: POS, F3: Stock, F7: Reports)
+  // Global Keyboard Navigation (F1: POS, F3: Stock, F7: Reports, F11: Fullscreen)
   useEffect(() => {
-    if (!currentUser) return;
-
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F1') {
+      if (e.key === 'F11') {
         e.preventDefault();
-        setCurrentTab('pos');
-      } else if (e.key === 'F3') {
-        e.preventDefault();
-        setCurrentTab('stock');
-      } else if (e.key === 'F7') {
-        e.preventDefault();
-        setCurrentTab('reports');
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      } else if (currentUser) {
+        if (e.key === 'F1') {
+          e.preventDefault();
+          setCurrentTab('pos');
+        } else if (e.key === 'F3') {
+          e.preventDefault();
+          setCurrentTab('stock');
+        } else if (e.key === 'F7') {
+          e.preventDefault();
+          setCurrentTab('reports');
+        }
       }
     };
 
@@ -199,6 +219,9 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
+        onOpenCashFlow={() => setIsCashFlowOpen(true)}
+        onOpenBreakTime={() => setIsBreakTimeOpen(true)}
+        onOpenCashierManagement={() => setIsCashierManagementOpen(true)}
       />
 
       {/* Main Workstation Body */}
@@ -254,6 +277,34 @@ export default function App() {
           description="Masukkan PIN Admin untuk membuka menu pengaturan toko, kustomisasi logo, atau manajemen stok lanjutan."
           onSuccess={handleAdminElevationSuccess}
           onCancel={() => setIsAdminPinModalOpen(false)}
+        />
+      )}
+
+      {/* Arus Kas: Uang Masuk / Keluar Modal */}
+      {isCashFlowOpen && activeShift && currentUser && (
+        <CashFlowModal
+          activeShift={activeShift}
+          currentUser={currentUser}
+          isOpen={isCashFlowOpen}
+          onClose={() => setIsCashFlowOpen(false)}
+        />
+      )}
+
+      {/* Mode Istirahat Kasir Modal */}
+      {isBreakTimeOpen && currentUser && (
+        <BreakTimeModal
+          currentUser={currentUser}
+          isOpen={isBreakTimeOpen}
+          onEndBreak={() => setIsBreakTimeOpen(false)}
+        />
+      )}
+
+      {/* Kelola Kasir (Khusus Owner) Modal */}
+      {isCashierManagementOpen && currentUser && (
+        <CashierManagementModal
+          currentUser={currentUser}
+          isOpen={isCashierManagementOpen}
+          onClose={() => setIsCashierManagementOpen(false)}
         />
       )}
     </div>

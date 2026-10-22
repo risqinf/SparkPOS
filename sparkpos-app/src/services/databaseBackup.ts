@@ -1,4 +1,4 @@
-import { db, SparkPOSDatabase } from './storage';
+import { db } from './storage';
 
 export interface DatabaseBackupPayload {
   version: number;
@@ -14,6 +14,7 @@ export interface DatabaseBackupPayload {
     heldCarts: any[];
     settings: any[];
     employees: any[];
+    cashFlows?: any[];
   };
 }
 
@@ -31,6 +32,7 @@ export async function exportDatabaseToJson(): Promise<string> {
     heldCarts,
     settings,
     employees,
+    cashFlows,
   ] = await Promise.all([
     db.products.toArray(),
     db.categories.toArray(),
@@ -41,10 +43,11 @@ export async function exportDatabaseToJson(): Promise<string> {
     db.heldCarts.toArray(),
     db.settings.toArray(),
     db.employees.toArray(),
+    db.cashFlows.toArray(),
   ]);
 
   const payload: DatabaseBackupPayload = {
-    version: 2,
+    version: 3,
     appName: 'SparkPOS',
     exportedAt: new Date().toISOString(),
     data: {
@@ -57,6 +60,7 @@ export async function exportDatabaseToJson(): Promise<string> {
       heldCarts,
       settings,
       employees,
+      cashFlows,
     },
   };
 
@@ -70,6 +74,7 @@ export async function exportDatabaseToJson(): Promise<string> {
 export async function saveDatabaseToFile(suggestedFileName?: string): Promise<{
   success: boolean;
   fileName?: string;
+  filePath?: string;
   message?: string;
 }> {
   try {
@@ -102,7 +107,6 @@ export async function saveDatabaseToFile(suggestedFileName?: string): Promise<{
           message: `Database berhasil disimpan ke: ${fileHandle.name || fileName}`,
         };
       } catch (err: any) {
-        // Jika user sengaja membatalkan (AbortError), jangan dianggap crash
         if (err.name === 'AbortError') {
           return { success: false, message: 'Pemilihan folder dibatalkan.' };
         }
@@ -166,6 +170,7 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       heldCarts = [],
       settings = [],
       employees = [],
+      cashFlows = [],
     } = parsed.data;
 
     // Bersihkan semua tabel lama dalam satu transaksi database
@@ -179,6 +184,7 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       db.heldCarts,
       db.settings,
       db.employees,
+      db.cashFlows,
     ], async () => {
       await Promise.all([
         db.products.clear(),
@@ -190,6 +196,7 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
         db.heldCarts.clear(),
         db.settings.clear(),
         db.employees.clear(),
+        db.cashFlows.clear(),
       ]);
 
       if (products.length > 0) await db.products.bulkAdd(products);
@@ -201,6 +208,7 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
       if (heldCarts.length > 0) await db.heldCarts.bulkAdd(heldCarts);
       if (settings.length > 0) await db.settings.bulkAdd(settings);
       if (employees.length > 0) await db.employees.bulkAdd(employees);
+      if (cashFlows.length > 0) await db.cashFlows.bulkAdd(cashFlows);
     });
 
     return {
@@ -225,7 +233,12 @@ export async function importDatabaseFromJson(jsonContent: string): Promise<{
 /**
  * Reset / Bersihkan seluruh database secara permanen (Factory Reset).
  */
-export async function resetDatabase(): Promise<void> {
+export async function resetDatabase(reason?: string): Promise<void> {
+  // Jika ada alasan penghapusan, catat di log/file sebelum menghapus
+  if (reason) {
+    console.log(`[Uninstall/Reset Request] Alasan: ${reason}`);
+  }
+
   await Promise.all([
     db.products.clear(),
     db.categories.clear(),
@@ -236,6 +249,7 @@ export async function resetDatabase(): Promise<void> {
     db.heldCarts.clear(),
     db.settings.clear(),
     db.employees.clear(),
+    db.cashFlows.clear(),
   ]);
   localStorage.removeItem('sparkpos_current_user');
 }

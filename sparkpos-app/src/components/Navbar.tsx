@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   LogOut,
   Lock,
+  ArrowDownUp,
+  Coffee,
+  Users,
 } from 'lucide-react';
 import { Shift, StoreProfile, Employee } from '../types/pos';
 
@@ -28,6 +31,9 @@ interface NavbarProps {
   currentUser: Employee | null;
   onLogout: () => void;
   onRequestAdminAccess?: () => void;
+  onOpenCashFlow?: () => void;
+  onOpenBreakTime?: () => void;
+  onOpenCashierManagement?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -41,6 +47,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onLogout,
   onRequestAdminAccess,
+  onOpenCashFlow,
+  onOpenBreakTime,
+  onOpenCashierManagement,
 }) => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -176,7 +185,43 @@ export const Navbar: React.FC<NavbarProps> = ({
       </nav>
 
       {/* ================= RIGHT CONTROLS: HELD, SHIFT, USER PROFILE & LOGOUT ================= */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
+        {/* Kelola Kasir (Owner Only) */}
+        {isAdmin && onOpenCashierManagement && (
+          <button
+            onClick={onOpenCashierManagement}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
+            title="Kelola Data Kasir & Shift Kerja (Khusus Owner)"
+          >
+            <Users className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Kelola Kasir</span>
+          </button>
+        )}
+
+        {/* Arus Kas (Uang Masuk / Keluar) */}
+        {onOpenCashFlow && (
+          <button
+            onClick={onOpenCashFlow}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700/80 text-slate-300 text-xs font-medium transition"
+            title="Catat Uang Masuk / Keluar (Operasional, Beli Makan, dll)"
+          >
+            <ArrowDownUp className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden md:inline">Uang Kas</span>
+          </button>
+        )}
+
+        {/* Istirahat Kasir (Break Mode Lock) */}
+        {onOpenBreakTime && (
+          <button
+            onClick={onOpenBreakTime}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-850 hover:bg-amber-500/10 hover:border-amber-500/40 border border-slate-700/80 text-amber-300 text-xs font-medium transition"
+            title="Kunci Layar Kasir Saat Sedang Istirahat"
+          >
+            <Coffee className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">Istirahat</span>
+          </button>
+        )}
+
         {/* Held Carts / Parkir */}
         <button
           onClick={openHeldModal}

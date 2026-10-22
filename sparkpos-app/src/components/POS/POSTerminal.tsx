@@ -27,7 +27,7 @@ import {
 } from '../../types/pos';
 import { calculateCartSummary, formatRupiah } from '../../services/cartCalculator';
 import { barcodeScanner, playSuccessBeep, playErrorBeep } from '../../services/scanner';
-import { db } from '../../services/storage';
+import { db, getActiveProducts } from '../../services/storage';
 import { PaymentModal } from './PaymentModal';
 import { HoldCartModal } from './HoldCartModal';
 import { DiscountModal } from './DiscountModal';
@@ -75,7 +75,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
   // Load products and categories from local DB
   const loadCatalog = async () => {
-    const prods = await db.products.where('isActive').equals(1 as any).toArray();
+    const prods = await getActiveProducts();
     const cats = await db.categories.toArray();
     setProducts(prods);
     setCategories(cats);
@@ -101,7 +101,8 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
   // Add product to cart logic
   const addToCart = (product: Product, quantity = 1) => {
-    if (product.stock <= 0) {
+    const isService = product.isService || product.categoryName?.toLowerCase() === 'jasa';
+    if (!isService && product.stock <= 0) {
       playErrorBeep();
       showToast(`Stok "${product.name}" habis (0)!`, 'error');
       return;
@@ -112,7 +113,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       if (existingIdx >= 0) {
         const item = prev[existingIdx];
         const newQty = item.quantity + quantity;
-        if (newQty > product.stock) {
+        if (!isService && newQty > product.stock) {
           showToast(`Stok tersisa hanya ${product.stock} ${product.unitName}`, 'error');
           return prev;
         }
@@ -308,24 +309,27 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     const txId = await db.transactions.add(newTx as any);
     newTx.id = txId;
 
-    // 2. Reduce Stock & Record Stock Movements
+    // 2. Reduce Stock & Record Stock Movements (Skip for Service items)
     for (const item of cartItems) {
-      const prod = await db.products.get(item.productId);
-      if (prod) {
-        const newStock = Math.max(0, prod.stock - item.quantity);
-        await db.products.update(prod.id, { stock: newStock, updatedAt: now });
+       const prod = await db.products.get(item.productId);
+       if (prod) {
+         const isService = prod.isService || prod.categoryName?.toLowerCase() === 'jasa';
+         if (!isService) {
+           const newStock = Math.max(0, prod.stock - item.quantity);
+           await db.products.update(prod.id, { stock: newStock, updatedAt: now });
 
-        await db.stockMovements.add({
-          id: 0,
-          productId: prod.id,
-          productName: prod.name,
-          type: 'OUT_SALE',
-          quantity: item.quantity,
-          balanceAfter: newStock,
-          referenceNo: invoiceNumber,
-          createdAt: now,
-        } as any);
-      }
+           await db.stockMovements.add({
+             id: 0,
+             productId: prod.id,
+             productName: prod.name,
+             type: 'OUT_SALE',
+             quantity: item.quantity,
+             balanceAfter: newStock,
+             referenceNo: invoiceNumber,
+             createdAt: now,
+           } as any);
+         }
+       }
     }
 
     // Refresh products
@@ -389,18 +393,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                 }
               }}
               placeholder="Scan barcode scanner atau ketik nama/SKU produk... (Enter)"
-              className="w-full pl-10 pr-36 py-2.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner font-medium"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner font-medium"
             />
             <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-
-            {/* Hardware Scanner Status Pill */}
-            <div
-              title="Scanner Barcode USB / Wireless Plug & Play siap menerima scan tanpa perlu klik mouse"
-              className="absolute right-2.5 top-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-400 font-mono font-semibold"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Scanner Siap</span>
-            </div>
           </div>
 
           {searchQuery && (
@@ -462,8 +457,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
               {filteredProducts.map((p) => {
-                const isOutOfStock = p.stock <= 0;
-                const isLowStock = p.stock > 0 && p.stock <= p.minStock;
+                const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
+                const isOutOfStock = !isService && p.stock <= 0;
+                const isLowStock = !isService && p.stock > 0 && p.stock <= p.minStock;
 
                 return (
                   <button
@@ -484,7 +480,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                         </span>
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${
-                            isOutOfStock
+                            isService
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              : isOutOfStock
                               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                               : isLowStock
                               ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
@@ -493,7 +491,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                         >
                           <span
                             className={`w-1 h-1 rounded-full ${
-                              isOutOfStock
+                              isService
+                                ? 'bg-blue-400'
+                                : isOutOfStock
                                 ? 'bg-rose-400'
                                 : isLowStock
                                 ? 'bg-amber-400'
@@ -501,7 +501,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                             }`}
                           />
                           <span>
-                            {isOutOfStock
+                            {isService
+                              ? 'Jasa (∞)'
+                              : isOutOfStock
                               ? 'HABIS'
                               : isLowStock
                               ? `Sisa ${p.stock}`

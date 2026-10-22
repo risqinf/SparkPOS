@@ -6,6 +6,7 @@ export interface Employee {
   fullName: string;
   pin: string;
   role: RoleType;
+  shiftSchedule?: string; // e.g. 'Shift Pagi (08:00 - 16:00)', 'Shift Siang'
   isActive: boolean;
   createdAt: string;
 }
@@ -37,6 +38,7 @@ export interface Product {
   stock: number;
   minStock: number;   // Batas peringatan stok menipis
   image?: string;
+  isService?: boolean; // True jika produk bertipe Jasa (Stok tak terbatas)
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -67,6 +69,7 @@ export interface CartItem {
   quantity: number;
   discountAmount: number; // Diskon per item (nominal)
   subtotal: number;       // (unitPrice * quantity) - discountAmount
+  isService?: boolean;
 }
 
 export interface CartSummary {
@@ -120,6 +123,20 @@ export interface HeldCart {
   heldAt: string;
 }
 
+export type CashFlowType = 'IN' | 'OUT';
+
+export interface CashFlow {
+  id?: number;
+  shiftId: number;
+  cashierId: number;
+  cashierName: string;
+  type: CashFlowType; // IN = Uang Masuk, OUT = Uang Keluar
+  category: string;   // e.g. 'Beli Makan / Konsumsi', 'Pengamen / Keamanan', 'Operasional & ATK'
+  amount: number;
+  note?: string;
+  createdAt: string;
+}
+
 export interface Shift {
   id: number;
   cashierId: number;
@@ -129,6 +146,8 @@ export interface Shift {
   openingCash: number;
   closingCash?: number;
   expectedCash: number;
+  totalCashIn?: number;
+  totalCashOut?: number;
   discrepancy?: number;
   note?: string;
   isClosed: boolean;
@@ -149,4 +168,5 @@ export interface StoreProfile {
   autoKickDrawer: boolean;
   autoPrintReceipt: boolean;
   currencySymbol: string;
+  backupFolderPath?: string; // Path folder cadangan yang dipilih user (Drive D: dll)
 }

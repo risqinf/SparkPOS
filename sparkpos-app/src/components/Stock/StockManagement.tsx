@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Product, Category, Unit, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
-import { db } from '../../services/storage';
+import { db, getActiveProducts } from '../../services/storage';
 import { ProductFormModal } from './ProductFormModal';
 import { StockOpnameModal } from './StockOpnameModal';
 import { StockHistoryModal } from './StockHistoryModal';
@@ -49,7 +49,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const isAdmin = currentUser?.role === 'admin';
 
   const loadData = async () => {
-    const prods = await db.products.where('isActive').equals(1 as any).toArray();
+    const prods = await getActiveProducts();
     const cats = await db.categories.toArray();
     const u = await db.units.toArray();
     setProducts(prods);
@@ -61,11 +61,14 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     loadData();
   }, []);
 
-  // KPI Calculations
+  // KPI Calculations (Exclude unlimited services from low-stock warnings)
   const totalSku = products.length;
-  const totalStockValueHpp = products.reduce((sum, p) => sum + p.buyPrice * p.stock, 0);
-  const lowStockCount = products.filter((p) => p.stock > 0 && p.stock <= p.minStock).length;
-  const zeroStockCount = products.filter((p) => p.stock <= 0).length;
+  const physicalProducts = products.filter(
+    (p) => !p.isService && p.categoryName?.toLowerCase() !== 'jasa'
+  );
+  const totalStockValueHpp = physicalProducts.reduce((sum, p) => sum + p.buyPrice * p.stock, 0);
+  const lowStockCount = physicalProducts.filter((p) => p.stock > 0 && p.stock <= p.minStock).length;
+  const zeroStockCount = physicalProducts.filter((p) => p.stock <= 0).length;
 
   // Filtered List
   const filteredProducts = products.filter((p) => {
@@ -73,9 +76,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     const matchSearch =
       searchQuery === '' ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.barcode.includes(searchQuery) ||
+      (p.barcode && p.barcode.includes(searchQuery)) ||
       p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchLowStock = !filterLowStockOnly || p.stock <= p.minStock;
+    const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
+    const matchLowStock = !filterLowStockOnly || (!isService && p.stock <= p.minStock);
     return matchCategory && matchSearch && matchLowStock;
   });
 
@@ -349,20 +353,28 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
                       {/* Stock Status */}
                       <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                            isOutOfStock
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                              : isLowStock
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              : 'bg-slate-800 text-slate-200 border border-slate-700'
-                          }`}
-                        >
-                          {p.stock} {p.unitName}
-                        </span>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          Min: {p.minStock} {p.unitName}
-                        </div>
+                        {p.isService || p.categoryName?.toLowerCase() === 'jasa' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                            Jasa (∞)
+                          </span>
+                        ) : (
+                          <>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                                isOutOfStock
+                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  : isLowStock
+                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                  : 'bg-slate-800 text-slate-200 border border-slate-700'
+                              }`}
+                            >
+                              {p.stock} {p.unitName}
+                            </span>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              Min: {p.minStock} {p.unitName}
+                            </div>
+                          </>
+                        )}
                       </td>
 
                       {/* Actions */}

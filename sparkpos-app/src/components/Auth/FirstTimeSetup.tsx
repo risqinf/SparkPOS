@@ -402,7 +402,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                   onChange={(e) => setSeedUnits(e.target.checked)}
                   className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
                 />
-                <span>Tambahkan satuan standar ritel otomatis (PCS, DUS, PACK, BTL, KG)</span>
+                <span>Tambahkan satuan standar otomatis (PCS, Meter, Roll)</span>
               </label>
 
               <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
@@ -412,7 +412,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                   onChange={(e) => setSeedCategories(e.target.checked)}
                   className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
                 />
-                <span>Tambahkan kategori dasar (Makanan & Minuman, Kebutuhan Pokok, Lainnya)</span>
+                <span>Tambahkan kategori standar (Aksesoris, Jasa, Laptop, Sparepart)</span>
               </label>
             </div>
 

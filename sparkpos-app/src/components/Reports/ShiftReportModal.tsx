@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Banknote, CreditCard, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
-import { Shift, Transaction } from '../../types/pos';
+import { Shift, Transaction, CashFlow } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
-import { db } from '../../services/storage';
+import { db, getCashFlowsByShift } from '../../services/storage';
 
 interface ShiftReportModalProps {
   activeShift: Shift | null;
@@ -20,6 +20,8 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
   const [cashSalesTotal, setCashSalesTotal] = useState<number>(0);
   const [nonCashSalesTotal, setNonCashSalesTotal] = useState<number>(0);
   const [txCount, setTxCount] = useState<number>(0);
+  const [cashInTotal, setCashInTotal] = useState<number>(0);
+  const [cashOutTotal, setCashOutTotal] = useState<number>(0);
 
   useEffect(() => {
     const calculateShiftSales = async () => {
@@ -42,13 +44,20 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
 
       setCashSalesTotal(cashSum);
       setNonCashSalesTotal(nonCashSum);
+
+      // Load Cash Flows (Uang Masuk / Keluar)
+      const flows = await getCashFlowsByShift(activeShift.id);
+      const inSum = flows.filter((f) => f.type === 'IN').reduce((sum, f) => sum + f.amount, 0);
+      const outSum = flows.filter((f) => f.type === 'OUT').reduce((sum, f) => sum + f.amount, 0);
+      setCashInTotal(inSum);
+      setCashOutTotal(outSum);
     };
 
     calculateShiftSales();
   }, [activeShift]);
 
   const openingCash = activeShift?.openingCash || 0;
-  const expectedCash = openingCash + cashSalesTotal;
+  const expectedCash = openingCash + cashSalesTotal + cashInTotal - cashOutTotal;
   const actualCash = parseFloat(actualCashStr) || 0;
   const discrepancy = actualCash - expectedCash;
 
@@ -154,6 +163,20 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
               <span className="text-slate-400 block mb-1">Penjualan Non-Tunai:</span>
               <span className="text-lg font-bold text-blue-400 font-mono">
                 {formatRupiah(nonCashSalesTotal)}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-850 border border-slate-800">
+              <span className="text-slate-400 block mb-1">Uang Masuk Manual (+):</span>
+              <span className="text-lg font-bold text-emerald-400 font-mono">
+                +{formatRupiah(cashInTotal)}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-850 border border-slate-800">
+              <span className="text-slate-400 block mb-1">Uang Keluar Operasional (-):</span>
+              <span className="text-lg font-bold text-rose-400 font-mono">
+                -{formatRupiah(cashOutTotal)}
               </span>
             </div>
           </div>
