@@ -19,6 +19,7 @@ import {
   RefreshCw,
   AlertCircle,
   FileSpreadsheet,
+  LogOut,
 } from 'lucide-react';
 import { ServiceOrder, ServiceStatus, Employee, StoreProfile } from '../../types/pos';
 import { getServiceOrders, deleteServiceOrder, updateServiceOrder } from '../../services/storage';
@@ -31,12 +32,14 @@ interface ServiceDashboardProps {
   currentUser?: Employee | null;
   storeProfile: StoreProfile;
   onRequestAdminAccess?: () => void;
+  onLogout?: () => void;
 }
 
 export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
   currentUser,
   storeProfile,
   onRequestAdminAccess,
+  onLogout,
 }) => {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -255,6 +258,22 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             <Plus className="w-4 h-4" />
             <span>Terima Servis Baru</span>
           </button>
+
+          {onLogout && (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`Logout dari akun ${currentUser?.fullName || 'ini'} dan kembali ke layar PIN?`)) {
+                  onLogout();
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-sm ml-1 cursor-pointer"
+              title="Logout Akun (Kembali ke Layar PIN)"
+            >
+              <LogOut className="w-3.5 h-3.5 text-white" />
+              <span>Logout</span>
+            </button>
+          )}
         </div>
       </div>
 

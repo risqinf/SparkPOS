@@ -619,6 +619,21 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             >
               <RotateCcw className="w-4 h-4" />
             </button>
+
+            {onLogout && (
+              <button
+                onClick={() => {
+                  if (confirm(`Logout dari kasir ${currentUser?.fullName || ''} dan kembali ke layar PIN?`)) {
+                    onLogout();
+                  }
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-xs cursor-pointer ml-1"
+                title="Logout Kasir (Kembali ke Layar PIN)"
+              >
+                <LogOut className="w-3.5 h-3.5 text-white" />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
         </div>
 

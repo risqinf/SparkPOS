@@ -118,26 +118,28 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* ================= MAIN NAVIGATION TABS ================= */}
+      {/* ================= MAIN NAVIGATION TABS (Strict Role-Based Access) ================= */}
       <nav className="flex items-center gap-1 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800">
-        {/* Tab 1: Kasir POS */}
-        <button
-          onClick={() => handleTabClick('pos')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'pos'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Terminal Kasir Penjualan (F1)"
-        >
-          <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Kasir (POS)</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F1
-          </kbd>
-        </button>
+        {/* Tab 1: Kasir POS (Tampil untuk Owner & Kasir - Teknisi TIDAK butuh POS) */}
+        {!isTechnician && (
+          <button
+            onClick={() => handleTabClick('pos')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'pos'
+                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            }`}
+            title="Terminal Kasir Penjualan (F1)"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Kasir (POS)</span>
+            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+              F1
+            </kbd>
+          </button>
+        )}
 
-        {/* Tab 2: Service Komputer & Laptop */}
+        {/* Tab 2: Service Komputer & Laptop (Tampil untuk Semua Role: Teknisi, Kasir, Owner) */}
         <button
           onClick={() => handleTabClick('service')}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
@@ -154,56 +156,59 @@ export const Navbar: React.FC<NavbarProps> = ({
           </kbd>
         </button>
 
-        {/* Tab 3: Stok & Produk */}
-        <button
-          onClick={() => handleTabClick('stock')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'stock'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Katalog Produk & Manajemen Stok (F3)"
-        >
-          <Boxes className="w-3.5 h-3.5 text-zinc-400" />
-          <span>Stok</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F3
-          </kbd>
-        </button>
+        {/* Tab 3: Stok & Produk (Tampil untuk Owner & Teknisi untuk cek sparepart) */}
+        {(isAdmin || isTechnician) && (
+          <button
+            onClick={() => handleTabClick('stock')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'stock'
+                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            }`}
+            title="Katalog Produk & Manajemen Stok (F3)"
+          >
+            <Boxes className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Stok</span>
+            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+              F3
+            </kbd>
+          </button>
+        )}
 
-        {/* Tab 4: Transaksi & Rekap Keuangan */}
-        <button
-          onClick={() => handleTabClick('reports')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'reports'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Menu Riwayat Transaksi, Rekap Harian & Bulanan Tgl 1 (F7)"
-        >
-          <Receipt className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Transaksi & Rekap</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F7
-          </kbd>
-        </button>
+        {/* Tab 4: Transaksi & Rekap Keuangan (HANYA Owner & Kasir - Teknisi TIDAK melihat keuangan toko) */}
+        {!isTechnician && (
+          <button
+            onClick={() => handleTabClick('reports')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'reports'
+                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            }`}
+            title="Menu Riwayat Transaksi, Rekap Harian & Bulanan Tgl 1 (F7)"
+          >
+            <Receipt className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Transaksi & Rekap</span>
+            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+              F7
+            </kbd>
+          </button>
+        )}
 
-        {/* Settings Tab - Restricted to Admin */}
-        <button
-          onClick={() => handleTabClick('settings')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'settings'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title={isAdmin ? 'Pengaturan Brand, Logo, Hardware & Relokasi Database' : 'Khusus Administrator (Terkunci)'}
-        >
-          <Settings className="w-3.5 h-3.5 text-zinc-400" />
-          <span>Pengaturan</span>
-          {!isAdmin && (
-            <Lock className="w-3 h-3 text-zinc-500" />
-          )}
-        </button>
+        {/* Tab 5: Settings Tab - HANYA MUNCUL UNTUK OWNER / ADMIN! Hilang total jika login sebagai kasir/teknisi */}
+        {isAdmin && (
+          <button
+            onClick={() => handleTabClick('settings')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'settings'
+                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            }`}
+            title="Pengaturan Brand, Logo, Hardware & Relokasi Database"
+          >
+            <Settings className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Pengaturan</span>
+          </button>
+        )}
       </nav>
 
       {/* ================= RIGHT CONTROLS: HELD, SHIFT, USER PROFILE & LOGOUT ================= */}
@@ -308,15 +313,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Tombol Logout / Ganti Kasir (Jelas & Menonjol) */}
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold transition shadow-xs"
-          title="Logout / Ganti Akun Kasir (Kembali ke Layar PIN)"
-        >
-          <LogOut className="w-3.5 h-3.5 text-rose-400" />
-          <span className="inline whitespace-nowrap">Ganti Kasir</span>
-        </button>
+        {/* Tombol Logout (Sangat Jelas, Merah Solid & Menonjol untuk Semua Role) */}
+        {onLogout && (
+          <button
+            onClick={() => {
+              if (confirm(`Logout dari akun ${currentUser?.fullName || 'ini'} dan kembali ke layar PIN?`)) {
+                onLogout();
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold transition shadow-md cursor-pointer ml-1"
+            title="Keluar / Logout Akun (Kembali ke Layar PIN)"
+          >
+            <LogOut className="w-3.5 h-3.5 text-white" />
+            <span className="font-bold">Logout</span>
+          </button>
+        )}
 
         {/* Fullscreen Toggle */}
         <button

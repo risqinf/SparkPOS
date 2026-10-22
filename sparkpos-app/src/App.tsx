@@ -260,6 +260,7 @@ export default function App() {
           <ServiceDashboard
             currentUser={currentUser}
             storeProfile={storeProfile}
+            onLogout={handleLogout}
           />
         )}
 
