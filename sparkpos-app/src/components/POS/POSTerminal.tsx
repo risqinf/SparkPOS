@@ -621,9 +621,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                       <span className="text-[10px] text-slate-500 dark:text-slate-400">/{p.unitName || 'pcs'}</span>
                     </div>
                   </button>
-                      <span className="text-[10px] text-slate-500 font-medium">/{p.unitName}</span>
-                    </div>
-                  </button>
                 );
               })}
             </div>

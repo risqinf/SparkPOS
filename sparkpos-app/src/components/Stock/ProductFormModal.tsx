@@ -508,13 +508,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                 </div>
               )}
-                      >
-                        {w}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
               {/* Serial Number (SN / IMEI) */}
               <div>
