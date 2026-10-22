@@ -25,6 +25,7 @@ import {
   ServiceOrder,
   CashFlow,
   Shift,
+  Employee,
 } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
 import { db } from '../../services/storage';
@@ -32,8 +33,10 @@ import { ReceiptModal } from '../POS/ReceiptModal';
 import {
   exportTransactionsToExcel,
   exportMonthlyFinancialRecapToExcel,
+  exportShiftsToExcel,
   DailyBreakdownRow,
   MonthlyRecapExportData,
+  ShiftExportItem,
 } from '../../services/excelExport';
 import {
   generateShiftReportReceiptText,
@@ -42,6 +45,7 @@ import {
 
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
+  currentUser?: Employee | null;
 }
 
 const MONTH_NAMES = [
@@ -61,7 +65,10 @@ const MONTH_NAMES = [
 
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storeProfile }) => {
+export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
+  storeProfile,
+  currentUser,
+}) => {
   const [activeSubTab, setActiveSubTab] = useState<'sales' | 'daily' | 'monthly' | 'shifts'>('sales');
 
   // Master Data State
@@ -69,7 +76,18 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [closedShifts, setClosedShifts] = useState<Shift[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Cashier / Employee Filter (If Kasir, forced to their own cashierId)
+  const [selectedCashierId, setSelectedCashierId] = useState<number | 'all'>(
+    currentUser?.role === 'kasir' ? currentUser.id : 'all'
+  );
+
+  // Shift report date filter (Default hari ini)
+  const [selectedShiftDate, setSelectedShiftDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
 
   // Filter Sales state
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,16 +111,18 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [txs, services, flows, shifts] = await Promise.all([
+      const [txs, services, flows, shifts, emps] = await Promise.all([
         db.transactions.reverse().sortBy('createdAt'),
         db.serviceOrders.toArray(),
         db.cashFlows.toArray(),
         db.shifts.toArray(),
+        db.employees.toArray(),
       ]);
       setTransactions(txs);
       setServiceOrders(services);
       setCashFlows(flows);
-      setClosedShifts(shifts.filter((s) => s.isClosed).sort((a, b) => b.id - a.id));
+      setClosedShifts(shifts.sort((a, b) => b.id - a.id));
+      setEmployees(emps);
     } catch (err) {
       console.error('Failed to load transaction & financial history', err);
     } finally {
@@ -122,7 +142,14 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
+    const effectiveCashierId = currentUser?.role === 'kasir' ? currentUser.id : selectedCashierId;
+
     return transactions.filter((tx) => {
+      // Cashier filter (Kasir hanya melihat transaksinya sendiri, Owner/Admin bisa filter)
+      if (effectiveCashierId !== 'all') {
+        if (tx.cashierId !== effectiveCashierId) return false;
+      }
+
       // Period filter
       const txDate = new Date(tx.createdAt);
       if (periodFilter === 'today') {
@@ -149,7 +176,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
 
       return true;
     });
-  }, [transactions, periodFilter, searchQuery]);
+  }, [transactions, periodFilter, searchQuery, selectedCashierId, currentUser]);
 
   // Overall Financial summary of current filtered sales
   const salesSummary = useMemo(() => {
@@ -365,6 +392,85 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
     };
     const text = generateShiftReportReceiptText(data, storeProfile);
     setShiftReceiptPreviewText(text);
+  };
+
+  // Rekapitulasi Gabungan Seluruh Shift pada tanggal terpilih
+  const dailyShiftsSummary = useMemo(() => {
+    const effectiveCashierId = currentUser?.role === 'kasir' ? currentUser.id : selectedCashierId;
+    const targetDate = selectedShiftDate;
+
+    const filtered = closedShifts.filter((s) => {
+      const shiftDate = (s.startTime || s.endTime || '').slice(0, 10);
+      if (targetDate && shiftDate !== targetDate) return false;
+      if (effectiveCashierId !== 'all' && s.cashierId !== effectiveCashierId) return false;
+      return true;
+    });
+
+    const totalOpeningCash = filtered.reduce((sum, s) => sum + (s.openingCash || 0), 0);
+    const totalCashSales = filtered.reduce((sum, s) => sum + (s.totalCashSales || 0), 0);
+    const totalNonCashSales = filtered.reduce((sum, s) => sum + (s.totalNonCashSales || 0), 0);
+    const totalServiceSales = filtered.reduce((sum, s) => sum + (s.totalServiceSales || 0), 0);
+    const totalCashIn = filtered.reduce((sum, s) => sum + (s.totalCashIn || 0), 0);
+    const totalCashOut = filtered.reduce((sum, s) => sum + (s.totalCashOut || 0), 0);
+    const totalExpectedCash = filtered.reduce((sum, s) => sum + (s.expectedCash || 0), 0);
+    const totalClosingCash = filtered.reduce(
+      (sum, s) => sum + (s.closingCash !== undefined ? s.closingCash : s.expectedCash || 0),
+      0
+    );
+    const totalDiscrepancy = filtered.reduce((sum, s) => sum + (s.discrepancy || 0), 0);
+    const totalTxCount = filtered.reduce((sum, s) => sum + (s.txCount || 0), 0);
+    const totalServiceCount = filtered.reduce((sum, s) => sum + (s.serviceCount || 0), 0);
+    const grandTotalRevenue = totalCashSales + totalNonCashSales + totalServiceSales;
+
+    return {
+      shifts: filtered,
+      totalOpeningCash,
+      totalCashSales,
+      totalNonCashSales,
+      totalServiceSales,
+      totalCashIn,
+      totalCashOut,
+      totalExpectedCash,
+      totalClosingCash,
+      totalDiscrepancy,
+      totalTxCount,
+      totalServiceCount,
+      grandTotalRevenue,
+      shiftCount: filtered.length,
+    };
+  }, [closedShifts, selectedShiftDate, selectedCashierId, currentUser]);
+
+  const handleExportShifts = () => {
+    if (dailyShiftsSummary.shifts.length === 0) {
+      alert('Tidak ada riwayat shift pada tanggal atau filter yang dipilih.');
+      return;
+    }
+    const exportItems: ShiftExportItem[] = dailyShiftsSummary.shifts.map((s) => ({
+      id: s.id,
+      cashierName: s.cashierName,
+      shiftName: s.shiftName,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      openingCash: s.openingCash || 0,
+      closingCash: s.closingCash,
+      expectedCash: s.expectedCash || 0,
+      totalCashSales: s.totalCashSales || 0,
+      totalNonCashSales: s.totalNonCashSales || 0,
+      totalServiceSales: s.totalServiceSales || 0,
+      totalCashIn: s.totalCashIn || 0,
+      totalCashOut: s.totalCashOut || 0,
+      txCount: s.txCount || 0,
+      serviceCount: s.serviceCount || 0,
+      discrepancy: s.discrepancy || 0,
+      note: s.note,
+      isClosed: s.isClosed,
+    }));
+
+    exportShiftsToExcel(
+      exportItems,
+      selectedShiftDate || 'Semua_Hari',
+      storeProfile.storeName
+    );
   };
 
   return (
@@ -1059,23 +1165,188 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
         </div>
       )}
 
-      {/* ================= VIEW 4: RIWAYAT LAPORAN SHIFT ================= */}
+      {/* ================= VIEW 4: RIWAYAT & REKAPITULASI LAPORAN SHIFT ================= */}
       {activeSubTab === 'shifts' && (
         <div className="flex-1 flex flex-col p-3 overflow-hidden space-y-2.5">
-          <div className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-between text-xs shrink-0">
-            <div>
-              <span className="font-bold text-zinc-200 block">
-                Arsip & Riwayat Laporan Penutupan Shift Kasir (Z-Reports)
-              </span>
-              <span className="text-[10px] text-zinc-400">
-                Pilih shift untuk mencetak ulang struk laporan rekonsiliasi kas
-              </span>
+          {/* Top Filter and Actions Bar */}
+          <div className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-emerald-400" />
+                <span className="font-bold text-zinc-200">Tanggal Rekap:</span>
+                <input
+                  type="date"
+                  value={selectedShiftDate}
+                  onChange={(e) => setSelectedShiftDate(e.target.value)}
+                  className="px-2 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-200 font-mono focus:border-emerald-500 focus:outline-hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedShiftDate(new Date().toISOString().slice(0, 10))}
+                  className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] font-semibold text-zinc-300"
+                >
+                  Hari Ini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedShiftDate('')}
+                  className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] font-semibold text-zinc-300"
+                >
+                  Semua Tanggal
+                </button>
+              </div>
+
+              {/* Cashier Filter */}
+              {currentUser?.role !== 'kasir' ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-zinc-400 text-xs">Kasir:</span>
+                  <select
+                    value={selectedCashierId}
+                    onChange={(e) =>
+                      setSelectedCashierId(e.target.value === 'all' ? 'all' : Number(e.target.value))
+                    }
+                    className="px-2 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-200 focus:border-emerald-500 focus:outline-hidden"
+                  >
+                    <option value="all">Semua Kasir</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.fullName} ({emp.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="px-2 py-1 rounded-md bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-[11px] font-semibold">
+                  Kasir: {currentUser.fullName}
+                </div>
+              )}
             </div>
-            <span className="text-zinc-400 text-xs">
-              Total Shift Selesai: <strong className="text-zinc-200">{closedShifts.length}</strong>
-            </span>
+
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400 text-xs">
+                Total Shift: <strong className="text-zinc-200">{dailyShiftsSummary.shiftCount}</strong>
+              </span>
+
+              <button
+                type="button"
+                onClick={handleExportShifts}
+                disabled={dailyShiftsSummary.shiftCount === 0}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition shadow-xs"
+                title="Ekspor laporan rekapitulasi shift kasir ke Excel (.csv)"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Ekspor Excel Rekap Shift</span>
+              </button>
+            </div>
           </div>
 
+          {/* Rekapitulasi Gabungan Seluruh Shift Hari Ini (Header Summary Cards) */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 space-y-2 shrink-0 shadow-xs">
+            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  Rekapitulasi Gabungan Seluruh Shift {selectedShiftDate ? `(${selectedShiftDate})` : '(Seluruh Arsip)'}
+                </span>
+                <span className="text-[10px] text-zinc-400">
+                  Akumulasi total kas masuk, keluar, dan uang aktual dari {dailyShiftsSummary.shiftCount} shift kasir
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-zinc-400 block leading-tight">Total Omzet Penjualan + Servis:</span>
+                <span className="text-sm font-extrabold text-zinc-100 font-mono">
+                  {formatRupiah(dailyShiftsSummary.grandTotalRevenue)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+              {/* 1. Modal Awal */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Total Modal Awal:</span>
+                <span className="text-xs font-bold text-zinc-200 font-mono block mt-0.5">
+                  {formatRupiah(dailyShiftsSummary.totalOpeningCash)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Kas awal kasir</span>
+              </div>
+
+              {/* 2. Tunai POS */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Penjualan Tunai:</span>
+                <span className="text-xs font-bold text-emerald-400 font-mono block mt-0.5">
+                  +{formatRupiah(dailyShiftsSummary.totalCashSales)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">{dailyShiftsSummary.totalTxCount} nota kasir</span>
+              </div>
+
+              {/* 3. Non-Tunai POS */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Non-Tunai (QRIS/EDC):</span>
+                <span className="text-xs font-bold text-sky-400 font-mono block mt-0.5">
+                  {formatRupiah(dailyShiftsSummary.totalNonCashSales)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Transfer / digital</span>
+              </div>
+
+              {/* 4. Servis */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Omzet Servis:</span>
+                <span className="text-xs font-bold text-amber-400 font-mono block mt-0.5">
+                  +{formatRupiah(dailyShiftsSummary.totalServiceSales)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">{dailyShiftsSummary.totalServiceCount} tiket servis</span>
+              </div>
+
+              {/* 5. Kas Masuk */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Uang Masuk (+):</span>
+                <span className="text-xs font-bold text-emerald-400 font-mono block mt-0.5">
+                  +{formatRupiah(dailyShiftsSummary.totalCashIn)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Petty cash masuk</span>
+              </div>
+
+              {/* 6. Kas Keluar */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Uang Keluar (-):</span>
+                <span className="text-xs font-bold text-rose-400 font-mono block mt-0.5">
+                  -{formatRupiah(dailyShiftsSummary.totalCashOut)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Biaya operasional</span>
+              </div>
+
+              {/* 7. Kas Fisik Laci Aktual */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Uang Fisik di Laci:</span>
+                <span className="text-xs font-bold text-zinc-100 font-mono block mt-0.5">
+                  {formatRupiah(dailyShiftsSummary.totalClosingCash)}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">Dihitung kasir</span>
+              </div>
+
+              {/* 8. Selisih Kas Gabungan */}
+              <div className="p-2 rounded-lg bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-400 block">Selisih Kas Gabungan:</span>
+                <span className="text-xs font-bold font-mono block mt-0.5">
+                  {dailyShiftsSummary.totalDiscrepancy === 0 ? (
+                    <span className="text-emerald-400">Pas (Rp 0)</span>
+                  ) : dailyShiftsSummary.totalDiscrepancy > 0 ? (
+                    <span className="text-sky-400">+{formatRupiah(dailyShiftsSummary.totalDiscrepancy)}</span>
+                  ) : (
+                    <span className="text-rose-400">{formatRupiah(dailyShiftsSummary.totalDiscrepancy)}</span>
+                  )}
+                </span>
+                <span className="text-[9px] text-zinc-500 block">
+                  {dailyShiftsSummary.totalDiscrepancy === 0
+                    ? 'Rekonsiliasi cocok'
+                    : dailyShiftsSummary.totalDiscrepancy > 0
+                    ? 'Uang fisik lebih'
+                    : 'Uang fisik kurang'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Shift Table */}
           <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex flex-col shadow-xs">
             <div className="overflow-y-auto flex-1">
               <table className="w-full text-left text-xs">
@@ -1086,6 +1357,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
                     <th className="px-3 py-2 font-semibold">Waktu Buka</th>
                     <th className="px-3 py-2 font-semibold">Waktu Tutup</th>
                     <th className="px-3 py-2 text-right font-semibold">Kas Awal</th>
+                    <th className="px-3 py-2 text-right font-semibold">Penjualan Tunai</th>
+                    <th className="px-3 py-2 text-right font-semibold">Non-Tunai</th>
+                    <th className="px-3 py-2 text-right font-semibold">Kas Masuk/Keluar</th>
                     <th className="px-3 py-2 text-right font-semibold">Kas Fisik Laci</th>
                     <th className="px-3 py-2 text-right font-semibold">Ekspektasi</th>
                     <th className="px-3 py-2 text-right font-semibold">Selisih</th>
@@ -1093,19 +1367,29 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-850">
-                  {closedShifts.length === 0 ? (
+                  {dailyShiftsSummary.shifts.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-12 text-zinc-500">
-                        Belum ada riwayat shift yang ditutup.
+                      <td colSpan={12} className="text-center py-12 text-zinc-500">
+                        Tidak ada riwayat shift yang cocok dengan tanggal atau filter yang dipilih.
                       </td>
                     </tr>
                   ) : (
-                    closedShifts.map((s) => (
+                    dailyShiftsSummary.shifts.map((s) => (
                       <tr key={s.id} className="hover:bg-zinc-800/40 transition">
                         <td className="px-3 py-2 font-mono font-bold text-zinc-200">
                           #{s.id}
+                          {s.shiftName && (
+                            <span className="block text-[9px] text-zinc-500 font-sans font-normal">
+                              {s.shiftName}
+                            </span>
+                          )}
                         </td>
-                        <td className="px-3 py-2 text-zinc-300 font-medium">{s.cashierName}</td>
+                        <td className="px-3 py-2 text-zinc-300 font-medium">
+                          {s.cashierName}
+                          <span className="block text-[9px] text-zinc-500">
+                            {s.isClosed ? 'Telah Ditutup' : 'Sedang Aktif'}
+                          </span>
+                        </td>
                         <td className="px-3 py-2 text-zinc-400">
                           {new Date(s.startTime).toLocaleString('id-ID', {
                             dateStyle: 'short',
@@ -1118,13 +1402,24 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
                                 dateStyle: 'short',
                                 timeStyle: 'short',
                               })
-                            : '-'}
+                            : <span className="text-emerald-400 font-medium">Berjalan</span>}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-zinc-300">
                           {formatRupiah(s.openingCash || 0)}
                         </td>
+                        <td className="px-3 py-2 text-right font-mono text-emerald-400">
+                          {formatRupiah(s.totalCashSales || 0)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-sky-400">
+                          {formatRupiah(s.totalNonCashSales || 0)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-zinc-400">
+                          <span className="text-emerald-400">+{formatRupiah(s.totalCashIn || 0)}</span>
+                          <span className="text-zinc-600"> / </span>
+                          <span className="text-rose-400">-{formatRupiah(s.totalCashOut || 0)}</span>
+                        </td>
                         <td className="px-3 py-2 text-right font-mono font-bold text-zinc-100">
-                          {formatRupiah(s.closingCash || s.expectedCash || 0)}
+                          {formatRupiah(s.closingCash !== undefined ? s.closingCash : s.expectedCash || 0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-zinc-400">
                           {formatRupiah(s.expectedCash || 0)}
@@ -1146,7 +1441,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
                             title="Cetak ulang struk Z-Report shift"
                           >
                             <Printer className="w-3 h-3 text-zinc-400" />
-                            <span>Cetak Z-Report</span>
+                            <span>Z-Report</span>
                           </button>
                         </td>
                       </tr>

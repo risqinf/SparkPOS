@@ -329,3 +329,127 @@ export function exportMonthlyFinancialRecapToExcel(data: MonthlyRecapExportData)
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 }
 
+/**
+ * Export Rekapitulasi Shift Kasir (Harian & Gabungan Semua Shift) ke Excel (.csv)
+ */
+export interface ShiftExportItem {
+  id: number;
+  cashierName: string;
+  shiftName?: string;
+  startTime: string;
+  endTime?: string;
+  openingCash: number;
+  closingCash?: number;
+  expectedCash: number;
+  totalCashSales?: number;
+  totalNonCashSales?: number;
+  totalServiceSales?: number;
+  totalCashIn?: number;
+  totalCashOut?: number;
+  txCount?: number;
+  serviceCount?: number;
+  discrepancy?: number;
+  note?: string;
+  isClosed: boolean;
+}
+
+export function exportShiftsToExcel(
+  shifts: ShiftExportItem[],
+  dateLabel: string,
+  storeName: string = 'SparkPOS'
+) {
+  const bom = '\uFEFF';
+  const lines: string[] = [];
+
+  lines.push(`REKAPITULASI LAPORAN SHIFT KASIR - ${storeName.toUpperCase()}`);
+  lines.push(`Periode / Tanggal: ${dateLabel}`);
+  lines.push(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`);
+  lines.push(`Total Shift: ${shifts.length}`);
+  lines.push('');
+
+  // Ringkasan Gabungan (Semua Shift Digabung)
+  const totalOpening = shifts.reduce((s, sh) => s + (sh.openingCash || 0), 0);
+  const totalCashSales = shifts.reduce((s, sh) => s + (sh.totalCashSales || 0), 0);
+  const totalNonCashSales = shifts.reduce((s, sh) => s + (sh.totalNonCashSales || 0), 0);
+  const totalServiceSales = shifts.reduce((s, sh) => s + (sh.totalServiceSales || 0), 0);
+  const totalCashIn = shifts.reduce((s, sh) => s + (sh.totalCashIn || 0), 0);
+  const totalCashOut = shifts.reduce((s, sh) => s + (sh.totalCashOut || 0), 0);
+  const totalExpected = shifts.reduce((s, sh) => s + (sh.expectedCash || 0), 0);
+  const totalActual = shifts.reduce((s, sh) => s + (sh.closingCash || sh.expectedCash || 0), 0);
+  const totalDiscrepancy = shifts.reduce((s, sh) => s + (sh.discrepancy || 0), 0);
+  const totalTxCount = shifts.reduce((s, sh) => s + (sh.txCount || 0), 0);
+  const grandTotalRevenue = totalCashSales + totalNonCashSales + totalServiceSales;
+
+  lines.push('RINGKASAN GABUNGAN SELURUH SHIFT HARI INI');
+  lines.push(`Total Kas Modal Awal Seluruh Shift,${totalOpening}`);
+  lines.push(`Total Penjualan Tunai Seluruh Shift,${totalCashSales}`);
+  lines.push(`Total Penjualan Non-Tunai Seluruh Shift,${totalNonCashSales}`);
+  lines.push(`Total Pendapatan Servis Seluruh Shift,${totalServiceSales}`);
+  lines.push(`TOTAL OMZET GABUNGAN HARI INI,${grandTotalRevenue}`);
+  lines.push(`Total Kas Masuk Manual (+),${totalCashIn}`);
+  lines.push(`Total Kas Keluar Biaya Operasional (-),${totalCashOut}`);
+  lines.push(`Total Kas Seharusnya di Laci (Expected),${totalExpected}`);
+  lines.push(`Total Kas Fisik Aktual Dihitung (Actual),${totalActual}`);
+  lines.push(`Total Selisih Kas Gabungan,${totalDiscrepancy}`);
+  lines.push(`Total Nota Transaksi Selesai,${totalTxCount}`);
+  lines.push('');
+
+  // Tabel Rincian per Shift
+  const headers = [
+    'No. Shift',
+    'Nama Kasir',
+    'Jadwal Shift',
+    'Waktu Buka',
+    'Waktu Tutup',
+    'Modal Awal (Rp)',
+    'Penjualan Tunai (Rp)',
+    'Penjualan Non-Tunai (Rp)',
+    'Pendapatan Servis (Rp)',
+    'Kas Masuk (+) (Rp)',
+    'Kas Keluar (-) (Rp)',
+    'Kas Laci Seharusnya (Rp)',
+    'Uang Fisik Dihitung (Rp)',
+    'Selisih Kas (Rp)',
+    'Jml Nota',
+    'Jml Servis',
+    'Status Shift',
+    'Catatan Kasir',
+  ];
+  lines.push(headers.map(escapeCsvCell).join(','));
+
+  for (const s of shifts) {
+    const startStr = s.startTime
+      ? new Date(s.startTime).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
+      : '-';
+    const endStr = s.endTime
+      ? new Date(s.endTime).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
+      : 'Sedang Berjalan (Aktif)';
+
+    lines.push([
+      escapeCsvCell(`#${s.id}`),
+      escapeCsvCell(s.cashierName),
+      escapeCsvCell(s.shiftName || 'Standar'),
+      escapeCsvCell(startStr),
+      escapeCsvCell(endStr),
+      escapeCsvCell(s.openingCash || 0),
+      escapeCsvCell(s.totalCashSales || 0),
+      escapeCsvCell(s.totalNonCashSales || 0),
+      escapeCsvCell(s.totalServiceSales || 0),
+      escapeCsvCell(s.totalCashIn || 0),
+      escapeCsvCell(s.totalCashOut || 0),
+      escapeCsvCell(s.expectedCash || 0),
+      escapeCsvCell(s.closingCash || s.expectedCash || 0),
+      escapeCsvCell(s.discrepancy || 0),
+      escapeCsvCell(s.txCount || 0),
+      escapeCsvCell(s.serviceCount || 0),
+      escapeCsvCell(s.isClosed ? 'Ditutup (Selesai)' : 'Aktif'),
+      escapeCsvCell(s.note || '-'),
+    ].join(','));
+  }
+
+  const csvContent = bom + lines.join('\r\n');
+  const filename = `Rekap_Shift_${dateLabel.replace(/\s+/g, '_')}_${storeName.replace(/\s+/g, '_')}.csv`;
+  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+

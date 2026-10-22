@@ -12,7 +12,7 @@ import {
   Receipt,
   RotateCcw,
 } from 'lucide-react';
-import { Shift, StoreProfile } from '../../types/pos';
+import { Shift, StoreProfile, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
 import { db, getCashFlowsByShift } from '../../services/storage';
 import {
@@ -23,6 +23,7 @@ import {
 interface ShiftReportModalProps {
   activeShift: Shift | null;
   storeProfile: StoreProfile;
+  currentUser?: Employee | null;
   onShiftClosed: () => void;
   onClose: () => void;
 }
@@ -30,11 +31,13 @@ interface ShiftReportModalProps {
 export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
   activeShift,
   storeProfile,
+  currentUser,
   onShiftClosed,
   onClose,
 }) => {
   const [modalTab, setModalTab] = useState<'current' | 'history'>('current');
   const [actualCashStr, setActualCashStr] = useState<string>('');
+  const [newOpeningCashStr, setNewOpeningCashStr] = useState<string>('0');
   const [note, setNote] = useState<string>('');
   const [cashSalesTotal, setCashSalesTotal] = useState<number>(0);
   const [nonCashSalesTotal, setNonCashSalesTotal] = useState<number>(0);
@@ -220,18 +223,28 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
       isClosed: true,
     });
 
-    // Start next shift automatically
-    await db.shifts.add({
-      id: activeShift.id + 1,
-      cashierId: activeShift.cashierId,
-      cashierName: activeShift.cashierName,
-      shiftName: activeShift.shiftName,
-      startTime: now,
-      openingCash: actualCash, // rolling cash into next shift
-      expectedCash: actualCash,
-      isClosed: false,
-    } as any);
+    onShiftClosed();
+    onClose();
+  };
 
+  const handleStartNewShift = async () => {
+    if (!currentUser) {
+      alert('Sesi kasir tidak ditemukan. Silakan login kembali.');
+      return;
+    }
+    const allShifts = await db.shifts.toArray();
+    const openingVal = parseFloat(newOpeningCashStr) || 0;
+    const newShift: Shift = {
+      id: (allShifts.length || 0) + 1,
+      cashierId: currentUser.id,
+      cashierName: currentUser.fullName,
+      shiftName: currentUser.shiftSchedule || 'Shift Standar',
+      startTime: new Date().toISOString(),
+      openingCash: openingVal,
+      expectedCash: openingVal,
+      isClosed: false,
+    };
+    await db.shifts.add(newShift);
     onShiftClosed();
     onClose();
   };
@@ -332,7 +345,47 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
 
         {/* Modal Tab Body */}
         {modalTab === 'current' ? (
-          <div className="p-4 space-y-3 overflow-y-auto flex-1 text-xs">
+          !activeShift ? (
+            <div className="p-8 text-center space-y-4 flex-1 flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                <Clock className="w-7 h-7" />
+              </div>
+              <div className="max-w-md">
+                <h3 className="text-base font-bold text-zinc-100">Tidak Ada Shift Kasir Aktif</h3>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Shift kerja Anda saat ini sedang ditutup. Silakan tentukan modal kas awal di laci untuk membuka shift kasir baru.
+                </p>
+              </div>
+              <div className="w-full max-w-xs space-y-3 text-left bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                <div>
+                  <label className="text-[11px] font-semibold text-zinc-300 block mb-1">
+                    Kas Modal Awal Kasir (Rp):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="0"
+                    value={newOpeningCashStr}
+                    onChange={(e) => setNewOpeningCashStr(e.target.value)}
+                    className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-zinc-100 font-mono focus:border-emerald-500 outline-none"
+                  />
+                  <span className="text-[10px] text-zinc-500 mt-1 block">
+                    {formatRupiah(parseFloat(newOpeningCashStr) || 0)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStartNewShift}
+                  className="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs transition shadow-lg flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Buka Shift Baru Sekarang</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 space-y-3 overflow-y-auto flex-1 text-xs">
             {/* Ringkasan Kas Laci Grid */}
             <div>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
@@ -488,7 +541,8 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
               </div>
             </div>
           </div>
-        ) : (
+        )
+      ) : (
           /* History Tab */
           <div className="p-4 overflow-y-auto flex-1 text-xs space-y-3">
             <div className="flex items-center justify-between">

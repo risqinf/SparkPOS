@@ -58,15 +58,7 @@ export default function App() {
       // Selalu mulai di layar login PIN agar setiap login wajib memasukkan username & PIN yang jelas
       localStorage.removeItem('sparkpos_current_user');
       setCurrentUser(null);
-
-      // Load active shift
-      const allShifts = await db.shifts.toArray();
-      const openShifts = allShifts.filter((s) => !s.isClosed);
-      if (openShifts.length > 0) {
-        setActiveShift(openShifts[openShifts.length - 1]);
-      } else {
-        setActiveShift(null);
-      }
+      setActiveShift(null);
 
       // Load held carts
       const held = await db.heldCarts.toArray();
@@ -96,6 +88,7 @@ export default function App() {
       handleLoginSuccess(cashierEmployee);
     } else if (loginAsCashier) {
       setCurrentUser(null);
+      setActiveShift(null);
       localStorage.removeItem('sparkpos_current_user');
     } else {
       setCurrentUser(adminEmployee);
@@ -108,12 +101,15 @@ export default function App() {
     setCurrentUser(employee);
     localStorage.setItem('sparkpos_current_user', JSON.stringify(employee));
 
-    // Check active shift or create shift for this cashier
+    // Cek apakah kasir ini SUDAH MEMILIKI shift aktif yang belum ditutup
+    // Contoh: login jam 07.30, apps tidak sengaja tertutup jam 13.10 -> lanjutkan shift kasir ini!
     const allShifts = await db.shifts.toArray();
-    const openShifts = allShifts.filter((s) => !s.isClosed);
-    if (openShifts.length > 0) {
-      setActiveShift(openShifts[openShifts.length - 1]);
+    const myOpenShift = allShifts.find((s) => !s.isClosed && s.cashierId === employee.id);
+
+    if (myOpenShift) {
+      setActiveShift(myOpenShift);
     } else {
+      // Buat shift baru untuk kasir ini
       const newShift: Shift = {
         id: (allShifts.length || 0) + 1,
         cashierId: employee.id,
@@ -138,6 +134,7 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setActiveShift(null);
     localStorage.removeItem('sparkpos_current_user');
   };
 
@@ -158,9 +155,13 @@ export default function App() {
   };
 
   const refreshShift = async () => {
+    if (!currentUser) {
+      setActiveShift(null);
+      return;
+    }
     const allShifts = await db.shifts.toArray();
-    const openShifts = allShifts.filter((s) => !s.isClosed);
-    setActiveShift(openShifts.length > 0 ? openShifts[openShifts.length - 1] : null);
+    const myOpenShift = allShifts.find((s) => !s.isClosed && s.cashierId === currentUser.id);
+    setActiveShift(myOpenShift || null);
   };
 
   // Global Keyboard Navigation (F1: POS, F3: Stock, F7: Reports, F11: Fullscreen)
@@ -272,6 +273,7 @@ export default function App() {
         {currentTab === 'reports' && (
           <TransactionHistory
             storeProfile={storeProfile}
+            currentUser={currentUser}
           />
         )}
 
@@ -291,6 +293,7 @@ export default function App() {
         <ShiftReportModal
           activeShift={activeShift}
           storeProfile={storeProfile}
+          currentUser={currentUser}
           onShiftClosed={refreshShift}
           onClose={() => setIsShiftModalOpen(false)}
         />
