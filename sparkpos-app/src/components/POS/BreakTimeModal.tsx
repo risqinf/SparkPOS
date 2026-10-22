@@ -31,9 +31,10 @@ export const BreakTimeModal: React.FC<BreakTimeModalProps> = ({
 
   // Live timer for break duration
   useEffect(() => {
+    const start = startTime || new Date();
     const timer = setInterval(() => {
       const now = new Date();
-      const diffSecs = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      const diffSecs = Math.floor((now.getTime() - start.getTime()) / 1000);
       setElapsedSeconds(diffSecs >= 0 ? diffSecs : 0);
     }, 1000);
     return () => clearInterval(timer);
