@@ -144,6 +144,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
       pickedUpAt: now,
       isPaid: true,
       paidAmount: order.paidAmount || order.grandTotal,
+      paymentMethod: order.paymentMethod || 'CASH',
     });
     await loadOrders();
   };

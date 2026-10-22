@@ -65,6 +65,7 @@ export interface ServiceOrder {
   discountAmount: number;     // Diskon servis
   grandTotal: number;         // Total akhir tagihan servis
   paidAmount: number;         // Nominal yang sudah dibayar
+  paymentMethod?: string;     // Metode pembayaran (CASH, QRIS, TRANSFER)
   isPaid: boolean;            // Lunas atau belum
   estimatedDate?: string;     // Estimasi tanggal selesai
   receivedAt: string;         // Tanggal masuk
