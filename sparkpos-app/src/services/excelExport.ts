@@ -224,3 +224,108 @@ export function exportServicesToExcel(
 
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 }
+
+/**
+ * Export Rekapitulasi Keuangan Bulanan (Per Tanggal 1 s/d Akhir Bulan) ke Excel (.csv)
+ */
+export interface DailyBreakdownRow {
+  dateStr: string;
+  dayNumber: number;
+  dayName: string;
+  txCount: number;
+  serviceCount: number;
+  productSales: number;
+  serviceSales: number;
+  totalRevenue: number;
+  productCost: number;
+  serviceCost: number;
+  grossProfit: number;
+  cashIn: number;
+  cashOut: number;
+  netProfit: number;
+}
+
+export interface MonthlyRecapExportData {
+  monthName: string;
+  year: number;
+  storeName: string;
+  totalProductSales: number;
+  totalServiceSales: number;
+  grandRevenue: number;
+  totalProductCost: number;
+  totalServiceCost: number;
+  totalGrossProfit: number;
+  totalOperationalExpenses: number;
+  netProfit: number;
+  totalCashPayments: number;
+  totalNonCashPayments: number;
+  dailyRows: DailyBreakdownRow[];
+}
+
+export function exportMonthlyFinancialRecapToExcel(data: MonthlyRecapExportData) {
+  const bom = '\uFEFF';
+  const lines: string[] = [];
+
+  // Metadata & Ringkasan Eksekutif
+  lines.push(`REKAPITULASI KEUANGAN BULANAN - ${data.storeName.toUpperCase()}`);
+  lines.push(`Periode: 1 ${data.monthName} ${data.year} s/d Selesai`);
+  lines.push(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`);
+  lines.push('');
+
+  // Ringkasan Finansial Eksekutif
+  lines.push('RINGKASAN PERFORMA KEUANGAN TOKO');
+  lines.push(`Total Omzet Penjualan Produk,${data.totalProductSales}`);
+  lines.push(`Total Omzet Servis Komputer,${data.totalServiceSales}`);
+  lines.push(`TOTAL OMZET KOTOR TOKO,${data.grandRevenue}`);
+  lines.push(`Total Modal HPP Produk Terjual,${data.totalProductCost}`);
+  lines.push(`Total Biaya Sparepart Servis,${data.totalServiceCost}`);
+  lines.push(`TOTAL ESTIMASI LABA KOTOR,${data.totalGrossProfit}`);
+  lines.push(`Total Biaya Operasional / Kas Keluar,${data.totalOperationalExpenses}`);
+  lines.push(`ESTIMASI LABA BERSIH TOKO,${data.netProfit}`);
+  lines.push('');
+  lines.push('METODE PENERIMAAN KAS');
+  lines.push(`Penerimaan Tunai (Cash),${data.totalCashPayments}`);
+  lines.push(`Penerimaan Non-Tunai (QRIS / Transfer),${data.totalNonCashPayments}`);
+  lines.push('');
+
+  // Tabel Rekapitulasi Harian
+  const headers = [
+    'Tanggal',
+    'Hari',
+    'Jml Nota POS',
+    'Jml Servis Selesai',
+    'Omzet Produk (Rp)',
+    'Omzet Servis (Rp)',
+    'Total Omzet (Rp)',
+    'Modal HPP Produk (Rp)',
+    'Biaya Part Servis (Rp)',
+    'Laba Kotor (Rp)',
+    'Kas Masuk Lain (Rp)',
+    'Kas Keluar Biaya (Rp)',
+    'Laba Bersih Harian (Rp)',
+  ];
+  lines.push(headers.map(escapeCsvCell).join(','));
+
+  for (const row of data.dailyRows) {
+    lines.push([
+      escapeCsvCell(row.dateStr),
+      escapeCsvCell(row.dayName),
+      escapeCsvCell(row.txCount),
+      escapeCsvCell(row.serviceCount),
+      escapeCsvCell(row.productSales),
+      escapeCsvCell(row.serviceSales),
+      escapeCsvCell(row.totalRevenue),
+      escapeCsvCell(row.productCost),
+      escapeCsvCell(row.serviceCost),
+      escapeCsvCell(row.grossProfit),
+      escapeCsvCell(row.cashIn),
+      escapeCsvCell(row.cashOut),
+      escapeCsvCell(row.netProfit),
+    ].join(','));
+  }
+
+  const csvContent = bom + lines.join('\r\n');
+  const filename = `Rekap_Keuangan_Bulanan_${data.monthName}_${data.year}_${data.storeName.replace(/\s+/g, '_')}.csv`;
+  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+

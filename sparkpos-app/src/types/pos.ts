@@ -215,8 +215,13 @@ export interface Shift {
   openingCash: number;
   closingCash?: number;
   expectedCash: number;
+  totalCashSales?: number;
+  totalNonCashSales?: number;
+  totalServiceSales?: number;
   totalCashIn?: number;
   totalCashOut?: number;
+  txCount?: number;
+  serviceCount?: number;
   discrepancy?: number;
   note?: string;
   isClosed: boolean;

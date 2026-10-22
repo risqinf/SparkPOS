@@ -290,6 +290,7 @@ export default function App() {
       {isShiftModalOpen && (
         <ShiftReportModal
           activeShift={activeShift}
+          storeProfile={storeProfile}
           onShiftClosed={refreshShift}
           onClose={() => setIsShiftModalOpen(false)}
         />

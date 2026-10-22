@@ -296,7 +296,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
                             onSupplierSelected(sup);
                             onClose();
                           }}
-                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-bold transition"
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition"
                         >
                           Pilih
                         </button>

@@ -807,7 +807,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   <div className={`p-2 rounded-xl border mt-0.5 ${
                     dbPathInfo?.isCustom 
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                      : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400'
+                      : 'bg-zinc-800 border-zinc-700 text-zinc-300'
                   }`}>
                     <HardDrive className="w-4 h-4" />
                   </div>
@@ -858,7 +858,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   type="button"
                   disabled={!isAdmin}
                   onClick={() => setIsMoveDbModalOpen(true)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs transition shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-xs transition shadow-sm"
                 >
                   <HardDrive className="w-3.5 h-3.5" />
                   <span>Pindahkan Lokasi Database (Drive D: / HDD)</span>
@@ -1127,7 +1127,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
                   <HardDrive className="w-5 h-5" />
                 </div>
                 <div>
@@ -1171,14 +1171,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     value={targetFolderPath}
                     onChange={(e) => setTargetFolderPath(e.target.value)}
                     placeholder="Contoh: D:\SparkPOS_Database"
-                    className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                   <button
                     type="button"
                     onClick={handlePickFolder}
                     className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition whitespace-nowrap"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
+                    <UploadCloud className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Pilih Folder</span>
                   </button>
                 </div>
@@ -1200,13 +1200,13 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               {/* Box Opsi Auto-Copy (Zero Data Loss) */}
-              <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/30 space-y-2.5">
+              <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
                 <label className="flex items-start gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={autoCopyData}
                     onChange={(e) => setAutoCopyData(e.target.checked)}
-                    className="mt-0.5 text-indigo-500 focus:ring-0 rounded"
+                    className="mt-0.5 text-emerald-500 focus:ring-0 rounded"
                   />
                   <div>
                     <span className="font-bold text-white block">
@@ -1219,7 +1219,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 </label>
 
                 {dbPathInfo?.itemCounts && (
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-indigo-900/40 text-[11px]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800 text-[11px]">
                     <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
                       <span className="text-slate-400">Produk: </span>
                       <strong className="text-emerald-400">{dbPathInfo.itemCounts.products} item</strong>
@@ -1256,7 +1256,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 type="button"
                 disabled={isMigratingDb || !targetFolderPath.trim()}
                 onClick={handleMigrateDatabasePath}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 transition shadow-md shadow-indigo-950/50"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 transition shadow-md shadow-emerald-950/50"
               >
                 <HardDrive className="w-4 h-4" />
                 <span>{isMigratingDb ? 'Menyalin & Memindahkan...' : 'Salin & Pindahkan Database'}</span>

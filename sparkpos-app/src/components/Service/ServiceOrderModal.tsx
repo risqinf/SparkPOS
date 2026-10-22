@@ -299,13 +299,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           {/* Section 1: Data Pelanggan & Perangkat */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Box 1: Identitas Pelanggan */}
-            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
               <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-800">
-                <User className="w-3.5 h-3.5 text-indigo-400" />
+                <User className="w-3.5 h-3.5 text-zinc-400" />
                 <span>1. Identitas Pelanggan</span>
               </h4>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div>
                   <label className="text-slate-400 block mb-1">
                     Nama Pelanggan <span className="text-rose-400">*</span>
@@ -316,7 +316,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     placeholder="Contoh: Pak Herman / Siti"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
@@ -327,20 +327,20 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     placeholder="Contoh: 081234567890"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Box 2: Perangkat & Status Servis */}
-            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
               <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-800">
                 <Laptop className="w-3.5 h-3.5 text-amber-400" />
                 <span>2. Perangkat & Status Pengerjaan</span>
               </h4>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-slate-400 block mb-1">
@@ -352,7 +352,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       placeholder="e.g. ThinkPad X201"
                       value={deviceType}
                       onChange={(e) => setDeviceType(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                     />
                   </div>
                   <div>
@@ -362,7 +362,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       placeholder="e.g. SN-892301"
                       value={deviceSerial}
                       onChange={(e) => setDeviceSerial(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -393,7 +393,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                         const tech = technicians.find((t) => t.id === id);
                         setAssignedTechName(tech ? tech.fullName : '');
                       }}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                     >
                       <option value="">Pilih Teknisi...</option>
                       {technicians.map((t) => (
@@ -530,7 +530,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition"
+                  className="w-full py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition"
                   title="Tambahkan ke rincian servis"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -687,7 +687,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition"
               title="Simpan data dan langsung cetak nota tanda terima servis"
             >
-              <Printer className="w-4 h-4 text-indigo-400" />
+              <Printer className="w-4 h-4 text-emerald-400" />
               <span>Simpan & Cetak Nota</span>
             </button>
 

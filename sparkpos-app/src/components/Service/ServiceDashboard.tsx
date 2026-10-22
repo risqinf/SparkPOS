@@ -191,8 +191,8 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
         );
       case 'DIAMBIL':
         return (
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-            🤝 Diambil & Lunas
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+            Diambil & Selesai
           </span>
         );
       case 'DIBATALKAN':
@@ -295,26 +295,26 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
-            🤝
+        <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-750 text-zinc-300 flex items-center justify-center font-bold text-xs">
+            ✓
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">
+            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider block">
               Sudah Diambil
             </span>
-            <span className="text-lg font-black text-purple-300">{countDiambil} unit</span>
+            <span className="text-base font-bold text-zinc-200">{countDiambil} unit</span>
           </div>
         </div>
 
         {/* Keuangan Servis (Owner only display) */}
         {isOwner && (
-          <div className="p-3.5 rounded-2xl bg-slate-900 border border-indigo-500/30 flex items-center gap-3 col-span-2 md:col-span-4 lg:col-span-1">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-              💰
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-emerald-500/30 flex items-center gap-2.5 col-span-2 md:col-span-4 lg:col-span-1">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+              Rp
             </div>
             <div>
-              <span className="text-[10px] text-indigo-400 uppercase font-bold tracking-wider block">
+              <span className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider block">
                 Laba Jasa Bersih
               </span>
               <span className="text-sm font-black text-emerald-400 font-mono">
@@ -525,10 +525,10 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleQuickPickup(order)}
-                                className="px-2 py-0.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-[10px] font-bold transition flex items-center gap-1 shadow-sm"
+                                className="px-2 py-0.5 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-[10px] font-semibold transition flex items-center gap-1 shadow-xs"
                                 title="Kasir serahkan unit ke pelanggan"
                               >
-                                <span>🤝 Diambil</span>
+                                <span>Serahkan Unit</span>
                               </button>
                             </div>
                           )}

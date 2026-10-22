@@ -186,3 +186,129 @@ export function generateServiceReceiptText(
 
   return lines.join('\n');
 }
+
+/**
+ * Format Laporan Penutupan Shift Kasir (Z-Report) untuk Printer Thermal (58mm/80mm)
+ */
+export interface ShiftReportPrintData {
+  shiftNumber: number;
+  cashierName: string;
+  shiftName?: string;
+  startTime: string;
+  endTime: string;
+  openingCash: number;
+  closingCash: number;
+  expectedCash: number;
+  discrepancy: number;
+  cashSales: number;
+  nonCashSales: number;
+  serviceCashSales?: number;
+  serviceNonCashSales?: number;
+  cashIn: number;
+  cashOut: number;
+  txCount: number;
+  serviceCount?: number;
+  note?: string;
+}
+
+export function generateShiftReportReceiptText(
+  data: ShiftReportPrintData,
+  profile: StoreProfile
+): string {
+  const width = profile.paperWidth === '58mm' ? 32 : 42;
+  const divider = '-'.repeat(width);
+  const doubleDivider = '='.repeat(width);
+  const lines: string[] = [];
+
+  // 1. Header Toko
+  lines.push(centerText(profile.storeName.toUpperCase(), width));
+  if (profile.branchName) lines.push(centerText(profile.branchName, width));
+  if (profile.address) lines.push(centerText(profile.address, width));
+  if (profile.phone) lines.push(centerText(`Telp: ${profile.phone}`, width));
+  lines.push(doubleDivider);
+
+  // 2. Judul Laporan Shift
+  lines.push(centerText('LAPORAN TUTUP SHIFT (Z-REPORT)', width));
+  lines.push(divider);
+
+  // 3. Info Kasir & Periode
+  lines.push(`No. Shift : #${data.shiftNumber}${data.shiftName ? ` (${data.shiftName})` : ''}`);
+  lines.push(`Kasir     : ${data.cashierName}`);
+
+  const startFormatted = new Date(data.startTime).toLocaleString('id-ID', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+  const endFormatted = new Date(data.endTime).toLocaleString('id-ID', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+
+  lines.push(`Mulai     : ${startFormatted}`);
+  lines.push(`Selesai   : ${endFormatted}`);
+  lines.push(doubleDivider);
+
+  // 4. Ringkasan Kas Laci (Drawer Reconciliation)
+  lines.push(centerText('REKONSILIASI KAS LACI', width));
+  lines.push(divider);
+  lines.push(padBetween('Modal Awal Kas:', formatRupiah(data.openingCash), width));
+  lines.push(padBetween('(+) Penjualan Tunai:', formatRupiah(data.cashSales), width));
+  if (data.serviceCashSales && data.serviceCashSales > 0) {
+    lines.push(padBetween('(+) Servis Tunai:', formatRupiah(data.serviceCashSales), width));
+  }
+  if (data.cashIn > 0) {
+    lines.push(padBetween('(+) Kas Masuk Lain:', formatRupiah(data.cashIn), width));
+  }
+  if (data.cashOut > 0) {
+    lines.push(padBetween('(-) Kas Keluar Biaya:', `-${formatRupiah(data.cashOut)}`, width));
+  }
+  lines.push(divider);
+  lines.push(padBetween('Total Ekspektasi Kas:', formatRupiah(data.expectedCash), width));
+  lines.push(padBetween('Uang Fisik Dihitung :', formatRupiah(data.closingCash), width));
+
+  let selisihLabel = 'SEIMBANG (Rp 0)';
+  if (data.discrepancy > 0) {
+    selisihLabel = `+${formatRupiah(data.discrepancy)} (LEBIH)`;
+  } else if (data.discrepancy < 0) {
+    selisihLabel = `${formatRupiah(data.discrepancy)} (MINUS)`;
+  }
+  lines.push(padBetween('Status Selisih Kas  :', selisihLabel, width));
+  lines.push(doubleDivider);
+
+  // 5. Ringkasan Non-Tunai & Omzet
+  lines.push(centerText('RINGKASAN PENJUALAN', width));
+  lines.push(divider);
+  lines.push(padBetween('Total Nota POS     :', `${data.txCount} Transaksi`, width));
+  lines.push(padBetween('Penjualan Tunai    :', formatRupiah(data.cashSales), width));
+  lines.push(padBetween('Penjualan Non-Tunai:', formatRupiah(data.nonCashSales), width));
+  lines.push(padBetween('Total Omzet POS    :', formatRupiah(data.cashSales + data.nonCashSales), width));
+
+  if ((data.serviceCount && data.serviceCount > 0) || (data.serviceCashSales && data.serviceCashSales > 0)) {
+    lines.push(divider);
+    lines.push(padBetween('Servis Selesai     :', `${data.serviceCount || 0} Tiket`, width));
+    const totalServis = (data.serviceCashSales || 0) + (data.serviceNonCashSales || 0);
+    lines.push(padBetween('Total Omzet Servis :', formatRupiah(totalServis), width));
+  }
+
+  const grandGrossRevenue = data.cashSales + data.nonCashSales + (data.serviceCashSales || 0) + (data.serviceNonCashSales || 0);
+  lines.push(doubleDivider);
+  lines.push(padBetween('TOTAL OMZET SHIFT  :', formatRupiah(grandGrossRevenue), width));
+  lines.push(doubleDivider);
+
+  // 6. Catatan Kasir
+  if (data.note) {
+    lines.push('Catatan:');
+    lines.push(` ${data.note}`);
+    lines.push(divider);
+  }
+
+  // 7. Tanda Tangan
+  lines.push('');
+  lines.push(padBetween('( Kasir )', '( Supervisor/Owner )', width));
+  lines.push('');
+  lines.push(centerText(`Dicetak: ${new Date().toLocaleString('id-ID')}`, width));
+  lines.push('');
+
+  return lines.join('\n');
+}
+
