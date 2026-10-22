@@ -118,9 +118,16 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-emerald-400" />
             <div>
-              <h2 className="text-base font-bold text-white">
-                Rincian Shift Kasir #{activeShift?.id || 1}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-white">
+                  Rincian Shift Kasir #{activeShift?.id || 1}
+                </h2>
+                {activeShift?.shiftName && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {activeShift.shiftName}
+                  </span>
+                )}
+              </div>
               <span className="text-xs text-slate-400">
                 Mulai: {startTimeStr} • Kasir: {activeShift?.cashierName}
               </span>

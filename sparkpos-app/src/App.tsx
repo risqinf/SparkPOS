@@ -112,6 +112,7 @@ export default function App() {
         id: (allShifts.length || 0) + 1,
         cashierId: employee.id,
         cashierName: employee.fullName,
+        shiftName: employee.shiftSchedule || (employee.isFlexibleShift ? 'Shift Fleksibel' : 'Shift Standar'),
         startTime: new Date().toISOString(),
         openingCash: 0,
         expectedCash: 0,

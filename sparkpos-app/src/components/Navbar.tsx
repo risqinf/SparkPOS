@@ -248,8 +248,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <Clock className="w-3.5 h-3.5 text-slate-400" />
           <div className="text-left leading-tight">
-            <span className="text-slate-400 text-[10px] block">Shift #{activeShift?.id || 1}</span>
-            <span className="font-semibold text-slate-200 text-xs truncate max-w-[90px] block">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 text-[10px] block font-mono">Shift #{activeShift?.id || 1}</span>
+              {currentUser?.shiftSchedule && (
+                <span className="text-[9px] text-emerald-400 font-medium truncate max-w-[120px] hidden sm:inline">
+                  • {currentUser.shiftSchedule}
+                </span>
+              )}
+            </div>
+            <span className="font-semibold text-slate-200 text-xs truncate max-w-[120px] block">
               {activeShift?.cashierName || 'Kasir'}
             </span>
           </div>

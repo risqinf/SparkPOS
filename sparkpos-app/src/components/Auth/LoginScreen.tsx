@@ -182,7 +182,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Sistem Kasir Aman & Offline</span>
             </span>
-            <span className="font-mono text-slate-400">v1.1.0</span>
+            <span className="font-mono text-slate-400">v1.2.0</span>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-white">Pilih Akun & Masukkan PIN</h2>
-              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.1.0</span>
+              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.2.0</span>
             </div>
 
             {/* Select User Role Buttons */}

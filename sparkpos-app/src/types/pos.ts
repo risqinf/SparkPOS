@@ -1,5 +1,14 @@
 export type RoleType = 'admin' | 'supervisor' | 'cashier';
 
+export interface WorkShiftTemplate {
+  id: string;
+  name: string;        // e.g. 'Shift Pagi', 'Shift Siang', 'Shift Weekend'
+  startTime?: string;  // e.g. '08:00'
+  endTime?: string;    // e.g. '16:00'
+  isFlexible: boolean; // true jika tanpa jam masuk/keluar tetap
+  description?: string;
+}
+
 export interface Employee {
   id: number;
   username: string;
@@ -7,6 +16,9 @@ export interface Employee {
   pin: string;
   role: RoleType;
   shiftSchedule?: string; // e.g. 'Shift Pagi (08:00 - 16:00)', 'Shift Siang'
+  shiftStart?: string;    // e.g. '08:00'
+  shiftEnd?: string;      // e.g. '16:00'
+  isFlexibleShift?: boolean; // true jika jadwal shift bebas / fleksibel
   isActive: boolean;
   createdAt: string;
 }
@@ -141,6 +153,7 @@ export interface Shift {
   id: number;
   cashierId: number;
   cashierName: string;
+  shiftName?: string; // e.g. 'Shift Pagi (08:00 - 16:00)' atau 'Fleksibel'
   startTime: string;
   endTime?: string;
   openingCash: number;

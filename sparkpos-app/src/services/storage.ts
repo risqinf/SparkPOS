@@ -10,6 +10,7 @@ import {
   HeldCart,
   Employee,
   CashFlow,
+  WorkShiftTemplate,
 } from '../types/pos';
 
 export class SparkPOSDatabase extends Dexie {
@@ -250,4 +251,31 @@ export async function getCashFlowsByShift(shiftId: number): Promise<CashFlow[]> 
     console.error('Error getCashFlowsByShift:', err);
     return [];
   }
+}
+
+// Master Template Jadwal & Jam Kerja Shift
+export const DEFAULT_WORK_SHIFTS: WorkShiftTemplate[] = [
+  { id: 'shift-pagi', name: 'Shift Pagi', startTime: '08:00', endTime: '16:00', isFlexible: false, description: 'Shift kerja pagi (08:00 - 16:00)' },
+  { id: 'shift-siang', name: 'Shift Siang', startTime: '12:00', endTime: '20:00', isFlexible: false, description: 'Shift kerja siang ke malam (12:00 - 20:00)' },
+  { id: 'shift-malam', name: 'Shift Malam', startTime: '16:00', endTime: '24:00', isFlexible: false, description: 'Shift kerja malam (16:00 - 24:00)' },
+  { id: 'shift-fullday', name: 'Full Day', startTime: '08:00', endTime: '21:00', isFlexible: false, description: 'Shift operasional seharian penuh' },
+  { id: 'shift-fleksibel', name: 'Shift Fleksibel', isFlexible: true, description: 'Shift bebas tanpa batasan jam tetap' },
+];
+
+export async function getWorkShiftTemplates(): Promise<WorkShiftTemplate[]> {
+  try {
+    const rec = await db.settings.get('work_shifts');
+    if (rec && rec.value && Array.isArray(rec.value) && rec.value.length > 0) {
+      return rec.value;
+    }
+    await db.settings.put({ key: 'work_shifts', value: DEFAULT_WORK_SHIFTS });
+    return DEFAULT_WORK_SHIFTS;
+  } catch (err) {
+    console.error('Error getWorkShiftTemplates:', err);
+    return DEFAULT_WORK_SHIFTS;
+  }
+}
+
+export async function saveWorkShiftTemplates(templates: WorkShiftTemplate[]): Promise<void> {
+  await db.settings.put({ key: 'work_shifts', value: templates });
 }
