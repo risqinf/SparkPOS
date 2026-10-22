@@ -47,6 +47,8 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedOrderToEdit, setSelectedOrderToEdit] = useState<ServiceOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<ServiceOrder | null>(null);
+  const [noteModalOrder, setNoteModalOrder] = useState<ServiceOrder | null>(null);
+  const [quickNoteText, setQuickNoteText] = useState('');
 
   const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin';
   const isTeknisi = currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor';
@@ -111,15 +113,60 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
     }
   };
 
-  const handleQuickStatusUpdate = async (order: ServiceOrder, nextStatus: ServiceStatus) => {
+  const handleQuickStart = async (order: ServiceOrder) => {
+    if (!order.id) return;
+    const techName = order.assignedTechName || currentUser?.fullName || 'Teknisi';
+    const techId = order.assignedTechId || currentUser?.id;
+    await updateServiceOrder(order.id, {
+      status: 'DIKERJAKAN',
+      assignedTechName: techName,
+      assignedTechId: techId,
+      startedAt: new Date().toISOString(),
+    });
+    await loadOrders();
+  };
+
+  const handleQuickFinish = async (order: ServiceOrder) => {
     if (!order.id) return;
     const now = new Date().toISOString();
     await updateServiceOrder(order.id, {
-      status: nextStatus,
-      completedAt: nextStatus === 'SELESAI' ? now : order.completedAt,
-      pickedUpAt: nextStatus === 'DIAMBIL' ? now : order.pickedUpAt,
+      status: 'SELESAI',
+      completedAt: now,
     });
     await loadOrders();
+  };
+
+  const handleQuickPickup = async (order: ServiceOrder) => {
+    if (!order.id) return;
+    const now = new Date().toISOString();
+    await updateServiceOrder(order.id, {
+      status: 'DIAMBIL',
+      pickedUpAt: now,
+      isPaid: true,
+      paidAmount: order.paidAmount || order.grandTotal,
+    });
+    await loadOrders();
+  };
+
+  const handleOpenNoteModal = (order: ServiceOrder) => {
+    setNoteModalOrder(order);
+    setQuickNoteText(order.notes || '');
+  };
+
+  const handleSaveQuickNote = async () => {
+    if (!noteModalOrder?.id) return;
+    await updateServiceOrder(noteModalOrder.id, {
+      notes: quickNoteText.trim() || undefined,
+    });
+    setNoteModalOrder(null);
+    await loadOrders();
+  };
+
+  const getWhatsAppLink = (order: ServiceOrder) => {
+    if (!order.customerPhone) return '#';
+    const cleanPhone = order.customerPhone.replace(/\D/g, '').replace(/^0/, '62');
+    const message = `Halo Kak ${order.customerName}, perbaikan ${order.deviceType} (No. Tiket: ${order.ticketNumber}) di ${storeProfile.storeName} saat ini sudah SELESAI dikerjakan oleh teknisi kami dan siap diambil di toko. Total biaya: ${formatRupiah(order.grandTotal)}. Terima kasih!`;
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
   const getStatusBadge = (status: ServiceStatus) => {
@@ -384,10 +431,23 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                         <span className="font-semibold text-slate-200 block truncate flex items-center gap-1.5">
                           <Laptop className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{order.deviceType}</span>
+                          {order.deviceSerial && (
+                            <span className="text-[10px] text-slate-500 font-mono">({order.deviceSerial})</span>
+                          )}
                         </span>
                         <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
                           {order.complaint}
                         </p>
+                        {order.diagnosis && (
+                          <div className="text-[10px] text-cyan-300 mt-1 bg-cyan-950/50 border border-cyan-800/40 rounded px-1.5 py-0.5 line-clamp-1">
+                            🔍 <strong>Diagnosa:</strong> {order.diagnosis}
+                          </div>
+                        )}
+                        {order.notes && (
+                          <div className="text-[10px] text-amber-300 mt-1 bg-amber-950/50 border border-amber-800/40 rounded px-1.5 py-0.5 line-clamp-2">
+                            💬 <strong>Info Teknisi:</strong> {order.notes}
+                          </div>
+                        )}
                       </td>
 
                       {/* Technician */}
@@ -411,8 +471,69 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                         </span>
                       </td>
 
-                      {/* Status Badge */}
-                      <td className="py-3 px-4 text-center">{getStatusBadge(order.status)}</td>
+                      {/* Status Badge & Quick Status Action */}
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          {getStatusBadge(order.status)}
+
+                          {/* Quick buttons per workflow status */}
+                          {order.status === 'DITERIMA' && (
+                            <button
+                              type="button"
+                              onClick={() => handleQuickStart(order)}
+                              className="px-2 py-0.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[10px] font-bold transition flex items-center gap-1 shadow-sm"
+                              title="Teknisi klik untuk mulai memproses unit ini"
+                            >
+                              <span>⚙️ Mulai Proses</span>
+                            </button>
+                          )}
+
+                          {order.status === 'DIKERJAKAN' && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleQuickFinish(order)}
+                                className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold transition flex items-center gap-1 shadow-sm"
+                                title="Tandai unit sudah selesai dikerjakan"
+                              >
+                                <span>✅ Selesai</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenNoteModal(order)}
+                                className="px-1.5 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-cyan-400 text-[10px] font-bold border border-slate-700 transition"
+                                title="Kirim info / catatan progres ke Admin & Kasir"
+                              >
+                                💬
+                              </button>
+                            </div>
+                          )}
+
+                          {order.status === 'SELESAI' && (
+                            <div className="flex items-center gap-1">
+                              {order.customerPhone && (
+                                <a
+                                  href={getWhatsAppLink(order)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition flex items-center gap-1 shadow-sm"
+                                  title="Kabari Pelanggan via WhatsApp"
+                                >
+                                  <span>📲 Chat WA</span>
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleQuickPickup(order)}
+                                className="px-2 py-0.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-[10px] font-bold transition flex items-center gap-1 shadow-sm"
+                                title="Kasir serahkan unit ke pelanggan"
+                              >
+                                <span>🤝 Diambil</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
 
                       {/* Actions */}
                       <td className="py-3 px-4 text-center">
@@ -421,13 +542,23 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                           <button
                             type="button"
                             onClick={() => setOrderToPrint(order)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white transition"
                             title="Cetak Tanda Terima Servis"
                           >
                             <Printer className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Edit / Update Status */}
+                          {/* Quick Note Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenNoteModal(order)}
+                            className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition"
+                            title="Beri Catatan Progres Pengerjaan ke Admin"
+                          >
+                            💬
+                          </button>
+
+                          {/* Edit / Full Details */}
                           <button
                             type="button"
                             onClick={() => {
@@ -435,7 +566,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                               setIsFormModalOpen(true);
                             }}
                             className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition"
-                            title="Update Pengerjaan & Status"
+                            title="Rincian Lengkap & Sparepart"
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
@@ -484,6 +615,89 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
           storeProfile={storeProfile}
           onClose={() => setOrderToPrint(null)}
         />
+      )}
+
+      {/* Quick Note Modal: Teknisi Update Info ke Admin & Kasir */}
+      {noteModalOrder && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-850">
+              <div className="flex items-center gap-2">
+                <span className="text-base">💬</span>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Update Info Proses ke Admin & Kasir</h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    Tiket #{noteModalOrder.ticketNumber} • {noteModalOrder.deviceType}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNoteModalOrder(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">
+                  Catatan Progres Pengerjaan:
+                </label>
+                <textarea
+                  rows={3}
+                  value={quickNoteText}
+                  onChange={(e) => setQuickNoteText(e.target.value)}
+                  placeholder="Ketik status terkini pengerjaan agar Kasir & Admin di kasir tahu..."
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Quick Template Buttons */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">
+                  Pilihan Cepat:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    '⚙️ Sedang proses install OS & driver',
+                    '🔍 Sedang cek jalur motherboard & tegangan',
+                    '📦 Menunggu konfirmasi penggantian part',
+                    '🧪 Sedang running-test stabilitas suhu & performa',
+                    '✅ Pengerjaan beres, unit normal & siap diambil',
+                  ].map((tpl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setQuickNoteText(tpl)}
+                      className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white transition text-left"
+                    >
+                      {tpl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setNoteModalOrder(null)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveQuickNote}
+                className="px-4 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition shadow-sm"
+              >
+                Simpan & Beritahu Admin
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

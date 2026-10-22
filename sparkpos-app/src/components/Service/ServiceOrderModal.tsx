@@ -408,8 +408,8 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Keluhan & Diagnosa Kerusakan */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Section 2: Keluhan, Diagnosa Kerusakan, & Info ke Admin */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-slate-400 block mb-1 font-semibold">
                 Keluhan Pelanggan <span className="text-rose-400">*</span>
@@ -420,20 +420,33 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 placeholder="Contoh: Laptop mati total, lampu indikator charger berkedip..."
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500 resize-none"
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500 resize-none"
               />
             </div>
 
             <div>
               <label className="text-slate-400 block mb-1 font-semibold">
-                Diagnosa & Catatan Teknisi
+                Diagnosa Kerusakan Teknisi
               </label>
               <textarea
                 rows={2}
-                placeholder="Contoh: Jalur VCore short 19V, perlu ganti mosfet & repasta thermal..."
+                placeholder="Contoh: Jalur VCore short 19V, perlu ganti mosfet & repasta..."
                 value={diagnosis}
                 onChange={(e) => setDiagnosis(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500 resize-none"
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-400 block mb-1 font-semibold flex items-center gap-1">
+                <span>💬 Info Proses ke Kasir/Admin</span>
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Contoh: Sedang running test, menunggu sparepart, dll..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 focus:outline-none focus:border-amber-500 resize-none"
               />
             </div>
           </div>
