@@ -236,7 +236,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
 
           <div className="text-center mb-6">
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
-              Setup Toko Selesai! 🎉
+              Setup Toko Selesai! <CheckCircle2 className="w-4 h-4 inline mr-1 text-emerald-500" />
             </h2>
             <p className="text-sm text-slate-400 mt-1">
               Data toko <strong className="text-white">{setupResult.profile.storeName}</strong> berhasil dikonfigurasi.

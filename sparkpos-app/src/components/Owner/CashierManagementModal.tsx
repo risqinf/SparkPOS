@@ -16,6 +16,8 @@ import {
   Calendar,
   Sparkles,
   LogOut,
+  ShieldCheck,
+  Briefcase,
 } from 'lucide-react';
 import { Employee, WorkShiftTemplate } from '../../types/pos';
 import {
@@ -497,7 +499,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      💼 Kasir
+                      Kasir
                     </button>
                     <button
                       type="button"
@@ -508,7 +510,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      🔧 Teknisi
+                      Teknisi
                     </button>
                     <button
                       type="button"
@@ -519,7 +521,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      👑 Owner
+                      Owner
                     </button>
                   </div>
                   <span className="text-[10px] text-slate-500 block mt-1">
@@ -712,7 +714,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                                   : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                               }`}
                             >
-                              {isOwner ? '👑 Owner' : isTeknisi ? '🔧 Teknisi' : '💼 Kasir'}
+                              {isOwner ? 'Owner' : isTeknisi ? 'Teknisi' : 'Kasir'}
                             </span>
                             {!isActive && (
                               <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">

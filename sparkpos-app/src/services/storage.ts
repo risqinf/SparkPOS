@@ -272,6 +272,16 @@ export async function updateStoreProfile(profile: StoreProfile): Promise<void> {
   await db.settings.put({ key: 'store_profile', value: profile });
 }
 
+
+/**
+ * [SECURITY NOTE]
+ * PIN disimpan dalam bentuk plaintext di IndexedDB lokal.
+ * Untuk produksi yang membutuhkan keamanan lebih, gunakan:
+ * - hash() berbasis Web Crypto API sebelum menyimpan ke DB
+ * - atau enkripsi client-side dengan key yang tidak tersimpan di browser
+ * Contoh: await crypto.subtle.digest('SHA-256', Buffer.from(pin)) 
+ */
+
 export async function authenticateEmployee(pinOrUsername: string, pin?: string): Promise<Employee | null> {
   if (pin !== undefined) {
     // Authenticate by username & pin

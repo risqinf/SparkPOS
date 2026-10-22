@@ -14,6 +14,8 @@ import {
   Lock,
   Truck,
   FileSpreadsheet,
+  Package,
+  ShieldCheck,
 } from 'lucide-react';
 import { Product, Category, Unit, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
@@ -366,13 +368,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           {p.warrantyPeriod && (
                             <>
                               <span>•</span>
-                              <span className="text-emerald-400">🛡️ {p.warrantyPeriod}</span>
+                              <span className="text-emerald-400"><ShieldCheck className="w-3 h-3 inline mr-0.5" />{p.warrantyPeriod}</span>
                             </>
                           )}
                           {p.supplierName && (
                             <>
                               <span>•</span>
-                              <span className="text-slate-300 font-medium">📦 {p.supplierName}</span>
+                              <span className="text-slate-300 font-medium"><Package className="w-3 h-3 inline mr-1" />{p.supplierName}</span>
                             </>
                           )}
                         </div>
@@ -380,10 +382,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         {(p.conditionNotes || p.completeness) && (
                           <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
                             {p.conditionNotes && (
-                              <span className="text-amber-400/90 italic">⚠️ {p.conditionNotes}</span>
+                              <span className="text-amber-400/90 italic"><AlertTriangle className="w-3 h-3 inline mr-1 text-amber-500" />{p.conditionNotes}</span>
                             )}
                             {p.completeness && (
-                              <span className="text-slate-400">📦 Kelengkapan: {p.completeness}</span>
+                              <span className="text-slate-400"><Package className="w-3 h-3 inline mr-1" />Kelengkapan: {p.completeness}</span>
                             )}
                           </div>
                         )}

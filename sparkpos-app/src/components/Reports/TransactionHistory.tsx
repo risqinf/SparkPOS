@@ -18,6 +18,8 @@ import {
   ChevronRight,
   Eye,
   FileText,
+  Truck,
+  X,
 } from 'lucide-react';
 import {
   Transaction,
@@ -704,7 +706,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           <div>{tx.customerName || <span className="text-zinc-500 italic">Pelanggan Umum</span>}</div>
                           {tx.shippingCost && tx.shippingCost > 0 ? (
                             <span className="text-[10px] text-cyan-400 block mt-0.5">
-                              🚚 Kirim: {tx.shippingCourier || 'Ekspedisi'} (+{formatRupiah(tx.shippingCost)})
+                              <Truck className="w-3 h-3 inline mr-1" />Kirim: {tx.shippingCourier || 'Ekspedisi'} (+{formatRupiah(tx.shippingCost)})
                             </span>
                           ) : null}
                         </td>
@@ -1481,7 +1483,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 onClick={() => setShiftReceiptPreviewText(null)}
                 className="p-1 rounded text-zinc-400 hover:text-zinc-100"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

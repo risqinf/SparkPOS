@@ -15,6 +15,9 @@ import {
   Sun,
   Moon,
   Monitor,
+  Info,
+  X,
+  Wrench,
 } from 'lucide-react';
 import { Employee, StoreProfile } from '../../types/pos';
 import { authenticateEmployee, db } from '../../services/storage';
@@ -318,7 +321,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                           : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300'
                       }`}
                     >
-                      <span>{isOwner ? '👑' : isTeknisi ? '🔧' : '👤'}</span>
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full shrink-0 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                  {isOwner
+                    ? <ShieldCheck className="w-3 h-3" />
+                    : isTeknisi
+                    ? <Wrench className="w-3 h-3" />
+                    : <User className="w-3 h-3" />}
+                </span>
                       <span className="font-bold">{emp.fullName}</span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">(@{emp.username})</span>
                     </button>
@@ -327,7 +336,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
 
                 {employees.filter((e: Employee) => e.role === 'kasir' || e.role === 'cashier').length === 0 && (
                   <div className="w-full p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px]">
-                    💡 Baru ada akun Owner. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir atau teknisi baru.
+                    <Info className="w-3 h-3 inline mr-1 text-amber-500" />Baru ada akun Owner. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir atau teknisi baru.
                   </div>
                 )}
               </div>
@@ -344,7 +353,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   </span>
                   {matchedUser && (
                     <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      ✓ Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'owner' || matchedUser.role === 'admin' ? 'Owner' : matchedUser.role === 'teknisi' || matchedUser.role === 'supervisor' ? 'Teknisi' : 'Kasir'})
+                      <CheckCircle2 className="w-3 h-3 inline mr-1 text-emerald-500" />Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'owner' || matchedUser.role === 'admin' ? 'Owner' : matchedUser.role === 'teknisi' || matchedUser.role === 'supervisor' ? 'Teknisi' : 'Kasir'})
                     </span>
                   )}
                 </label>
@@ -371,7 +380,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                       }}
                       className="absolute right-3 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
-                      ✕
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>

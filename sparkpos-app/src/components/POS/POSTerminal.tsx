@@ -19,6 +19,8 @@ import {
   Truck,
   ChevronDown,
   ChevronUp,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
 import {
   Product,
@@ -439,7 +441,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         <div className="bg-emerald-50 dark:bg-slate-900 border-b border-emerald-200 dark:border-emerald-500/30 px-4 py-1.5 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300 shrink-0 z-20">
           <div className="flex items-center gap-2">
             <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold">
-              👑
+              <ShieldCheck className="w-3.5 h-3.5" />
             </span>
             <span>
               <strong>Mode Owner Aktif</strong> — Anda sedang di layar kasir dengan akun Owner.
@@ -713,7 +715,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                       </span>
                     )}
                     {item.warrantyPeriod && (
-                      <span className="text-emerald-600 dark:text-emerald-400 text-[10px]">🛡️ {item.warrantyPeriod}</span>
+                      <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-[10px]">
+                        <ShieldCheck className="w-3 h-3 mr-0.5" />{item.warrantyPeriod}
+                      </span>
                     )}
                     {item.serialNumber && (
                       <span className="text-slate-400 text-[10px]">SN: {item.serialNumber}</span>
@@ -776,7 +780,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                 className="text-slate-500 hover:text-slate-300 text-xs px-1.5"
                 title="Hapus nama pelanggan"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>

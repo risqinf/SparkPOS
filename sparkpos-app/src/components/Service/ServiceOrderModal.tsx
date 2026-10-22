@@ -418,11 +418,11 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       onChange={(e) => setStatus(e.target.value as ServiceStatus)}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold focus:outline-none focus:border-amber-500"
                     >
-                      <option value="DITERIMA">📥 DITERIMA</option>
-                      <option value="DIKERJAKAN">⚙️ DIKERJAKAN</option>
-                      <option value="SELESAI">✅ SELESAI</option>
-                      <option value="DIAMBIL">🤝 DIAMBIL</option>
-                      <option value="DIBATALKAN">❌ DIBATALKAN</option>
+                      <option value="DITERIMA">DITERIMA</option>
+                      <option value="DIKERJAKAN">DIKERJAKAN</option>
+                      <option value="SELESAI">SELESAI</option>
+                      <option value="DIAMBIL">DIAMBIL</option>
+                      <option value="DIBATALKAN">DIBATALKAN</option>
                     </select>
                   </div>
 
@@ -677,7 +677,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
             <div>
               <label className="text-slate-400 block mb-1 font-semibold flex items-center gap-1">
-                <span>💬 Info Proses ke Kasir/Admin</span>
+                <span>Info Proses ke Kasir/Admin</span>
               </label>
               <textarea
                 rows={2}
@@ -710,8 +710,8 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   onChange={(e) => setNewItemType(e.target.value as 'PART' | 'SERVICE')}
                   className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-semibold text-xs"
                 >
-                  <option value="SERVICE">🔧 JASA</option>
-                  <option value="PART">📦 SPAREPART</option>
+                  <option value="SERVICE">JASA</option>
+                  <option value="PART">SPAREPART</option>
                 </select>
               </div>
 
