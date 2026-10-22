@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck } from 'lucide-react';
-import { Product, Category, Unit, Supplier } from '../../types/pos';
+import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck, ShieldCheck, Cpu } from 'lucide-react';
+import { Product, Category, Unit, Supplier, ProductCondition } from '../../types/pos';
 import { db, getSuppliers } from '../../services/storage';
 
 interface ProductFormModalProps {
@@ -33,6 +33,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [sellPrice, setSellPrice] = useState<string>(product?.sellPrice?.toString() || '0');
   const [stock, setStock] = useState<string>(product?.stock?.toString() || '0');
   const [minStock, setMinStock] = useState<string>(product?.minStock?.toString() || '5');
+
+  // Spesifikasi Khusus Toko Komputer (Kondisi, Kelengkapan, Garansi, SN)
+  const [condition, setCondition] = useState<ProductCondition>(product?.condition || 'BARU');
+  const [conditionNotes, setConditionNotes] = useState(product?.conditionNotes || '');
+  const [completeness, setCompleteness] = useState(product?.completeness || '');
+  const [warrantyPeriod, setWarrantyPeriod] = useState(product?.warrantyPeriod || '1 Bulan Toko');
+  const [serialNumber, setSerialNumber] = useState(product?.serialNumber || '');
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,6 +92,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         stock: currentStock,
         minStock: minimumStock,
         isService: isServiceCategory,
+        condition,
+        conditionNotes: conditionNotes.trim() || undefined,
+        completeness: completeness.trim() || undefined,
+        warrantyPeriod: warrantyPeriod.trim() || undefined,
+        serialNumber: serialNumber.trim() || undefined,
         isActive: true,
         updatedAt: now,
       });
@@ -103,6 +116,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         stock: currentStock,
         minStock: minimumStock,
         isService: isServiceCategory,
+        condition,
+        conditionNotes: conditionNotes.trim() || undefined,
+        completeness: completeness.trim() || undefined,
+        warrantyPeriod: warrantyPeriod.trim() || undefined,
+        serialNumber: serialNumber.trim() || undefined,
         isActive: true,
         createdAt: now,
         updatedAt: now,
@@ -312,9 +330,136 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 />
               </div>
             </div>
-          </div>
+          {/* Spesifikasi Khusus Komputer & Laptop: Kondisi, Kelengkapan, Garansi, SN */}
+          {!isServiceCategory && (
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-emerald-400" />
+                  Kondisi & Kelengkapan Laptop / Komponen
+                </span>
+                <span className="text-[10px] text-slate-500">Khusus Toko Komputer</span>
+              </div>
 
-          {/* Stock & Minimum Stock OR Unlimited Service Notice */}
+              {/* Pilihan Kondisi Unit */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                  Kondisi Barang:
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(
+                    [
+                      { key: 'BARU', label: 'Baru', desc: 'Segel / BNIB', color: 'border-emerald-600 bg-emerald-950/40 text-emerald-300' },
+                      { key: 'BEKAS', label: 'Bekas (Normal)', desc: 'Mulus 100% normal', color: 'border-blue-600 bg-blue-950/40 text-blue-300' },
+                      { key: 'MINUS', label: 'Bekas (Minus)', desc: 'Ada cacat / minus', color: 'border-amber-600 bg-amber-950/40 text-amber-300' },
+                      { key: 'MATOT', label: 'Matot / Kanibal', desc: 'Mati total / bahan sparepart', color: 'border-rose-600 bg-rose-950/40 text-rose-300' },
+                    ] as const
+                  ).map((c) => (
+                    <button
+                      type="button"
+                      key={c.key}
+                      onClick={() => setCondition(c.key)}
+                      className={`p-2 rounded-lg border text-left transition flex flex-col justify-between ${
+                        condition === c.key
+                          ? `${c.color} ring-1 ring-emerald-500 font-bold`
+                          : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="text-xs">{c.label}</span>
+                      <span className="text-[9px] opacity-75 mt-0.5 leading-tight">{c.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Detail Kerusakan / Minus jika bukan BARU */}
+              {condition !== 'BARU' && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-amber-400 mb-1">
+                    Detail Kerusakan / Catatan Minus Fisik:
+                  </label>
+                  <input
+                    type="text"
+                    value={conditionNotes}
+                    onChange={(e) => setConditionNotes(e.target.value)}
+                    placeholder="Contoh: Baterai drop, engsel kanan longgar, lecet casing wajar..."
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-amber-900/60 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
+
+              {/* Kelengkapan Unit & Serial Number */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    Kelengkapan Unit:
+                  </label>
+                  <input
+                    type="text"
+                    value={completeness}
+                    onChange={(e) => setCompleteness(e.target.value)}
+                    placeholder="Unit + Charger + Dus, Batangan..."
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['Fullset Box', 'Unit + Charger', 'Unit Saja (Batangan)', 'Kabel Power'].map((tag) => (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => setCompleteness(tag)}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                      >
+                        +{tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                    Masa Garansi Toko / Pabrik:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={warrantyPeriod}
+                      onChange={(e) => setWarrantyPeriod(e.target.value)}
+                      placeholder="1 Bulan Toko / 1 Tahun Resmi..."
+                      className="w-full pl-7 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                    />
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2" />
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['7 Hari', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Tanpa Garansi'].map((w) => (
+                      <button
+                        type="button"
+                        key={w}
+                        onClick={() => setWarrantyPeriod(w)}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                      >
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Serial Number (SN / IMEI) */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  Serial Number / No. Seri Mesin (Opsional):
+                </label>
+                <input
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  placeholder="SN: LNV-PF123456 / Cek di stiker belakang laptop"
+                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          )}
+
           {isServiceCategory ? (
             <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs flex items-center gap-2.5">
               <Sparkles className="w-5 h-5 text-blue-400 shrink-0" />

@@ -10,7 +10,8 @@ export function calculateCartSummary(
   orderDiscountPercent: number = 0,
   orderDiscountNominal: number = 0,
   taxPercent: number = 0,
-  isTaxInclusive: boolean = false
+  isTaxInclusive: boolean = false,
+  shippingCost: number = 0
 ): CartSummary {
   if (items.length === 0) {
     return {
@@ -21,7 +22,8 @@ export function calculateCartSummary(
       taxPercent,
       taxAmount: 0,
       isTaxInclusive,
-      grandTotal: 0,
+      shippingCost: shippingCost || 0,
+      grandTotal: shippingCost || 0,
       totalItems: 0,
       rounding: 0,
     };
@@ -67,6 +69,9 @@ export function calculateCartSummary(
     grandTotal = taxableBase;
   }
 
+  // Tambahkan biaya pengiriman / ongkir jika ada
+  grandTotal += (shippingCost || 0);
+
   return {
     subtotal,
     discountItemTotal,
@@ -75,6 +80,7 @@ export function calculateCartSummary(
     taxPercent,
     taxAmount,
     isTaxInclusive,
+    shippingCost: shippingCost || 0,
     grandTotal: Math.max(0, Math.round(grandTotal)),
     totalItems,
     rounding: 0,

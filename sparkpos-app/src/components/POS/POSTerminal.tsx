@@ -16,6 +16,9 @@ import {
   LogOut,
   Users,
   User,
+  Truck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   Product,
@@ -74,6 +77,13 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   const [orderDiscountPercent, setOrderDiscountPercent] = useState<number>(0);
   const [orderDiscountNominal, setOrderDiscountNominal] = useState<number>(0);
 
+  // Biaya Pengiriman (Ongkir) & Ekspedisi
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [shippingCourier, setShippingCourier] = useState<string>('');
+  const [shippingTrackingNumber, setShippingTrackingNumber] = useState<string>('');
+  const [shippingAddress, setShippingAddress] = useState<string>('');
+  const [isShippingOpen, setIsShippingOpen] = useState<boolean>(false);
+
   // Modals
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
@@ -101,13 +111,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Cart Financials
+  // Cart Financials (Termasuk Ongkir)
   const cartSummary: CartSummary = calculateCartSummary(
     cartItems,
     orderDiscountPercent,
     orderDiscountNominal,
     storeProfile.taxPercent,
-    storeProfile.isTaxInclusive
+    storeProfile.isTaxInclusive,
+    shippingCost
   );
 
   // Add product to cart logic
@@ -147,6 +158,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           quantity,
           discountAmount: 0,
           subtotal: product.sellPrice * quantity,
+          condition: product.condition,
+          warrantyPeriod: product.warrantyPeriod,
+          serialNumber: product.serialNumber,
         };
         return [...prev, newItem];
       }
@@ -185,6 +199,11 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       setCartItems([]);
       setOrderDiscountPercent(0);
       setOrderDiscountNominal(0);
+      setShippingCost(0);
+      setShippingCourier('');
+      setShippingTrackingNumber('');
+      setShippingAddress('');
+      setIsShippingOpen(false);
     }
   };
 
@@ -260,6 +279,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       orderDiscountNominal,
       orderDiscountPercent,
       customerName: customerName.trim() || undefined,
+      shippingCost,
+      shippingCourier: shippingCourier.trim() || undefined,
+      shippingTrackingNumber: shippingTrackingNumber.trim() || undefined,
+      shippingAddress: shippingAddress.trim() || undefined,
       heldAt: new Date().toISOString(),
     };
     await db.heldCarts.add(newHeld);
@@ -267,6 +290,11 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setOrderDiscountPercent(0);
     setOrderDiscountNominal(0);
     setCustomerName('');
+    setShippingCost(0);
+    setShippingCourier('');
+    setShippingTrackingNumber('');
+    setShippingAddress('');
+    setIsShippingOpen(false);
     onUpdateHeldCarts();
     showToast(`Transaksi diparkir: ${label}`, 'success');
   };
@@ -282,6 +310,11 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setOrderDiscountPercent(cart.orderDiscountPercent);
     setOrderDiscountNominal(cart.orderDiscountNominal);
     setCustomerName(cart.customerName || '');
+    setShippingCost(cart.shippingCost || 0);
+    setShippingCourier(cart.shippingCourier || '');
+    setShippingTrackingNumber(cart.shippingTrackingNumber || '');
+    setShippingAddress(cart.shippingAddress || '');
+    setIsShippingOpen(!!(cart.shippingCost && cart.shippingCost > 0));
     await db.heldCarts.delete(cart.id);
     onUpdateHeldCarts();
     setIsHeldModalOpen(false);
@@ -310,6 +343,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       subtotal: cartSummary.subtotal,
       discountOrderAmount: cartSummary.discountOrderAmount,
       taxAmount: cartSummary.taxAmount,
+      shippingCost,
+      shippingCourier: shippingCourier.trim() || undefined,
+      shippingTrackingNumber: shippingTrackingNumber.trim() || undefined,
+      shippingAddress: shippingAddress.trim() || undefined,
       grandTotal: cartSummary.grandTotal,
       paidAmount,
       changeAmount,
@@ -354,6 +391,11 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setCartItems([]);
     setOrderDiscountPercent(0);
     setOrderDiscountNominal(0);
+    setShippingCost(0);
+    setShippingCourier('');
+    setShippingTrackingNumber('');
+    setShippingAddress('');
+    setIsShippingOpen(false);
     setIsPaymentOpen(false);
 
     // Show Receipt Modal
@@ -655,13 +697,26 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               >
                 {/* Product Info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-xs text-slate-200 truncate">{item.name}</h4>
-                  <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                    {formatRupiah(item.unitPrice)}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h4 className="font-medium text-xs text-slate-200 truncate">{item.name}</h4>
+                    {item.condition && item.condition !== 'BARU' && (
+                      <span className="text-[9px] px-1 py-0.2 rounded font-bold uppercase tracking-wider bg-amber-950/80 text-amber-400 border border-amber-800/60">
+                        {item.condition}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5 font-mono flex items-center gap-2 flex-wrap">
+                    <span>{formatRupiah(item.unitPrice)}</span>
                     {item.discountAmount > 0 && (
-                      <span className="text-slate-400 ml-1">
+                      <span className="text-slate-400">
                         (-{formatRupiah(item.discountAmount)})
                       </span>
+                    )}
+                    {item.warrantyPeriod && (
+                      <span className="text-emerald-400 text-[10px]">🛡️ {item.warrantyPeriod}</span>
+                    )}
+                    {item.serialNumber && (
+                      <span className="text-slate-400 text-[10px]">SN: {item.serialNumber}</span>
                     )}
                   </div>
                 </div>
@@ -726,6 +781,125 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             )}
           </div>
 
+          {/* Biaya Pengiriman (Ongkir) Toggle & Options */}
+          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsShippingOpen(!isShippingOpen)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition"
+              >
+                <Truck className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Kirim Barang / Ongkir</span>
+                {shippingCost > 0 && (
+                  <span className="text-cyan-400 font-mono text-[11px] ml-1">
+                    (+{formatRupiah(shippingCost)})
+                  </span>
+                )}
+                {isShippingOpen ? (
+                  <ChevronUp className="w-3 h-3 text-slate-500" />
+                ) : (
+                  <ChevronDown className="w-3 h-3 text-slate-500" />
+                )}
+              </button>
+
+              {shippingCost > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShippingCost(0);
+                    setShippingCourier('');
+                    setShippingTrackingNumber('');
+                    setShippingAddress('');
+                  }}
+                  className="text-[10px] text-slate-500 hover:text-rose-400 font-semibold"
+                >
+                  Batal Ongkir
+                </button>
+              )}
+            </div>
+
+            {isShippingOpen && (
+              <div className="pt-2 border-t border-slate-800/80 space-y-2 text-xs">
+                {/* Nominal Ongkir */}
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">
+                    Biaya Ongkos Kirim (Rp):
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1.5 text-[11px] text-slate-500 font-semibold">Rp</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={shippingCost || ''}
+                      onChange={(e) => setShippingCost(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className="w-full pl-8 pr-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-cyan-500 font-bold"
+                    />
+                  </div>
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {[10000, 15000, 20000, 25000, 35000, 50000].map((amt) => (
+                      <button
+                        type="button"
+                        key={amt}
+                        onClick={() => setShippingCost(amt)}
+                        className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                          shippingCost === amt
+                            ? 'bg-cyan-600 text-white font-bold'
+                            : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+                        }`}
+                      >
+                        +{amt / 1000}rb
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Kurir Ekspedisi */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">Pilihan Kurir:</label>
+                    <select
+                      value={shippingCourier}
+                      onChange={(e) => setShippingCourier(e.target.value)}
+                      className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500 font-medium"
+                    >
+                      <option value="">Pilih Kurir...</option>
+                      <option value="J&T Express">J&T Express</option>
+                      <option value="JNE Express">JNE Express</option>
+                      <option value="SiCepat">SiCepat</option>
+                      <option value="GoSend / Grab">GoSend / Grab</option>
+                      <option value="Kurir Toko">Kurir Toko Sendiri</option>
+                      <option value="Pos Indonesia">Pos Indonesia</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">No. Resi (Opsional):</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. JP123456789"
+                      value={shippingTrackingNumber}
+                      onChange={(e) => setShippingTrackingNumber(e.target.value)}
+                      className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Alamat Pengiriman */}
+                <div>
+                  <label className="text-[10px] text-slate-400 block mb-1">Alamat Pengiriman:</label>
+                  <input
+                    type="text"
+                    placeholder="Alamat lengkap penerima..."
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Subtotal, Diskon & Pajak Rows */}
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-400">
@@ -757,6 +931,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   : 'Rp 0'}
               </span>
             </div>
+
+            {/* Ongkos Kirim Row if set */}
+            {shippingCost > 0 && (
+              <div className="flex justify-between text-cyan-400 font-medium">
+                <span>Ongkos Kirim ({shippingCourier || 'Ekspedisi'}):</span>
+                <span className="font-mono">+{formatRupiah(shippingCost)}</span>
+              </div>
+            )}
 
             {/* PPN Pajak */}
             {storeProfile.taxPercent > 0 && (

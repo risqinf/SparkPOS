@@ -332,18 +332,61 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     <tr key={p.id} className="hover:bg-slate-850/60 transition">
                       {/* Name & Barcode */}
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-200 text-xs">{p.name}</div>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-slate-200 text-xs">{p.name}</span>
+                          {p.condition && p.condition !== 'BARU' ? (
+                            <span
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                p.condition === 'MATOT'
+                                  ? 'bg-rose-950/60 text-rose-400 border border-rose-800/80'
+                                  : p.condition === 'MINUS'
+                                  ? 'bg-amber-950/60 text-amber-400 border border-amber-800/80'
+                                  : 'bg-blue-950/60 text-blue-400 border border-blue-800/80'
+                              }`}
+                            >
+                              {p.condition}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-400 border border-emerald-800/80">
+                              BARU
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1 flex-wrap">
                           <span className="font-mono text-slate-400">{p.barcode || '-'}</span>
                           <span>•</span>
                           <span className="font-mono">{p.sku}</span>
+                          {p.serialNumber && (
+                            <>
+                              <span>•</span>
+                              <span className="font-mono text-slate-300">SN: {p.serialNumber}</span>
+                            </>
+                          )}
+                          {p.warrantyPeriod && (
+                            <>
+                              <span>•</span>
+                              <span className="text-emerald-400">🛡️ {p.warrantyPeriod}</span>
+                            </>
+                          )}
                           {p.supplierName && (
                             <>
                               <span>•</span>
-                              <span className="text-emerald-400 font-medium">📦 {p.supplierName}</span>
+                              <span className="text-slate-300 font-medium">📦 {p.supplierName}</span>
                             </>
                           )}
                         </div>
+
+                        {(p.conditionNotes || p.completeness) && (
+                          <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                            {p.conditionNotes && (
+                              <span className="text-amber-400/90 italic">⚠️ {p.conditionNotes}</span>
+                            )}
+                            {p.completeness && (
+                              <span className="text-slate-400">📦 Kelengkapan: {p.completeness}</span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Category */}

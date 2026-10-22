@@ -56,6 +56,11 @@ export interface ServiceOrder {
   deviceSerial?: string;      // No seri / IMEI / SN
   complaint: string;          // Keluhan awal pelanggan
   diagnosis?: string;         // Diagnosa & analisa teknisi
+  completeness?: string;      // Kelengkapan unit: Charger, Tas, Box, Baterai, Kabel Power dll
+  physicalCondition?: string; // Kondisi fisik: Lecet pemakaian, engsel patah, baut kurang dll
+  devicePassword?: string;    // Password Windows / PIN / Pola kunci jika ada
+  warrantyDays?: number;      // Garansi pengerjaan servis (hari, misal: 7, 14, 30 hari)
+  downPayment?: number;       // Uang Muka / DP servis saat barang masuk
   status: ServiceStatus;
   assignedTechId?: number;    // ID teknisi penanggung jawab
   assignedTechName?: string;  // Nama teknisi
@@ -90,6 +95,8 @@ export interface Unit {
   symbol: string;
 }
 
+export type ProductCondition = 'BARU' | 'BEKAS' | 'MINUS' | 'MATOT';
+
 export interface Product {
   id: number;
   sku: string;
@@ -107,6 +114,11 @@ export interface Product {
   minStock: number;   // Batas peringatan stok menipis
   image?: string;
   isService?: boolean; // True jika produk bertipe Jasa (Stok tak terbatas)
+  condition?: ProductCondition; // BARU = Baru, BEKAS = Bekas Mulus, MINUS = Bekas Ada Minus, MATOT = Bahan Kanibal/Rusak
+  conditionNotes?: string;      // Detail minus/kondisi fisik (e.g. "Baterai drop, lecet bezel", "Unit matot kena air")
+  completeness?: string;        // Kelengkapan (e.g. "Fullset Box + Charger Ori", "Unit Only / Batangan")
+  warrantyPeriod?: string;      // Garansi (e.g. "1 Tahun Resmi", "1 Bulan Toko", "7 Hari")
+  serialNumber?: string;        // Nomor Seri / SN distributor
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -139,6 +151,9 @@ export interface CartItem {
   discountAmount: number; // Diskon per item (nominal)
   subtotal: number;       // (unitPrice * quantity) - discountAmount
   isService?: boolean;
+  condition?: ProductCondition;
+  warrantyPeriod?: string;
+  serialNumber?: string;
 }
 
 export interface CartSummary {
@@ -149,6 +164,7 @@ export interface CartSummary {
   taxPercent: number;
   taxAmount: number;
   isTaxInclusive: boolean;
+  shippingCost?: number;
   grandTotal: number;
   totalItems: number;
   rounding: number;
@@ -172,6 +188,10 @@ export interface Transaction {
   subtotal: number;
   discountOrderAmount: number;
   taxAmount: number;
+  shippingCost?: number;             // Biaya ongkir / pengiriman
+  shippingCourier?: string;          // Kurir pengiriman (JNE, J&T, Gosend, Kurir Toko)
+  shippingTrackingNumber?: string;   // Nomor Resi pengiriman
+  shippingAddress?: string;          // Alamat pengiriman
   grandTotal: number;
   paidAmount: number;
   changeAmount: number;
@@ -189,6 +209,8 @@ export interface HeldCart {
   orderDiscountNominal: number;
   orderDiscountPercent: number;
   customerName?: string;
+  shippingCost?: number;
+  shippingCourier?: string;
   heldAt: string;
 }
 

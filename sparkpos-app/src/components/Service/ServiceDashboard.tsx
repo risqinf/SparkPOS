@@ -458,6 +458,39 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                         <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
                           {order.complaint}
                         </p>
+
+                        {/* Kelengkapan & Kondisi Fisik */}
+                        {(order.completeness || order.physicalCondition) && (
+                          <div className="text-[10px] text-slate-400 mt-1 flex flex-wrap gap-1">
+                            {order.completeness && (
+                              <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
+                                📦 {order.completeness}
+                              </span>
+                            )}
+                            {order.physicalCondition && (
+                              <span className="bg-amber-950/40 text-amber-300 border border-amber-900/60 px-1.5 py-0.5 rounded">
+                                ⚠️ {order.physicalCondition}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Device Password & Warranty */}
+                        {(order.devicePassword || (order.warrantyDays !== undefined && order.warrantyDays > 0)) && (
+                          <div className="text-[10px] text-slate-400 mt-1 flex flex-wrap gap-1">
+                            {order.devicePassword && (
+                              <span className="bg-slate-800 text-zinc-300 font-mono px-1.5 py-0.5 rounded">
+                                🔑 {order.devicePassword}
+                              </span>
+                            )}
+                            {order.warrantyDays !== undefined && order.warrantyDays > 0 && (
+                              <span className="bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 px-1.5 py-0.5 rounded">
+                                🛡️ {order.warrantyDays} Hari Garansi
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         {order.diagnosis && (
                           <div className="text-[10px] text-cyan-300 mt-1 bg-cyan-950/50 border border-cyan-800/40 rounded px-1.5 py-0.5 line-clamp-1">
                             🔍 <strong>Diagnosa:</strong> {order.diagnosis}
@@ -482,12 +515,21 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                         <span className="font-bold text-emerald-400 text-sm block">
                           {formatRupiah(order.grandTotal)}
                         </span>
+                        {order.downPayment !== undefined && order.downPayment > 0 && !order.isPaid && (
+                          <span className="text-[10px] text-amber-400 block font-normal">
+                            DP: {formatRupiah(order.downPayment)} (Sisa: {formatRupiah(Math.max(0, order.grandTotal - order.downPayment))})
+                          </span>
+                        )}
                         <span
                           className={`text-[9px] font-bold uppercase ${
-                            order.isPaid ? 'text-emerald-400' : 'text-amber-400'
+                            order.isPaid
+                              ? 'text-emerald-400'
+                              : order.downPayment && order.downPayment > 0
+                              ? 'text-amber-400'
+                              : 'text-rose-400'
                           }`}
                         >
-                          {order.isPaid ? '✓ Lunas' : 'Belum Lunas'}
+                          {order.isPaid ? '✓ Lunas' : order.downPayment && order.downPayment > 0 ? 'DP Diterima' : 'Belum Lunas'}
                         </span>
                       </td>
 

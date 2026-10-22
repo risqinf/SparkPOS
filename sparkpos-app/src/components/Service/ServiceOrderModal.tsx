@@ -15,6 +15,8 @@ import {
   AlertCircle,
   Cpu,
   Package,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import {
   ServiceOrder,
@@ -54,6 +56,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   const [assignedTechName, setAssignedTechName] = useState('');
   const [estimatedDate, setEstimatedDate] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Spesifikasi Toko Komputer: Kelengkapan, Kondisi Fisik, Password & Garansi
+  const [completeness, setCompleteness] = useState('');
+  const [physicalCondition, setPhysicalCondition] = useState('');
+  const [devicePassword, setDevicePassword] = useState('');
+  const [warrantyDays, setWarrantyDays] = useState('14');
+  const [downPayment, setDownPayment] = useState('0');
 
   // Service Items (Spareparts & Jasa)
   const [items, setItems] = useState<ServiceItem[]>([]);
@@ -108,6 +117,11 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         setDiscountAmount(orderToEdit.discountAmount.toString());
         setIsPaid(orderToEdit.isPaid);
         setPaidAmount(orderToEdit.paidAmount.toString());
+        setCompleteness(orderToEdit.completeness || '');
+        setPhysicalCondition(orderToEdit.physicalCondition || '');
+        setDevicePassword(orderToEdit.devicePassword || '');
+        setWarrantyDays(orderToEdit.warrantyDays !== undefined ? orderToEdit.warrantyDays.toString() : '14');
+        setDownPayment(orderToEdit.downPayment !== undefined ? orderToEdit.downPayment.toString() : '0');
       } else {
         const nextTicket = await generateServiceTicketNumber();
         setTicketNumber(nextTicket);
@@ -231,6 +245,11 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             : orderToEdit?.completedAt,
         pickedUpAt: status === 'DIAMBIL' && !orderToEdit?.pickedUpAt ? now : orderToEdit?.pickedUpAt,
         notes: notes.trim() || undefined,
+        completeness: completeness.trim() || undefined,
+        physicalCondition: physicalCondition.trim() || undefined,
+        devicePassword: devicePassword.trim() || undefined,
+        warrantyDays: parseInt(warrantyDays, 10) || 0,
+        downPayment: parseFloat(downPayment) || 0,
         createdAt: orderToEdit?.createdAt || now,
         updatedAt: now,
       };
@@ -408,7 +427,162 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Keluhan, Diagnosa Kerusakan, & Info ke Admin */}
+          {/* Section 2: Kelengkapan Masuk, Kondisi Fisik, Password Perangkat & Garansi */}
+          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>2. Kelengkapan Unit, Kondisi Fisik & Garansi</span>
+              </h4>
+              <span className="text-[10px] text-slate-500">Standar Bengkel Komputer & Laptop</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Kelengkapan Unit */}
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Kelengkapan Unit Saat Diterima:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Unit + Charger Original + Tas..."
+                  value={completeness}
+                  onChange={(e) => setCompleteness(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+                />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {[
+                    'Charger / Adaptor',
+                    'Tas Laptop',
+                    'Dus / Box',
+                    'Kabel Power',
+                    'Baterai',
+                    'Unit Saja (Batangan)',
+                    'Mouse',
+                  ].map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      onClick={() => {
+                        const current = completeness ? completeness.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                        if (current.includes(tag)) {
+                          setCompleteness(current.filter((t) => t !== tag).join(', '));
+                        } else {
+                          setCompleteness([...current, tag].join(', '));
+                        }
+                      }}
+                      className={`text-[9px] px-2 py-0.5 rounded transition ${
+                        completeness.includes(tag)
+                          ? 'bg-emerald-600 text-white font-bold'
+                          : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                      }`}
+                    >
+                      {completeness.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Kondisi Fisik Awal */}
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Kondisi Fisik Saat Masuk:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Casing mulus, lecet pemakaian, baut kurang..."
+                  value={physicalCondition}
+                  onChange={(e) => setPhysicalCondition(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-amber-500"
+                />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {[
+                    'Casing Mulus',
+                    'Lecet Pemakaian',
+                    'Engsel Longgar',
+                    'Layar Baret/Flek',
+                    'Baut Kurang',
+                    'Retak Sudut',
+                  ].map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      onClick={() => {
+                        const current = physicalCondition ? physicalCondition.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                        if (current.includes(tag)) {
+                          setPhysicalCondition(current.filter((t) => t !== tag).join(', '));
+                        } else {
+                          setPhysicalCondition([...current, tag].join(', '));
+                        }
+                      }}
+                      className={`text-[9px] px-2 py-0.5 rounded transition ${
+                        physicalCondition.includes(tag)
+                          ? 'bg-amber-600 text-white font-bold'
+                          : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                      }`}
+                    >
+                      {physicalCondition.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Password Windows & Garansi Servis */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-800/60">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Password Windows / PIN / Pola Layar:
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Contoh: 123456 / Tanpa Password"
+                    value={devicePassword}
+                    onChange={(e) => setDevicePassword(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                  <Lock className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-semibold text-slate-300 block">
+                    Garansi Servis Selesai:
+                  </label>
+                  <span className="text-[10px] text-emerald-400 font-bold">{warrantyDays} Hari Garansi</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    value={warrantyDays}
+                    onChange={(e) => setWarrantyDays(e.target.value)}
+                    className="w-20 px-2 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono text-xs text-center focus:outline-none focus:border-emerald-500"
+                  />
+                  <div className="flex gap-1 flex-1">
+                    {['7', '14', '30', '60'].map((d) => (
+                      <button
+                        type="button"
+                        key={d}
+                        onClick={() => setWarrantyDays(d)}
+                        className={`flex-1 py-1 rounded text-[10px] font-semibold transition ${
+                          warrantyDays === d
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        }`}
+                      >
+                        {d} Hari
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Keluhan, Diagnosa Kerusakan, & Info ke Admin */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-slate-400 block mb-1 font-semibold">
@@ -627,15 +801,29 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
               {!isPaid && (
                 <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">
-                    Uang Muka / DP yang Diterima (Rp):
+                  <label className="text-[11px] text-slate-400 block mb-1 font-semibold">
+                    Uang Muka / DP yang Diterima Saat Masuk (Rp):
                   </label>
-                  <input
-                    type="number"
-                    value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs text-slate-500 font-semibold">Rp</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={downPayment}
+                      onChange={(e) => {
+                        setDownPayment(e.target.value);
+                        setPaidAmount(e.target.value);
+                      }}
+                      placeholder="0"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  {parseFloat(downPayment) > 0 && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] flex justify-between items-center">
+                      <span>Sisa Pelunasan Nanti:</span>
+                      <strong className="font-mono text-xs text-amber-400">{formatRupiah(Math.max(0, grandTotal - (parseFloat(downPayment) || 0)))}</strong>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

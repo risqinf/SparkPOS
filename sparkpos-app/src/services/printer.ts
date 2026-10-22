@@ -48,13 +48,24 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
 
   // 3. Line Items
   for (const item of tx.items) {
-    lines.push(item.name);
+    let itemName = item.name;
+    if (item.condition && item.condition !== 'BARU') {
+      itemName += ` [${item.condition}]`;
+    }
+    lines.push(itemName);
     let left = ` ${item.quantity} x ${formatRupiah(item.unitPrice)}`;
     if (item.discountAmount > 0) {
       left += ` (-${formatRupiah(item.discountAmount)})`;
     }
     const right = formatRupiah(item.subtotal);
     lines.push(padBetween(left, right, width));
+
+    if (item.serialNumber) {
+      lines.push(`  SN: ${item.serialNumber}`);
+    }
+    if (item.warrantyPeriod) {
+      lines.push(`  Garansi: ${item.warrantyPeriod}`);
+    }
   }
   lines.push(divider);
 
@@ -67,6 +78,17 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
 
   if (tx.taxAmount > 0) {
     lines.push(padBetween('PPN:', formatRupiah(tx.taxAmount), width));
+  }
+
+  if (tx.shippingCost && tx.shippingCost > 0) {
+    const courierLabel = tx.shippingCourier ? `Ongkir (${tx.shippingCourier}):` : 'Ongkos Kirim:';
+    lines.push(padBetween(courierLabel, formatRupiah(tx.shippingCost), width));
+    if (tx.shippingTrackingNumber) {
+      lines.push(` Resi: ${tx.shippingTrackingNumber}`);
+    }
+    if (tx.shippingAddress) {
+      lines.push(` Alamat: ${tx.shippingAddress}`);
+    }
   }
 
   lines.push(doubleDivider);
@@ -141,6 +163,12 @@ export function generateServiceReceiptText(
   if (order.customerPhone) lines.push(`No. HP/WA : ${order.customerPhone}`);
   lines.push(`Perangkat : ${order.deviceType}`);
   if (order.deviceSerial) lines.push(`No. Seri  : ${order.deviceSerial}`);
+  if (order.completeness) lines.push(`Kelengkpn : ${order.completeness}`);
+  if (order.physicalCondition) lines.push(`Kondisi   : ${order.physicalCondition}`);
+  if (order.devicePassword) lines.push(`Pass/PIN  : ${order.devicePassword}`);
+  if (order.warrantyDays && order.warrantyDays > 0) {
+    lines.push(`Garansi   : ${order.warrantyDays} Hari`);
+  }
   if (order.assignedTechName) lines.push(`Teknisi   : ${order.assignedTechName}`);
   lines.push(divider);
 
@@ -167,9 +195,20 @@ export function generateServiceReceiptText(
 
   // Total Finansial
   lines.push(padBetween('Total Tagihan:', formatRupiah(order.grandTotal), width));
-  lines.push(padBetween('Status Bayar :', order.isPaid ? 'LUNAS' : 'BELUM LUNAS', width));
-  if (order.paidAmount > 0) {
-    lines.push(padBetween('Dibayar      :', formatRupiah(order.paidAmount), width));
+  if (order.downPayment && order.downPayment > 0) {
+    lines.push(padBetween('DP / Uang Muka:', formatRupiah(order.downPayment), width));
+    const sisa = Math.max(0, order.grandTotal - order.downPayment);
+    lines.push(padBetween('Sisa Tagihan  :', formatRupiah(sisa), width));
+  }
+  lines.push(
+    padBetween(
+      'Status Bayar :',
+      order.isPaid ? 'LUNAS' : order.downPayment && order.downPayment > 0 ? 'DP DITERIMA' : 'BELUM LUNAS',
+      width
+    )
+  );
+  if (order.paidAmount > 0 && (!order.downPayment || order.paidAmount !== order.downPayment)) {
+    lines.push(padBetween('Total Dibayar:', formatRupiah(order.paidAmount), width));
   }
   lines.push(doubleDivider);
 
@@ -178,6 +217,9 @@ export function generateServiceReceiptText(
   lines.push('1. Wajib membawa nota tanda terima ini.');
   lines.push('2. Barang tidak diambil >30 hari di luar');
   lines.push('   tanggung jawab toko.');
+  if (order.warrantyDays && order.warrantyDays > 0) {
+    lines.push(`3. Garansi servis berlaku ${order.warrantyDays} hari.`);
+  }
   lines.push('');
   lines.push(padBetween('( Pelanggan )', '( Teknisi )', width));
   lines.push('');

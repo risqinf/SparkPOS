@@ -701,7 +701,12 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           })}
                         </td>
                         <td className="px-3 py-2 text-zinc-300 font-medium">
-                          {tx.customerName || <span className="text-zinc-500 italic">Pelanggan Umum</span>}
+                          <div>{tx.customerName || <span className="text-zinc-500 italic">Pelanggan Umum</span>}</div>
+                          {tx.shippingCost && tx.shippingCost > 0 ? (
+                            <span className="text-[10px] text-cyan-400 block mt-0.5">
+                              🚚 Kirim: {tx.shippingCourier || 'Ekspedisi'} (+{formatRupiah(tx.shippingCost)})
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-3 py-2 text-zinc-300">{tx.cashierName}</td>
                         <td className="px-3 py-2 text-zinc-400">
