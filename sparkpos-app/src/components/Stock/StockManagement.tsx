@@ -101,28 +101,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   };
 
   const handleOpenAddProduct = () => {
-    if (!isAdmin) {
-      if (onRequestAdminAccess) onRequestAdminAccess();
-      return;
-    }
     setSelectedProductToEdit(null);
     setIsFormOpen(true);
   };
 
   const handleOpenEditProduct = (p: Product) => {
-    if (!isAdmin) {
-      if (onRequestAdminAccess) onRequestAdminAccess();
-      return;
-    }
     setSelectedProductToEdit(p);
     setIsFormOpen(true);
   };
 
   const handleOpenOpname = (p?: Product) => {
-    if (!isAdmin) {
-      if (onRequestAdminAccess) onRequestAdminAccess();
-      return;
-    }
     setSelectedProductForOpname(p || null);
     setIsOpnameOpen(true);
   };

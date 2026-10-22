@@ -118,28 +118,26 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* ================= MAIN NAVIGATION TABS (Strict Role-Based Access) ================= */}
+      {/* ================= MAIN NAVIGATION TABS ================= */}
       <nav className="flex items-center gap-1 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800">
-        {/* Tab 1: Kasir POS (Tampil untuk Owner & Kasir - Teknisi TIDAK butuh POS) */}
-        {!isTechnician && (
-          <button
-            onClick={() => handleTabClick('pos')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-              currentTab === 'pos'
-                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-            }`}
-            title="Terminal Kasir Penjualan (F1)"
-          >
-            <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Kasir (POS)</span>
-            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-              F1
-            </kbd>
-          </button>
-        )}
+        {/* Tab 1: Kasir POS (Bisa diakses Kasir, Owner, dan Teknisi jika kasir sedang libur/cuti) */}
+        <button
+          onClick={() => handleTabClick('pos')}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+            currentTab === 'pos'
+              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+          }`}
+          title="Terminal Kasir Penjualan (F1)"
+        >
+          <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Kasir (POS)</span>
+          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+            F1
+          </kbd>
+        </button>
 
-        {/* Tab 2: Service Komputer & Laptop (Tampil untuk Semua Role: Teknisi, Kasir, Owner) */}
+        {/* Tab 2: Service Komputer & Laptop */}
         <button
           onClick={() => handleTabClick('service')}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
@@ -156,43 +154,39 @@ export const Navbar: React.FC<NavbarProps> = ({
           </kbd>
         </button>
 
-        {/* Tab 3: Stok & Produk (Tampil untuk Owner & Teknisi untuk cek sparepart) */}
-        {(isAdmin || isTechnician) && (
-          <button
-            onClick={() => handleTabClick('stock')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-              currentTab === 'stock'
-                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-            }`}
-            title="Katalog Produk & Manajemen Stok (F3)"
-          >
-            <Boxes className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Stok</span>
-            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-              F3
-            </kbd>
-          </button>
-        )}
+        {/* Tab 3: Stok & Produk (Kasir/Admin kelola stok, Teknisi cek sparepart, Owner) */}
+        <button
+          onClick={() => handleTabClick('stock')}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+            currentTab === 'stock'
+              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+          }`}
+          title="Katalog Produk & Manajemen Stok (F3)"
+        >
+          <Boxes className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Stok</span>
+          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+            F3
+          </kbd>
+        </button>
 
-        {/* Tab 4: Transaksi & Rekap Keuangan (HANYA Owner & Kasir - Teknisi TIDAK melihat keuangan toko) */}
-        {!isTechnician && (
-          <button
-            onClick={() => handleTabClick('reports')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-              currentTab === 'reports'
-                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-            }`}
-            title="Menu Riwayat Transaksi, Rekap Harian & Bulanan Tgl 1 (F7)"
-          >
-            <Receipt className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Transaksi & Rekap</span>
-            <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-              F7
-            </kbd>
-          </button>
-        )}
+        {/* Tab 4: Transaksi & Rekap Keuangan */}
+        <button
+          onClick={() => handleTabClick('reports')}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
+            currentTab === 'reports'
+              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
+              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+          }`}
+          title="Menu Riwayat Transaksi, Rekap Harian & Bulanan Tgl 1 (F7)"
+        >
+          <Receipt className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Transaksi & Rekap</span>
+          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
+            F7
+          </kbd>
+        </button>
 
         {/* Tab 5: Settings Tab - HANYA MUNCUL UNTUK OWNER / ADMIN! Hilang total jika login sebagai kasir/teknisi */}
         {isAdmin && (
