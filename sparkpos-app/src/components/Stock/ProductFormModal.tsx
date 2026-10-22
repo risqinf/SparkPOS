@@ -394,24 +394,44 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                    Kelengkapan Unit:
+                    Kelengkapan Unit (Laptop / Printer / PC):
                   </label>
                   <input
                     type="text"
                     value={completeness}
                     onChange={(e) => setCompleteness(e.target.value)}
-                    placeholder="Unit + Charger + Dus, Batangan..."
+                    placeholder="Unit + Charger + Dus, Kabel USB Printer..."
                     className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                   />
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {['Fullset Box', 'Unit + Charger', 'Unit Saja (Batangan)', 'Kabel Power'].map((tag) => (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {[
+                      'Fullset Box',
+                      'Unit + Charger',
+                      'Kabel Power',
+                      'Kabel USB Printer',
+                      'Adaptor Printer',
+                      'Cartridge / Head',
+                      'Tabung Infus',
+                      'Batangan Saja',
+                    ].map((tag) => (
                       <button
                         type="button"
                         key={tag}
-                        onClick={() => setCompleteness(tag)}
-                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                        onClick={() => {
+                          const current = completeness ? completeness.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                          if (current.includes(tag)) {
+                            setCompleteness(current.filter((t) => t !== tag).join(', '));
+                          } else {
+                            setCompleteness([...current, tag].join(', '));
+                          }
+                        }}
+                        className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                          completeness.includes(tag)
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        }`}
                       >
-                        +{tag}
+                        {completeness.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
                       </button>
                     ))}
                   </div>
@@ -431,13 +451,63 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     />
                     <ShieldCheck className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2" />
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {['7 Hari', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Tanpa Garansi'].map((w) => (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {['3 Hari Tes', '7 Hari Toko', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Non Garansi'].map((w) => (
                       <button
                         type="button"
                         key={w}
                         onClick={() => setWarrantyPeriod(w)}
-                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                        className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                          warrantyPeriod === w
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        }`}
+                      >
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Chips Minus untuk Printer / Komputer jika bukan BARU */}
+              {condition !== 'BARU' && (
+                <div className="pt-2 border-t border-slate-800/60">
+                  <span className="text-[10px] text-slate-400 block mb-1">Pilih Cepat Minus Printer / PC / Laptop:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      'Head Buntu / Bergaris',
+                      'Roller Aus / Paper Jam',
+                      'Blink Error (Waste Pad)',
+                      'Infus Masuk Angin/Bocor',
+                      'Baterai Drop',
+                      'Engsel Longgar',
+                      'Lecet Pemakaian',
+                      'No Display / Matot',
+                    ].map((m) => (
+                      <button
+                        type="button"
+                        key={m}
+                        onClick={() => {
+                          const current = conditionNotes ? conditionNotes.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                          if (current.includes(m)) {
+                            setConditionNotes(current.filter((t) => t !== m).join(', '));
+                          } else {
+                            setConditionNotes([...current, m].join(', '));
+                          }
+                        }}
+                        className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                          conditionNotes.includes(m)
+                            ? 'bg-amber-600 text-white font-bold'
+                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        }`}
+                      >
+                        {conditionNotes.includes(m) ? `✓ ${m}` : `+ ${m}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
                       >
                         {w}
                       </button>

@@ -189,7 +189,7 @@ export interface Transaction {
   discountOrderAmount: number;
   taxAmount: number;
   shippingCost?: number;             // Biaya ongkir / pengiriman
-  shippingCourier?: string;          // Kurir pengiriman (JNE, J&T, Gosend, Kurir Toko)
+  shippingCourier?: string;          // Kurir pengiriman (SPX Express / Shopee Xpress, J&T, JNE, SiCepat, GoSend, Kurir Toko)
   shippingTrackingNumber?: string;   // Nomor Resi pengiriman
   shippingAddress?: string;          // Alamat pengiriman
   grandTotal: number;

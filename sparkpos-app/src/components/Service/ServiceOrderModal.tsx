@@ -368,11 +368,35 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     <input
                       type="text"
                       required
-                      placeholder="e.g. ThinkPad X201"
+                      placeholder="e.g. Epson L3110 / ThinkPad X201 / PC Rakitan"
                       value={deviceType}
                       onChange={(e) => setDeviceType(e.target.value)}
                       className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                     />
+                    {/* Quick Device Category Chips */}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {[
+                        'Laptop',
+                        'Printer Epson Ink Tank',
+                        'Printer Canon',
+                        'Printer HP Laserjet',
+                        'PC Desktop / CPU',
+                        'Monitor LED',
+                      ].map((dev) => (
+                        <button
+                          type="button"
+                          key={dev}
+                          onClick={() => setDeviceType(dev)}
+                          className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                            deviceType.includes(dev)
+                              ? 'bg-amber-600 text-white font-bold'
+                              : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                          }`}
+                        >
+                          {dev}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="text-slate-400 block mb-1">No. Seri / SN</label>
@@ -453,9 +477,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {[
                     'Charger / Adaptor',
+                    'Kabel Power',
+                    'Kabel USB Printer',
+                    'Adaptor Printer',
+                    'Cartridge / Head',
+                    'Tabung Infus',
                     'Tas Laptop',
                     'Dus / Box',
-                    'Kabel Power',
                     'Baterai',
                     'Unit Saja (Batangan)',
                     'Mouse',
@@ -585,15 +613,54 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           {/* Section 3: Keluhan, Diagnosa Kerusakan, & Info ke Admin */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="text-slate-400 block mb-1 font-semibold">
-                Keluhan Pelanggan <span className="text-rose-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-400 font-semibold text-xs">
+                  Keluhan Pelanggan <span className="text-rose-400">*</span>
+                </label>
+              </div>
               <textarea
                 rows={2}
                 required
-                placeholder="Contoh: Laptop mati total, lampu indikator charger berkedip..."
+                placeholder="Contoh: Tinta putus-putus, lampu kedip, mati total..."
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500 resize-none text-xs"
+              />
+              {/* Quick Complaint Chips for Laptop, PC & Printer */}
+              <div className="flex flex-wrap gap-1 mt-1">
+                {[
+                  'Head Buntu / Tinta Putus',
+                  'Paper Jam / Tarikan Macet',
+                  'Blink Error (Lampu Kedip)',
+                  'Reset Bantalan Penuh',
+                  'Infus Bocor/Masuk Angin',
+                  'Mati Total (Matot)',
+                  'Layar Gelap / No Display',
+                  'Bluescreen (BSOD)',
+                  'Instal Ulang Windows',
+                ].map((cChip) => (
+                  <button
+                    type="button"
+                    key={cChip}
+                    onClick={() => {
+                      const current = complaint ? complaint.split(',').map((s) => s.trim()).filter(Boolean) : [];
+                      if (current.includes(cChip)) {
+                        setComplaint(current.filter((t) => t !== cChip).join(', '));
+                      } else {
+                        setComplaint([...current, cChip].join(', '));
+                      }
+                    }}
+                    className={`text-[9px] px-1.5 py-0.5 rounded transition ${
+                      complaint.includes(cChip)
+                        ? 'bg-amber-600 text-white font-bold'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {complaint.includes(cChip) ? `✓ ${cChip}` : `+ ${cChip}`}
+                  </button>
+                ))}
+              </div>
+            </div>
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500 resize-none"
               />
             </div>

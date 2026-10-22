@@ -6,17 +6,57 @@
 
 import { Transaction, Product, ServiceOrder } from '../types/pos';
 
+/**
+ * Helper to trigger file download safely in both web browsers and Tauri WebView2.
+ * Crucial fix: Delay URL.revokeObjectURL to avoid aborting the download in Chromium/WebView2.
+ */
 function downloadFile(content: string, filename: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  try {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up DOM element immediately, but delay blob revocation by 60s
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1000);
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        // ignore
+      }
+    }, 60000);
+
+    // Also copy to clipboard as TSV as immediate convenience
+    try {
+      const tsvContent = content.replace(/\uFEFF/, '').replace(/,/g, '\t');
+      navigator.clipboard.writeText(tsvContent).then(() => {
+        console.log('Export data successfully copied to clipboard');
+      }).catch(() => {});
+    } catch (e) {
+      // ignore
+    }
+  } catch (error) {
+    console.error('Download file error, trying direct data URI fallback:', error);
+    try {
+      const encodedUri = encodeURI(`data:${mimeType},${content}`);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (fallbackError) {
+      alert('Gagal mendownload file secara otomatis. Data telah disalin ke clipboard, Anda dapat langsung menempelkannya (Ctrl+V) di Excel.');
+    }
+  }
 }
 
 function escapeCsvCell(value: any): string {

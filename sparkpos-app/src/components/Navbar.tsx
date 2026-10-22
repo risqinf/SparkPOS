@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   ShoppingCart,
@@ -13,13 +13,16 @@ import {
   User,
   ShieldCheck,
   LogOut,
-  Lock,
   ArrowDownUp,
   Coffee,
   Users,
   Wrench,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { Shift, StoreProfile, Employee } from '../types/pos';
+import { getSavedTheme, cycleTheme, onThemeChange, ThemeMode } from '../services/theme';
 
 interface NavbarProps {
   currentTab: 'pos' | 'service' | 'stock' | 'reports' | 'settings';
@@ -52,7 +55,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenBreakTime,
   onOpenCashierManagement,
 }) => {
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getSavedTheme());
+
+  useEffect(() => {
+    const unsub = onThemeChange((mode) => {
+      setThemeMode(mode);
+    });
+    return unsub;
+  }, []);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -62,8 +73,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const handleToggleTheme = () => {
+    const next = cycleTheme();
+    setThemeMode(next);
+  };
+
   const isAdmin = currentUser?.role === 'owner' || currentUser?.role === 'admin';
-  const isTechnician = currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor';
 
   const handleTabClick = (tab: 'pos' | 'service' | 'stock' | 'reports' | 'settings') => {
     if (tab === 'settings' && !isAdmin) {
@@ -78,12 +93,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="h-13 bg-zinc-900 border-b border-zinc-800 px-3 lg:px-4 flex items-center justify-between shrink-0 shadow-xs select-none z-20 w-full">
-      {/* ================= BRAND & STORE PROFILE ================= */}
-      <div className="flex items-center gap-2.5">
-        {/* Custom Logo or Default Minimal Emblem */}
+    <header className="h-11 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-2 lg:px-3 flex items-center justify-between shrink-0 shadow-xs select-none z-30 w-full text-slate-800 dark:text-zinc-100 transition-colors">
+      {/* ================= LEFT: BRAND & STORE PROFILE ================= */}
+      <div className="flex items-center gap-2 shrink-0 pr-2 border-r border-slate-200 dark:border-zinc-800">
         {storeProfile.appLogo ? (
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800 flex items-center justify-center p-0.5 shrink-0">
+          <div className="w-7 h-7 rounded-lg overflow-hidden bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 flex items-center justify-center p-0.5 shrink-0">
             <img
               src={storeProfile.appLogo}
               alt="Logo"
@@ -91,246 +105,269 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center text-emerald-400 shrink-0">
-            <Sparkles className="w-4 h-4" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-zinc-950 border border-emerald-200 dark:border-zinc-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
         )}
 
-        <div>
-          <div className="flex items-center gap-1.5 leading-none">
-            <span className="font-bold text-sm text-zinc-100 tracking-tight">
+        <div className="leading-tight">
+          <div className="flex items-center gap-1.5">
+            <span className="font-extrabold text-xs text-slate-900 dark:text-zinc-100 tracking-tight">
               {storeProfile.appName || 'SparkPOS'}
             </span>
-            <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
-              Desktop
+            <span className="text-[8px] font-semibold px-1 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700 uppercase">
+              Pro
             </span>
           </div>
-          <div className="text-[11px] text-zinc-400 flex items-center gap-1 font-medium mt-0.5 leading-none">
-            <Store className="w-3 h-3 text-zinc-500 shrink-0" />
-            <span className="truncate max-w-[150px] text-zinc-300">{storeProfile.storeName}</span>
-            {storeProfile.branchName && (
-              <>
-                <span className="text-zinc-600">•</span>
-                <span className="text-zinc-400 truncate max-w-[120px]">{storeProfile.branchName}</span>
-              </>
-            )}
+          <div className="text-[10px] text-slate-500 dark:text-zinc-400 flex items-center gap-1 font-medium truncate max-w-[130px] lg:max-w-[160px]">
+            <Store className="w-2.5 h-2.5 text-slate-400 dark:text-zinc-500 shrink-0" />
+            <span className="truncate">{storeProfile.storeName}</span>
           </div>
         </div>
       </div>
 
-      {/* ================= MAIN NAVIGATION TABS ================= */}
-      <nav className="flex items-center gap-1 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800">
-        {/* Tab 1: Kasir POS (Bisa diakses Kasir, Owner, dan Teknisi jika kasir sedang libur/cuti) */}
-        <button
-          onClick={() => handleTabClick('pos')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'pos'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Terminal Kasir Penjualan (F1)"
-        >
-          <ShoppingCart className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Kasir (POS)</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F1
-          </kbd>
-        </button>
-
-        {/* Tab 2: Service Komputer & Laptop */}
-        <button
-          onClick={() => handleTabClick('service')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'service'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Kelola Servis Komputer & Laptop (F2)"
-        >
-          <Wrench className="w-3.5 h-3.5 text-amber-400" />
-          <span>Service</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F2
-          </kbd>
-        </button>
-
-        {/* Tab 3: Stok & Produk (Kasir/Admin kelola stok, Teknisi cek sparepart, Owner) */}
-        <button
-          onClick={() => handleTabClick('stock')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'stock'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Katalog Produk & Manajemen Stok (F3)"
-        >
-          <Boxes className="w-3.5 h-3.5 text-zinc-400" />
-          <span>Stok</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F3
-          </kbd>
-        </button>
-
-        {/* Tab 4: Transaksi & Rekap Keuangan */}
-        <button
-          onClick={() => handleTabClick('reports')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-            currentTab === 'reports'
-              ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
-          }`}
-          title="Menu Riwayat Transaksi, Rekap Harian & Bulanan Tgl 1 (F7)"
-        >
-          <Receipt className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Transaksi & Rekap</span>
-          <kbd className="hidden md:inline-block px-1 py-0.2 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F7
-          </kbd>
-        </button>
-
-        {/* Tab 5: Settings Tab - HANYA MUNCUL UNTUK OWNER / ADMIN! Hilang total jika login sebagai kasir/teknisi */}
-        {isAdmin && (
+      {/* ================= MIDDLE & RIGHT CONTROLS WRAPPER (SCROLLABLE ON NARROW SCREENS) ================= */}
+      <div className="flex-1 flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pl-2 py-0.5 min-w-0">
+        {/* ================= MAIN NAVIGATION TABS ================= */}
+        <nav className="flex items-center gap-0.5 bg-slate-100 dark:bg-zinc-950 p-0.5 rounded-lg border border-slate-200 dark:border-zinc-800 shrink-0">
+          {/* Tab 1: Kasir POS */}
           <button
-            onClick={() => handleTabClick('settings')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition ${
-              currentTab === 'settings'
-                ? 'bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            onClick={() => handleTabClick('pos')}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'pos'
+                ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Pengaturan Brand, Logo, Hardware & Relokasi Database"
+            title="Terminal Kasir Penjualan (F1)"
           >
-            <Settings className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Pengaturan</span>
+            <ShoppingCart className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Kasir</span>
+            <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
+              F1
+            </kbd>
           </button>
-        )}
-      </nav>
 
-      {/* ================= RIGHT CONTROLS: HELD, SHIFT, USER PROFILE & LOGOUT ================= */}
-      {/* ================= RIGHT CONTROLS: HELD, SHIFT, USER PROFILE & LOGOUT ================= */}
-      <div className="flex items-center gap-1.5">
-        {/* Kelola Kasir (Owner Only) */}
-        {isAdmin && onOpenCashierManagement && (
+          {/* Tab 2: Service Komputer, Laptop, Printer */}
           <button
-            onClick={onOpenCashierManagement}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
-            title="Kelola Data Kasir & Shift Kerja (Khusus Owner)"
+            onClick={() => handleTabClick('service')}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'service'
+                ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
+            }`}
+            title="Kelola Servis Komputer, Laptop & Printer (F2)"
           >
-            <Users className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Kelola Kasir</span>
+            <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>Service</span>
+            <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
+              F2
+            </kbd>
           </button>
-        )}
 
-        {/* Arus Kas (Uang Masuk / Keluar) */}
-        {onOpenCashFlow && (
+          {/* Tab 3: Stok Produk & Sparepart */}
           <button
-            onClick={onOpenCashFlow}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-medium transition"
-            title="Catat Uang Masuk / Keluar (Operasional, Beli Makan, dll)"
+            onClick={() => handleTabClick('stock')}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'stock'
+                ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
+            }`}
+            title="Katalog Produk, Stok & Sparepart (F3)"
           >
-            <ArrowDownUp className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Uang Kas</span>
+            <Boxes className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+            <span>Stok</span>
+            <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
+              F3
+            </kbd>
           </button>
-        )}
 
-        {/* Istirahat Kasir (Break Mode Lock) */}
-        {onOpenBreakTime && (
+          {/* Tab 4: Transaksi & Rekap */}
           <button
-            onClick={onOpenBreakTime}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-950 hover:bg-amber-500/10 hover:border-amber-500/40 border border-zinc-800 text-amber-300 text-xs font-medium transition"
-            title="Kunci Layar Kasir Saat Sedang Istirahat"
+            onClick={() => handleTabClick('reports')}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+              currentTab === 'reports'
+                ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
+            }`}
+            title="Riwayat Transaksi, Rekap Harian & Bulanan (F7)"
           >
-            <Coffee className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden md:inline">Istirahat</span>
+            <Receipt className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Transaksi & Rekap</span>
+            <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
+              F7
+            </kbd>
           </button>
-        )}
 
-        {/* Held Carts / Parkir */}
-        <button
-          onClick={openHeldModal}
-          className="relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-medium transition"
-          title="Antrean Transaksi Tertahan / Parkir (F6)"
-        >
-          <PauseCircle className="w-3.5 h-3.5 text-zinc-400" />
-          <span className="hidden sm:inline">Parkir</span>
-          {heldCount > 0 && (
-            <span className="flex items-center justify-center px-1.5 py-0.2 rounded-full bg-zinc-700 text-white font-bold text-[9px]">
-              {heldCount}
-            </span>
+          {/* Tab 5: Settings Tab (Owner Only) */}
+          {isAdmin && (
+            <button
+              onClick={() => handleTabClick('settings')}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+                currentTab === 'settings'
+                  ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
+              }`}
+              title="Pengaturan Brand, Logo, Hardware & Relokasi Database"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
+              <span>Pengaturan</span>
+            </button>
           )}
-          <kbd className="px-1 text-[8px] bg-zinc-900 rounded text-zinc-400 font-mono border border-zinc-800">
-            F6
-          </kbd>
-        </button>
+        </nav>
 
-        {/* Active Shift Indicator */}
-        <button
-          onClick={openShiftModal}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs transition"
-          title="Klik untuk melihat rincian shift kasir atau tutup shift"
-        >
-          <Clock className="w-3.5 h-3.5 text-zinc-400" />
-          <div className="text-left leading-tight">
-            <div className="flex items-center gap-1">
-              <span className="text-zinc-500 text-[9px] block font-mono">Shift #{activeShift?.id || 1}</span>
-              {currentUser?.shiftSchedule && (
-                <span className="text-[9px] text-emerald-400 font-medium truncate max-w-[90px] hidden sm:inline">
-                  • {currentUser.shiftSchedule}
-                </span>
-              )}
+        {/* ================= RIGHT ACTION BUTTONS ================= */}
+        <div className="flex items-center gap-1 shrink-0 ml-1">
+          {/* Kelola Kasir (Owner Only) */}
+          {isAdmin && onOpenCashierManagement && (
+            <button
+              onClick={onOpenCashierManagement}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition shrink-0"
+              title="Kelola Data Kasir & Shift Kerja (Khusus Owner)"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">Kelola Kasir</span>
+            </button>
+          )}
+
+          {/* Arus Kas (Uang Kas Masuk / Keluar) */}
+          {onOpenCashFlow && (
+            <button
+              onClick={onOpenCashFlow}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-medium transition shrink-0"
+              title="Catat Uang Masuk / Keluar (Operasional, Beli Makan, dll)"
+            >
+              <ArrowDownUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden md:inline">Uang Kas</span>
+            </button>
+          )}
+
+          {/* Istirahat Kasir */}
+          {onOpenBreakTime && (
+            <button
+              onClick={onOpenBreakTime}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-amber-100 dark:hover:bg-amber-500/10 border border-slate-200 dark:border-zinc-800 text-amber-700 dark:text-amber-300 text-xs font-medium transition shrink-0"
+              title="Kunci Layar Kasir Saat Sedang Istirahat"
+            >
+              <Coffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="hidden md:inline">Istirahat</span>
+            </button>
+          )}
+
+          {/* Held Carts / Parkir */}
+          <button
+            onClick={openHeldModal}
+            className="relative flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-medium transition shrink-0"
+            title="Antrean Transaksi Tertahan / Parkir (F6)"
+          >
+            <PauseCircle className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            <span className="hidden md:inline">Parkir</span>
+            {heldCount > 0 && (
+              <span className="flex items-center justify-center px-1.5 py-0.2 rounded-full bg-slate-700 dark:bg-zinc-700 text-white font-bold text-[9px]">
+                {heldCount}
+              </span>
+            )}
+            <kbd className="hidden lg:inline-block px-1 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
+              F6
+            </kbd>
+          </button>
+
+          {/* Active Shift Indicator */}
+          <button
+            onClick={openShiftModal}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs transition shrink-0"
+            title="Klik untuk melihat rincian shift kasir atau tutup shift"
+          >
+            <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            <div className="text-left leading-tight hidden sm:block">
+              <span className="text-slate-500 dark:text-zinc-500 text-[8px] block font-mono">
+                Shift #{activeShift?.id || 1}
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[10px] truncate max-w-[80px] block">
+                {activeShift?.cashierName || 'Kasir'}
+              </span>
             </div>
-            <span className="font-semibold text-zinc-200 text-[11px] truncate max-w-[110px] block">
-              {activeShift?.cashierName || 'Kasir'}
-            </span>
-          </div>
-        </button>
-
-        {/* Current User Badge (Owner vs Teknisi vs Kasir) */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800">
-          {isAdmin ? (
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          ) : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor' ? (
-            <Users className="w-3.5 h-3.5 text-sky-400" />
-          ) : (
-            <User className="w-3.5 h-3.5 text-zinc-400" />
-          )}
-          <div className="text-left leading-none">
-            <span className="text-[11px] font-semibold text-zinc-200 block truncate max-w-[80px]">
-              {currentUser?.fullName?.split(' ')[0] || 'User'}
-            </span>
-            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mt-0.5">
-              {isAdmin
-                ? 'Owner'
-                : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor'
-                ? 'Teknisi'
-                : 'Kasir'}
-            </span>
-          </div>
-        </div>
-
-        {/* Tombol Logout (Sangat Jelas, Merah Solid & Menonjol untuk Semua Role) */}
-        {onLogout && (
-          <button
-            onClick={() => {
-              if (confirm(`Logout dari akun ${currentUser?.fullName || 'ini'} dan kembali ke layar PIN?`)) {
-                onLogout();
-              }
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold transition shadow-md cursor-pointer ml-1"
-            title="Keluar / Logout Akun (Kembali ke Layar PIN)"
-          >
-            <LogOut className="w-3.5 h-3.5 text-white" />
-            <span className="font-bold">Logout</span>
           </button>
-        )}
 
-        {/* Fullscreen Toggle */}
-        <button
-          onClick={toggleFullscreen}
-          className="p-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-100 transition"
-          title="Layar Penuh (F11)"
-        >
-          {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-        </button>
+          {/* Current User Badge */}
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shrink-0">
+            {isAdmin ? (
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            ) : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor' ? (
+              <Users className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+            ) : (
+              <User className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            )}
+            <div className="text-left leading-none">
+              <span className="text-[10px] font-bold text-slate-800 dark:text-zinc-200 block truncate max-w-[70px]">
+                {currentUser?.fullName?.split(' ')[0] || 'User'}
+              </span>
+              <span className="text-[7.5px] font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">
+                {isAdmin
+                  ? 'Owner'
+                  : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor'
+                  ? 'Teknisi'
+                  : 'Kasir'}
+              </span>
+            </div>
+          </div>
+
+          {/* ================= THEME SWITCHER BUTTON (System / Light / Dark) ================= */}
+          <button
+            onClick={handleToggleTheme}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition shrink-0 cursor-pointer"
+            title={`Tema Saat Ini: ${
+              themeMode === 'system'
+                ? 'Mengikuti Sistem (Default)'
+                : themeMode === 'light'
+                ? 'Terang (Light Mode)'
+                : 'Gelap (Dark Mode)'
+            }. Klik untuk ganti.`}
+          >
+            {themeMode === 'system' && (
+              <>
+                <Monitor className="w-3.5 h-3.5 text-sky-500" />
+                <span className="hidden xl:inline text-[10px]">Sistem</span>
+              </>
+            )}
+            {themeMode === 'light' && (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span className="hidden xl:inline text-[10px]">Terang</span>
+              </>
+            )}
+            {themeMode === 'dark' && (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden xl:inline text-[10px]">Gelap</span>
+              </>
+            )}
+          </button>
+
+          {/* ================= TOMBOL LOGOUT (ALWAYS VISIBLE, PROMINENT & SOLID) ================= */}
+          {onLogout && (
+            <button
+              onClick={() => {
+                if (confirm(`Logout dari akun ${currentUser?.fullName || 'ini'} dan kembali ke layar PIN?`)) {
+                  onLogout();
+                }
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0 ml-0.5"
+              title="Keluar / Logout Akun (Kembali ke Layar PIN)"
+            >
+              <LogOut className="w-3.5 h-3.5 text-white" />
+              <span>Logout</span>
+            </button>
+          )}
+
+          {/* Fullscreen Toggle */}
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition shrink-0"
+            title="Layar Penuh (F11)"
+          >
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
     </header>
   );

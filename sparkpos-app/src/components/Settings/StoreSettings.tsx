@@ -326,28 +326,28 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6 bg-slate-950 overflow-y-auto">
+    <div className="flex-1 flex flex-col p-4 lg:p-6 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-y-auto select-none">
       <div className="w-full max-w-7xl 2xl:max-w-[1700px] mx-auto p-2 lg:p-4 space-y-6 pb-16">
         {/* Title Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
-              <Settings className="w-5 h-5 text-emerald-400" />
+            <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs">
+              <Settings className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white">Pengaturan Brand & Konfigurasi Toko</h1>
+                <h1 className="text-lg font-bold text-slate-900 dark:text-white">Pengaturan Brand & Konfigurasi Toko</h1>
                 {isAdmin ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                     Mode Admin (Akses Penuh)
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                     Akses Kasir (Read Only)
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Kustomisasi nama aplikasi, upload logo toko, identitas nota, dan printer thermal POS.
               </p>
             </div>

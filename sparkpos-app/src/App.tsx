@@ -20,6 +20,7 @@ import { CashierManagementModal } from './components/Owner/CashierManagementModa
 import { CashFlowModal } from './components/POS/CashFlowModal';
 import { BreakTimeModal } from './components/POS/BreakTimeModal';
 import { ServiceDashboard } from './components/Service/ServiceDashboard';
+import { applyTheme, initThemeListener } from './services/theme';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -72,7 +73,12 @@ export default function App() {
   };
 
   useEffect(() => {
+    applyTheme();
+    const cleanup = initThemeListener();
     initializeApp();
+    return () => {
+      cleanup();
+    };
   }, []);
 
   const handleSetupComplete = (
@@ -221,7 +227,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
+    <div className="flex flex-col h-screen w-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden font-sans select-none">
       {/* Top Navigation & Status Bar */}
       <Navbar
         currentTab={currentTab}

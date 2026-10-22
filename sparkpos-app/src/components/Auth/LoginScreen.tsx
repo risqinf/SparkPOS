@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from 'react';
 import {
   Lock,
   User,
@@ -12,10 +11,14 @@ import {
   Clock,
   KeyRound,
   CheckCircle2,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { Employee, StoreProfile } from '../../types/pos';
 import { authenticateEmployee, db } from '../../services/storage';
 import { playSuccessBeep, playErrorBeep } from '../../services/scanner';
+import { getSavedTheme, cycleTheme, onThemeChange, ThemeMode } from '../../services/theme';
 
 interface LoginScreenProps {
   storeProfile: StoreProfile;
@@ -23,12 +26,20 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginSuccess }) => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getSavedTheme());
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [username, setUsername] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeFocusField, setActiveFocusField] = useState<'username' | 'pin'>('username');
+
+  useEffect(() => {
+    const unsub = onThemeChange((mode) => {
+      setThemeMode(mode);
+    });
+    return unsub;
+  }, []);
 
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const pinInputRef = useRef<HTMLInputElement>(null);
@@ -147,15 +158,38 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
   }, [username, pin, employees]);
 
   return (
-    <div className="flex h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden items-center justify-center p-4 lg:p-6">
-      <div className="w-full max-w-5xl 2xl:max-w-6xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[600px] 2xl:min-h-[660px]">
+    <div className="flex h-screen w-screen bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 select-none overflow-hidden items-center justify-center p-4 lg:p-6 relative">
+      {/* Theme Switcher Button Top-Right */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={() => {
+            const next = cycleTheme();
+            setThemeMode(next);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold shadow-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          title="Klik untuk beralih antara Sistem / Terang / Gelap"
+        >
+          {themeMode === 'system' && <Monitor className="w-3.5 h-3.5 text-sky-500" />}
+          {themeMode === 'light' && <Sun className="w-3.5 h-3.5 text-amber-500" />}
+          {themeMode === 'dark' && <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+          <span className="text-[11px]">
+            {themeMode === 'system'
+              ? 'Sistem (Default)'
+              : themeMode === 'light'
+              ? 'Mode Terang'
+              : 'Mode Gelap'}
+          </span>
+        </button>
+      </div>
+
+      <div className="w-full max-w-5xl 2xl:max-w-6xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[600px] 2xl:min-h-[660px]">
         {/* ================= LEFT SIDE: BRANDING & PROFILE (5 cols) ================= */}
-        <div className="md:col-span-5 bg-slate-900/60 p-8 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between">
+        <div className="md:col-span-5 bg-slate-50 dark:bg-slate-900/60 p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between">
           <div>
             {/* Store & App Logo */}
             <div className="flex items-center gap-3 mb-6">
               {storeProfile.appLogo ? (
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 p-1 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex items-center justify-center shrink-0">
                   <img
                     src={storeProfile.appLogo}
                     alt="Logo"
@@ -163,31 +197,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   />
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-600/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <Sparkles className="w-6 h-6" />
                 </div>
               )}
               <div>
-                <h1 className="font-extrabold text-xl text-white tracking-tight">
+                <h1 className="font-extrabold text-xl text-slate-900 dark:text-white tracking-tight">
                   {storeProfile.appName || 'SparkPOS'}
                 </h1>
-                <span className="text-[11px] text-slate-400 font-medium block">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
                   Desktop Retail Offline System
                 </span>
               </div>
             </div>
 
             {/* Store Identity Box */}
-            <div className="p-4 rounded-xl bg-slate-850/80 border border-slate-800 space-y-1.5 mb-6">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
-                <Store className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <div className="p-4 rounded-xl bg-white dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 space-y-1.5 mb-6 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-slate-200">
+                <Store className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{storeProfile.storeName}</span>
               </div>
               {storeProfile.branchName && (
-                <p className="text-xs text-slate-400 pl-5">{storeProfile.branchName}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 pl-5">{storeProfile.branchName}</p>
               )}
               {storeProfile.address && (
-                <p className="text-[11px] text-slate-500 pl-5 line-clamp-2">{storeProfile.address}</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 pl-5 line-clamp-2">{storeProfile.address}</p>
               )}
             </div>
 
@@ -239,32 +273,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
         </div>
 
         {/* ================= RIGHT SIDE: USERNAME & PIN FORM + TOUCH NUMPAD ================= */}
-        <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between bg-slate-900">
+        <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between bg-white dark:bg-slate-900">
           <div>
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
               <div>
-                <h2 className="text-base font-bold text-white">Login Masuk ke SparkPOS</h2>
-                <p className="text-xs text-slate-400">Masukkan Username & PIN akun yang ingin digunakan</p>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Login Masuk ke SparkPOS</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Masukkan Username & PIN akun yang ingin digunakan</p>
               </div>
-              <span className="text-xs text-emerald-400 font-mono font-bold">v2.0.0</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-bold">v2.3.0</span>
             </div>
 
             {/* Error Message Alert */}
             {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-xs text-rose-300 animate-in fade-in">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 dark:text-rose-400" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
             {/* Quick-Pick Account Buttons */}
             <div className="mb-4">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>Pilih Cepat Akun yang Tersedia:</span>
                 </span>
-                <span className="text-[11px] text-slate-500">Klik untuk isi username otomatis</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">Klik untuk isi username otomatis</span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -279,19 +313,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                       onClick={() => handleSelectQuickUser(emp)}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
                         isSelected
-                          ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-sm'
-                          : 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-white shadow-2xs'
+                          : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300'
                       }`}
                     >
                       <span>{isOwner ? '👑' : isTeknisi ? '🔧' : '👤'}</span>
                       <span className="font-bold">{emp.fullName}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">(@{emp.username})</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">(@{emp.username})</span>
                     </button>
                   );
                 })}
 
                 {employees.filter((e) => e.role === 'kasir' || e.role === 'cashier').length === 0 && (
-                  <div className="w-full p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
+                  <div className="w-full p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px]">
                     💡 Baru ada akun Owner. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir atau teknisi baru.
                   </div>
                 )}
@@ -302,13 +336,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
             <form onSubmit={handleLogin} className="space-y-3 mb-4">
               {/* Username Input */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-emerald-400" />
+                    <User className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Username Akun:</span>
                   </span>
                   {matchedUser && (
-                    <span className="text-[11px] text-emerald-400 font-medium">
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                       ✓ Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'owner' || matchedUser.role === 'admin' ? 'Owner' : matchedUser.role === 'teknisi' || matchedUser.role === 'supervisor' ? 'Teknisi' : 'Kasir'})
                     </span>
                   )}
@@ -325,7 +359,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                       setErrorMessage(null);
                     }}
                     placeholder="Ketik username akun (contoh: admin, kasir1)..."
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium font-mono"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium font-mono shadow-2xs"
                   />
                   {username && (
                     <button
@@ -334,7 +368,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                         setUsername('');
                         setPin('');
                       }}
-                      className="absolute right-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
+                      className="absolute right-3 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
                       ✕
                     </button>
@@ -344,9 +378,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
 
               {/* PIN Input Field */}
               <div>
-                <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+                <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 mb-1">
                   <span className="flex items-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+                    <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>PIN Akses (4 - 6 Angka):</span>
                   </span>
                   <span className="text-[11px] text-slate-500">
@@ -367,13 +401,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                       setErrorMessage(null);
                     }}
                     placeholder="Ketik PIN pada keyboard atau numpad di bawah..."
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-bold tracking-widest font-mono"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-bold tracking-widest font-mono shadow-2xs"
                   />
                   {pin && (
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="absolute right-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
+                      className="absolute right-3 top-2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     >
                       Hapus
                     </button>
@@ -382,14 +416,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               </div>
             </form>
 
-            {/* Tactile Touch Numpad (for touchscreens & mouse clicks) */}
+            {/* Tactile Touch Numpad */}
             <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <button
                   key={digit}
                   type="button"
                   onClick={() => handleNumpadClick(digit)}
-                  className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-base active:scale-95 transition shadow-sm"
+                  className="h-10 rounded-xl bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-sm active:scale-95 transition shadow-2xs"
                 >
                   {digit}
                 </button>
@@ -398,7 +432,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <button
                 type="button"
                 onClick={handleClear}
-                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 font-semibold text-xs active:scale-95 transition"
+                className="h-10 rounded-xl bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-xs active:scale-95 transition"
               >
                 Clear
               </button>
@@ -406,7 +440,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <button
                 type="button"
                 onClick={() => handleNumpadClick('0')}
-                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-base active:scale-95 transition shadow-sm"
+                className="h-10 rounded-xl bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-sm active:scale-95 transition shadow-2xs"
               >
                 0
               </button>
@@ -414,7 +448,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <button
                 type="button"
                 onClick={handleBackspace}
-                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 flex items-center justify-center active:scale-95 transition"
+                className="h-10 rounded-xl bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center active:scale-95 transition"
               >
                 <Delete className="w-4 h-4" />
               </button>
