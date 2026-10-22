@@ -122,9 +122,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col p-5 bg-slate-950 overflow-hidden select-none">
+    <div className="flex-1 flex flex-col p-4 lg:p-6 bg-slate-950 overflow-hidden select-none">
       {/* ================= TOP 4 KPI CARDS (Restrained Minimalist) ================= */}
-      <div className="grid grid-cols-4 gap-3.5 mb-4 shrink-0">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 lg:gap-4 mb-4 shrink-0">
         {/* Total SKU */}
         <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
           <div>
@@ -204,7 +204,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* ================= FILTER & ACTION TOOLBAR ================= */}
       <div className="flex items-center justify-between gap-3 mb-3 shrink-0">
-        <div className="flex items-center gap-2 flex-1 max-w-xl">
+        <div className="flex items-center gap-2 flex-1 max-w-2xl">
           {/* Search Box */}
           <div className="relative flex-1">
             <input

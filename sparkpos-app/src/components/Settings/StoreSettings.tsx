@@ -234,7 +234,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
   return (
     <div className="flex-1 flex flex-col p-6 bg-slate-950 overflow-y-auto">
-      <div className="max-w-4xl mx-auto w-full space-y-6 pb-12">
+      <div className="w-full max-w-7xl 2xl:max-w-[1700px] mx-auto p-2 lg:p-4 space-y-6 pb-16">
         {/* Title Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
@@ -296,7 +296,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Card 1: Branding & Logo */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Kolom Kiri: Branding, Identitas Toko, Printer & Pajak */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Card 1: Branding & Logo */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -621,7 +624,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Kolom Kanan: Database, Backup Drive D:, Restore & Uninstall */}
+        <div className="lg:col-span-5 space-y-6">
           {/* Card 5: Pencadangan & Pemulihan Database (Drive D:, USB, Restore) */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -740,31 +746,33 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Action Bar */}
-          <div className="flex items-center justify-between pt-2">
-            {isAdmin ? (
-              <button
-                type="button"
-                onClick={handleResetData}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Database (Kembali ke Setup Awal)</span>
-              </button>
-            ) : <div />}
+        {/* Action Bar (Full Width) */}
+        <div className="lg:col-span-12 flex items-center justify-between pt-4 border-t border-slate-800">
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={handleResetData}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Database (Kembali ke Setup Awal)</span>
+            </button>
+          ) : <div />}
 
-            {isAdmin && (
-              <button
-                type="submit"
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-sm active:scale-95"
-              >
-                <Save className="w-4 h-4" />
-                <span>Simpan Pengaturan</span>
-              </button>
-            )}
-          </div>
-        </form>
+          {isAdmin && (
+            <button
+              type="submit"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-sm active:scale-95"
+            >
+              <Save className="w-4 h-4" />
+              <span>Simpan Pengaturan</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </form>
       </div>
 
       {/* MODAL UNINSTALL & HAPUS BERSIH DATABASE */}

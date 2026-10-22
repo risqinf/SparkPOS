@@ -105,8 +105,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
   }, [pin, selectedUser]);
 
   return (
-    <div className="flex h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden items-center justify-center p-6">
-      <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[560px]">
+    <div className="flex h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden items-center justify-center p-4 lg:p-6">
+      <div className="w-full max-w-5xl 2xl:max-w-6xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[600px] 2xl:min-h-[660px]">
         {/* ================= LEFT SIDE: BRANDING & PROFILE (5 cols) ================= */}
         <div className="md:col-span-5 bg-slate-900/60 p-8 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between">
           <div>
@@ -160,7 +160,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   <span>1. Administrator / Owner:</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Akses penuh: kelola stok, opname, laporan finansial, kustomisasi nama brand & upload logo toko.
+                  Akses penuh: kelola stok, opname, laporan finansial, tambah/edit akun kasir & shift kerja.
                 </p>
               </div>
 
@@ -170,7 +170,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   <span>2. Non-Admin (Kasir):</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Akses operasional: transaksi penjualan, scan barcode, tutup kasir shift, & cetak struk (pengaturan brand terkunci).
+                  Akses kasir: transaksi penjualan, scan barcode, tutup kasir shift, & cetak struk.
                 </p>
               </div>
             </div>
@@ -182,7 +182,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Sistem Kasir Aman & Offline</span>
             </span>
-            <span className="font-mono text-slate-400">v1.2.0</span>
+            <span className="font-mono text-slate-400">v1.3.0</span>
           </div>
         </div>
 
@@ -191,11 +191,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-white">Pilih Akun & Masukkan PIN</h2>
-              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.2.0</span>
+              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.3.0</span>
             </div>
 
             {/* Select User Role Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 mb-5">
+            <div className="grid grid-cols-2 gap-2.5 mb-5 max-h-[160px] overflow-y-auto pr-1">
               {employees.map((emp) => {
                 const isSelected = selectedUser?.id === emp.id;
                 const isAdmin = emp.role === 'admin';
@@ -216,19 +216,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900 text-slate-300">
-                        {isAdmin ? 'Administrator' : 'Non-Admin / Kasir'}
+                        {isAdmin ? '👑 Owner' : '👤 Kasir'}
                       </span>
                       {isSelected && (
                         <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                       )}
                     </div>
                     <div className="font-semibold text-xs text-white truncate">{emp.fullName}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                      User: @{emp.username}
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
+                      <span className="font-mono">@{emp.username}</span>
+                      {emp.shiftSchedule && (
+                        <span className="text-[9px] text-emerald-400 font-medium truncate max-w-[100px]">
+                          {emp.shiftSchedule}
+                        </span>
+                      )}
                     </div>
                   </button>
                 );
               })}
+
+              {employees.filter((e) => e.role === 'cashier').length === 0 && (
+                <div className="col-span-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
+                  💡 Belum ada kasir terdaftar. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan kasir baru.
+                </div>
+              )}
             </div>
 
             {/* PIN Dots Display */}

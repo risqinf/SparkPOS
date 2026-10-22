@@ -162,14 +162,23 @@ export async function initializeStore(
   profile: StoreProfile,
   adminData: { username: string; pin: string; fullName: string },
   seedUnits: boolean = true,
-  seedCategories: boolean = true
-): Promise<Employee> {
+  seedCategories: boolean = true,
+  cashierData?: {
+    username: string;
+    fullName: string;
+    pin: string;
+    shiftSchedule?: string;
+    shiftStart?: string;
+    shiftEnd?: string;
+    isFlexibleShift?: boolean;
+  }
+): Promise<{ admin: Employee; cashier?: Employee }> {
   const now = new Date().toISOString();
 
   // 1. Simpan Profil Toko
   await db.settings.put({ key: 'store_profile', value: profile });
 
-  // 2. Buat Akun Owner / Administrator Utama (TANPA DATA KASIR)
+  // 2. Buat Akun Owner / Administrator Utama
   const adminEmployee: Omit<Employee, 'id'> = {
     username: adminData.username.trim() || 'owner',
     fullName: adminData.fullName.trim() || 'Pemilik Toko (Owner)',
@@ -179,6 +188,25 @@ export async function initializeStore(
     createdAt: now,
   };
   const adminId = await db.employees.add(adminEmployee as any);
+  const createdAdmin: Employee = { id: adminId as number, ...adminEmployee };
+
+  let createdCashier: Employee | undefined;
+  if (cashierData && cashierData.fullName.trim() && cashierData.pin.trim()) {
+    const cashierEmployee: Omit<Employee, 'id'> = {
+      username: cashierData.username.trim() || 'kasir1',
+      fullName: cashierData.fullName.trim() || 'Kasir 1',
+      pin: cashierData.pin.trim() || '1234',
+      role: 'cashier',
+      shiftSchedule: cashierData.shiftSchedule || 'Shift Pagi (08:00 - 16:00)',
+      shiftStart: cashierData.shiftStart,
+      shiftEnd: cashierData.shiftEnd,
+      isFlexibleShift: cashierData.isFlexibleShift,
+      isActive: true,
+      createdAt: now,
+    };
+    const cashierId = await db.employees.add(cashierEmployee as any);
+    createdCashier = { id: cashierId as number, ...cashierEmployee };
+  }
 
   // 3. Inisialisasi Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart)
   if (seedCategories) {
@@ -193,8 +221,8 @@ export async function initializeStore(
   }
 
   return {
-    id: adminId as number,
-    ...adminEmployee,
+    admin: createdAdmin,
+    cashier: createdCashier,
   };
 }
 

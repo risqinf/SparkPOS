@@ -46,9 +46,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ storePro
   const averageTicket = totalCount > 0 ? Math.round(totalRevenue / totalCount) : 0;
 
   return (
-    <div className="flex-1 flex flex-col p-5 bg-slate-950 overflow-hidden select-none">
+    <div className="flex-1 flex flex-col p-4 lg:p-6 bg-slate-950 overflow-hidden select-none">
       {/* Top Metrics Ribbon (Restrained Minimalist) */}
-      <div className="grid grid-cols-3 gap-3.5 mb-4 shrink-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 lg:gap-4.5 mb-4 shrink-0">
         <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-[11px] font-medium text-slate-400 block">

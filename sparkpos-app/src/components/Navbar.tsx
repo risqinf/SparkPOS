@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="h-16 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 shadow-md select-none z-20">
+    <header className="h-16 bg-slate-900 border-b border-slate-800 px-4 lg:px-6 flex items-center justify-between shrink-0 shadow-md select-none z-20 w-full">
       {/* ================= BRAND & STORE PROFILE ================= */}
       <div className="flex items-center gap-3">
         {/* Custom Logo or Default Minimal Emblem */}
@@ -273,19 +273,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-[11px] font-semibold text-slate-200 block truncate max-w-[100px]">
               {currentUser?.fullName?.split(' ')[0] || 'User'}
             </span>
-            <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider block mt-0.5">
-              {isAdmin ? 'Admin' : 'Kasir'}
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
+              {isAdmin ? '👑 Owner' : '👤 Kasir'}
             </span>
           </div>
         </div>
 
-        {/* Logout / Switch User */}
+        {/* Tombol Logout / Ganti Kasir (Jelas & Menonjol) */}
         <button
           onClick={onLogout}
-          className="p-2 rounded-xl bg-slate-850 hover:bg-rose-500/10 border border-slate-700/80 text-slate-400 hover:text-rose-400 transition"
-          title="Ganti Pengguna / Logout"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold transition shadow-sm"
+          title="Logout / Ganti Akun Kasir (Kembali ke Layar PIN)"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5 text-rose-400" />
+          <span className="inline whitespace-nowrap">Keluar / Ganti Kasir</span>
         </button>
 
         {/* Fullscreen Toggle */}

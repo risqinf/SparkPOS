@@ -89,13 +89,25 @@ export default function App() {
     initializeApp();
   }, []);
 
-  const handleSetupComplete = (adminEmployee: Employee, profile: StoreProfile) => {
+  const handleSetupComplete = (
+    adminEmployee: Employee,
+    profile: StoreProfile,
+    loginAsCashier?: boolean,
+    cashierEmployee?: Employee
+  ) => {
     setStoreProfile(profile);
-    setCurrentUser(adminEmployee);
-    localStorage.setItem('sparkpos_current_user', JSON.stringify(adminEmployee));
     setIsConfigured(true);
     setIsReady(true);
-    setCurrentTab('pos');
+    if (loginAsCashier && cashierEmployee) {
+      handleLoginSuccess(cashierEmployee);
+    } else if (loginAsCashier) {
+      setCurrentUser(null);
+      localStorage.removeItem('sparkpos_current_user');
+    } else {
+      setCurrentUser(adminEmployee);
+      localStorage.setItem('sparkpos_current_user', JSON.stringify(adminEmployee));
+      setCurrentTab('pos');
+    }
   };
 
   const handleLoginSuccess = async (employee: Employee) => {

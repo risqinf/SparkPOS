@@ -377,8 +377,8 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         </div>
       )}
 
-      {/* ================= LEFT: PRODUCT CATALOG & BARCODE SEARCH (60%) ================= */}
-      <div className="w-[60%] flex flex-col border-r border-slate-800 bg-slate-900/40 p-4 overflow-hidden">
+      {/* ================= LEFT: PRODUCT CATALOG & BARCODE SEARCH (FLEX-1 EXPANSIVE) ================= */}
+      <div className="flex-1 flex flex-col border-r border-slate-800 bg-slate-900/40 p-4 lg:p-5 overflow-hidden">
         {/* Top Barcode / Search Input Row */}
         <div className="mb-3 flex items-center gap-2">
           <div className="relative flex-1">
@@ -438,7 +438,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           })}
         </div>
 
-        {/* Product Cards Grid */}
+        {/* Product Cards Grid (Responsive Multi-Column for Desktop Screens) */}
         <div className="flex-1 overflow-y-auto pr-1">
           {filteredProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 py-12 space-y-2">
@@ -455,7 +455,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
               {filteredProducts.map((p) => {
                 const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
                 const isOutOfStock = !isService && p.stock <= 0;
@@ -533,8 +533,8 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         </div>
       </div>
 
-      {/* ================= RIGHT: ACTIVE CART & FINANCIALS (40%) ================= */}
-      <div className="w-[40%] flex flex-col bg-slate-900 overflow-hidden border-l border-slate-800">
+      {/* ================= RIGHT: ACTIVE CART & FINANCIALS (FLEXIBLE SIDEBAR) ================= */}
+      <div className="w-[390px] lg:w-[430px] xl:w-[470px] 2xl:w-[510px] shrink-0 flex flex-col bg-slate-900 overflow-hidden border-l border-slate-800">
         {/* Cart Header */}
         <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
