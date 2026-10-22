@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   X,
   FileText,
+  LogOut,
 } from 'lucide-react';
 import { StoreProfile, Employee } from '../../types/pos';
 import { updateStoreProfile, db } from '../../services/storage';
@@ -35,6 +36,7 @@ interface StoreSettingsProps {
   onUpdateProfile: (profile: StoreProfile) => void;
   currentUser?: Employee | null;
   onRequestAdminAccess?: () => void;
+  onLogout?: () => void;
 }
 
 export const StoreSettings: React.FC<StoreSettingsProps> = ({
@@ -42,6 +44,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
   onUpdateProfile,
   currentUser,
   onRequestAdminAccess,
+  onLogout,
 }) => {
   const [profile, setProfile] = useState<StoreProfile>({ ...storeProfile });
   const [isSaved, setIsSaved] = useState(false);
@@ -260,12 +263,26 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
           </div>
 
-          {isSaved && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Pengaturan Berhasil Disimpan!</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {isSaved && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Pengaturan Berhasil Disimpan!</span>
+              </div>
+            )}
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold transition shadow-sm"
+                title="Keluar dari akun Administrator dan kembali ke layar login kasir"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span>Logout / Ganti ke Layar Kasir</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Permission Banner if Non-Admin */}
@@ -750,16 +767,29 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
         {/* Action Bar (Full Width) */}
         <div className="lg:col-span-12 flex items-center justify-between pt-4 border-t border-slate-800">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={handleResetData}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Database (Kembali ke Setup Awal)</span>
-            </button>
-          ) : <div />}
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={handleResetData}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Database (Kembali ke Setup Awal)</span>
+              </button>
+            )}
+
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span>Logout dari Akun Ini</span>
+              </button>
+            )}
+          </div>
 
           {isAdmin && (
             <button

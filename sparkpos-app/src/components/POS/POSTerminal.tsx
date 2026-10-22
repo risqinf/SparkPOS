@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   RotateCcw,
   Sparkles,
+  LogOut,
+  Users,
 } from 'lucide-react';
 import {
   Product,
@@ -24,6 +26,7 @@ import {
   PaymentEntry,
   Transaction,
   HeldCart,
+  Employee,
 } from '../../types/pos';
 import { calculateCartSummary, formatRupiah } from '../../services/cartCalculator';
 import { barcodeScanner, playSuccessBeep, playErrorBeep } from '../../services/scanner';
@@ -41,6 +44,9 @@ interface POSTerminalProps {
   openHeldModal: () => void;
   isHeldModalOpen: boolean;
   setIsHeldModalOpen: (open: boolean) => void;
+  currentUser?: Employee | null;
+  onLogout?: () => void;
+  onOpenCashierManagement?: () => void;
 }
 
 export const POSTerminal: React.FC<POSTerminalProps> = ({
@@ -51,6 +57,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   openHeldModal,
   isHeldModalOpen,
   setIsHeldModalOpen,
+  currentUser,
+  onLogout,
+  onOpenCashierManagement,
 }) => {
   // Catalog State
   const [products, setProducts] = useState<Product[]>([]);
@@ -358,7 +367,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   });
 
   return (
-    <div className="flex-1 flex overflow-hidden relative bg-slate-950">
+    <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-950">
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -377,8 +386,46 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         </div>
       )}
 
-      {/* ================= LEFT: PRODUCT CATALOG & BARCODE SEARCH (FLEX-1 EXPANSIVE) ================= */}
-      <div className="flex-1 flex flex-col border-r border-slate-800 bg-slate-900/40 p-4 lg:p-5 overflow-hidden">
+      {/* Banner Khusus bila Login sebagai Owner / Administrator */}
+      {currentUser?.role === 'admin' && (
+        <div className="bg-slate-900 border-b border-emerald-500/30 px-4 py-2 flex items-center justify-between text-xs text-emerald-300 shrink-0 z-20">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
+              👑
+            </span>
+            <span>
+              <strong>Mode Owner (Administrator) Aktif</strong> — Anda sedang di layar kasir dengan akun Owner. Mau berganti akun kasir?
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {onOpenCashierManagement && (
+              <button
+                type="button"
+                onClick={onOpenCashierManagement}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 text-xs font-semibold transition"
+              >
+                <Users className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Kelola Data Kasir</span>
+              </button>
+            )}
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-bold transition shadow-sm"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-300" />
+                <span>Logout ke Layar Kasir</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Main Terminal Workstation Split Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* ================= LEFT: PRODUCT CATALOG & BARCODE SEARCH (FLEX-1 EXPANSIVE) ================= */}
+        <div className="flex-1 flex flex-col border-r border-slate-800 bg-slate-900/40 p-4 lg:p-5 overflow-hidden">
         {/* Top Barcode / Search Input Row */}
         <div className="mb-3 flex items-center gap-2">
           <div className="relative flex-1">
@@ -706,6 +753,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             <span>BAYAR SEKARANG [F12] — {formatRupiah(cartSummary.grandTotal)}</span>
           </button>
         </div>
+      </div>
       </div>
 
       {/* MODALS */}

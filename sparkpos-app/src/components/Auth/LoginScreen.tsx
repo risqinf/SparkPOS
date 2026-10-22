@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Lock,
   User,
@@ -8,6 +8,10 @@ import {
   Delete,
   AlertCircle,
   Sparkles,
+  Users,
+  Clock,
+  KeyRound,
+  CheckCircle2,
 } from 'lucide-react';
 import { Employee, StoreProfile } from '../../types/pos';
 import { authenticateEmployee, db } from '../../services/storage';
@@ -20,34 +24,48 @@ interface LoginScreenProps {
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginSuccess }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
+  const [username, setUsername] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeFocusField, setActiveFocusField] = useState<'username' | 'pin'>('username');
 
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+
+  // Load registered employees
   useEffect(() => {
     const loadEmps = async () => {
       const all = await db.employees.toArray();
       const list = all.filter((e) => e.isActive !== false);
       setEmployees(list);
-      if (list.length > 0) {
-        // default select cashier or admin
-        setSelectedUser(list[0]);
-      }
     };
     loadEmps();
   }, []);
 
+  // Matching employee based on current username input
+  const matchedUser = employees.find(
+    (e) => e.username.toLowerCase() === username.trim().toLowerCase()
+  );
+
   const handleNumpadClick = (digit: string) => {
-    if (pin.length < 6) {
-      setPin((prev) => prev + digit);
-      setErrorMessage(null);
+    if (activeFocusField === 'username') {
+      setUsername((prev) => prev + digit);
+    } else {
+      if (pin.length < 6) {
+        setPin((prev) => prev + digit);
+        setErrorMessage(null);
+      }
     }
   };
 
   const handleBackspace = () => {
-    setPin((prev) => prev.slice(0, -1));
-    setErrorMessage(null);
+    if (activeFocusField === 'username') {
+      setUsername((prev) => prev.slice(0, -1));
+    } else {
+      setPin((prev) => prev.slice(0, -1));
+      setErrorMessage(null);
+    }
   };
 
   const handleClear = () => {
@@ -55,11 +73,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
     setErrorMessage(null);
   };
 
+  const handleSelectQuickUser = (emp: Employee) => {
+    setUsername(emp.username);
+    setPin('');
+    setErrorMessage(null);
+    setActiveFocusField('pin');
+    if (pinInputRef.current) {
+      pinInputRef.current.focus();
+    }
+  };
+
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!pin) {
-      setErrorMessage('Silakan masukkan PIN otentikasi.');
+
+    if (!username.trim()) {
+      setErrorMessage('Silakan masukkan username akun Anda!');
       playErrorBeep();
+      if (usernameInputRef.current) usernameInputRef.current.focus();
+      return;
+    }
+
+    if (!pin) {
+      setErrorMessage('Silakan masukkan PIN otentikasi!');
+      playErrorBeep();
+      if (pinInputRef.current) pinInputRef.current.focus();
       return;
     }
 
@@ -67,34 +104,39 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
     setErrorMessage(null);
 
     try {
-      let authUser: Employee | null = null;
-      if (selectedUser) {
-        authUser = await authenticateEmployee(selectedUser.username, pin);
-      } else {
-        authUser = await authenticateEmployee(pin);
+      // 1. Cek keberadaan username
+      const existingUser = employees.find(
+        (emp) => emp.username.toLowerCase() === username.trim().toLowerCase()
+      );
+
+      if (!existingUser) {
+        playErrorBeep();
+        setErrorMessage(`Username "@${username.trim()}" tidak terdaftar di sistem!`);
+        return;
       }
+
+      // 2. Verifikasi PIN
+      const authUser = await authenticateEmployee(username.trim(), pin.trim());
 
       if (authUser) {
         playSuccessBeep();
         onLoginSuccess(authUser);
       } else {
         playErrorBeep();
-        setErrorMessage('PIN tidak sesuai! Silakan periksa kembali.');
+        setErrorMessage(`PIN tidak sesuai untuk akun @${existingUser.username}!`);
         setPin('');
+        if (pinInputRef.current) pinInputRef.current.focus();
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Physical keyboard listener for digits, Enter and Backspace
+  // Keyboard shortcut listener (Enter to submit)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key >= '0' && e.key <= '9') {
-        handleNumpadClick(e.key);
-      } else if (e.key === 'Backspace') {
-        handleBackspace();
-      } else if (e.key === 'Enter') {
+      if (e.key === 'Enter') {
+        e.preventDefault();
         handleLogin();
       } else if (e.key === 'Escape') {
         handleClear();
@@ -102,7 +144,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pin, selectedUser]);
+  }, [username, pin, employees]);
 
   return (
     <div className="flex h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden items-center justify-center p-4 lg:p-6">
@@ -152,25 +194,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
             {/* Role Explanation Note */}
             <div className="space-y-2 text-xs text-slate-400">
               <span className="font-semibold text-slate-300 block uppercase tracking-wider text-[10px]">
-                Hak Akses Sistem (RBAC):
+                Panduan Login Akun:
               </span>
               <div className="p-2.5 rounded-lg bg-slate-850/50 border border-slate-800 text-[11px] space-y-1">
                 <div className="text-slate-300 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span>1. Administrator / Owner:</span>
+                  <span>1. Login sebagai Owner / Admin:</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Akses penuh: kelola stok, opname, laporan finansial, tambah/edit akun kasir & shift kerja.
+                  Gunakan username Admin (misal: <code>admin</code>) dan PIN Admin untuk membuka pengaturan, stok, dan kelola kasir.
                 </p>
               </div>
 
               <div className="p-2.5 rounded-lg bg-slate-850/50 border border-slate-800 text-[11px] space-y-1">
                 <div className="text-slate-300 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                  <span>2. Non-Admin (Kasir):</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span>2. Login sebagai Kasir:</span>
                 </div>
                 <p className="text-slate-400 pl-2.5">
-                  Akses kasir: transaksi penjualan, scan barcode, tutup kasir shift, & cetak struk.
+                  Gunakan username Kasir (misal: <code>kasir1</code>) dan PIN Kasir untuk melayani transaksi kasir.
                 </p>
               </div>
             </div>
@@ -182,114 +224,161 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Sistem Kasir Aman & Offline</span>
             </span>
-            <span className="font-mono text-slate-400">v1.3.0</span>
+            <span className="font-mono text-slate-400">v1.4.0</span>
           </div>
         </div>
 
-        {/* ================= RIGHT SIDE: TOUCH NUMPAD & PIN LOGIN (7 cols) ================= */}
-        <div className="md:col-span-7 p-8 flex flex-col justify-between bg-slate-900">
+        {/* ================= RIGHT SIDE: USERNAME & PIN FORM + TOUCH NUMPAD ================= */}
+        <div className="md:col-span-7 p-6 lg:p-8 flex flex-col justify-between bg-slate-900">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-white">Pilih Akun & Masukkan PIN</h2>
-              <span className="text-xs text-slate-400 font-mono">SparkPOS v1.3.0</span>
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+              <div>
+                <h2 className="text-base font-bold text-white">Login Masuk ke SparkPOS</h2>
+                <p className="text-xs text-slate-400">Masukkan Username & PIN akun yang ingin digunakan</p>
+              </div>
+              <span className="text-xs text-slate-400 font-mono">v1.4.0</span>
             </div>
 
-            {/* Select User Role Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 mb-5 max-h-[160px] overflow-y-auto pr-1">
-              {employees.map((emp) => {
-                const isSelected = selectedUser?.id === emp.id;
-                const isAdmin = emp.role === 'admin';
-                return (
-                  <button
-                    key={emp.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedUser(emp);
-                      setPin('');
-                      setErrorMessage(null);
-                    }}
-                    className={`p-3 rounded-xl border text-left transition ${
-                      isSelected
-                        ? 'bg-slate-800 border-slate-600 shadow-md text-white'
-                        : 'bg-slate-850 border-slate-800 text-slate-400 hover:bg-slate-800/60 hover:text-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900 text-slate-300">
-                        {isAdmin ? '👑 Owner' : '👤 Kasir'}
-                      </span>
-                      {isSelected && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                      )}
-                    </div>
-                    <div className="font-semibold text-xs text-white truncate">{emp.fullName}</div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
-                      <span className="font-mono">@{emp.username}</span>
-                      {emp.shiftSchedule && (
-                        <span className="text-[9px] text-emerald-400 font-medium truncate max-w-[100px]">
-                          {emp.shiftSchedule}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-xs text-rose-300 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-              {employees.filter((e) => e.role === 'cashier').length === 0 && (
-                <div className="col-span-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
-                  💡 Belum ada kasir terdaftar. Login sebagai Owner terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan kasir baru.
-                </div>
-              )}
-            </div>
-
-            {/* PIN Dots Display */}
+            {/* Quick-Pick Account Buttons */}
             <div className="mb-4">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5 px-1">
-                <span>PIN Akses ({selectedUser?.fullName}):</span>
-                <span className="font-mono text-[11px] text-slate-500">
-                  {selectedUser?.role === 'admin' ? '6 Digit' : '4 Digit'}
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Pilih Cepat Akun yang Tersedia:</span>
                 </span>
+                <span className="text-[11px] text-slate-500">Klik untuk isi username otomatis</span>
               </div>
 
-              <div className="h-12 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-slate-500" />
-                  <div className="flex items-center gap-2 tracking-widest text-lg font-mono text-emerald-400">
-                    {pin ? '●'.repeat(pin.length) : (
-                      <span className="text-xs text-slate-600 font-sans tracking-normal">
-                        Ketik PIN pada numpad atau keyboard...
-                      </span>
-                    )}
-                  </div>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {employees.map((emp) => {
+                  const isSelected = username.trim().toLowerCase() === emp.username.toLowerCase();
+                  const isAdmin = emp.role === 'admin';
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => handleSelectQuickUser(emp)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+                        isSelected
+                          ? 'bg-emerald-500/20 border-emerald-500 text-white shadow-sm'
+                          : 'bg-slate-850 hover:bg-slate-800 border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      <span>{isAdmin ? '👑' : '👤'}</span>
+                      <span className="font-bold">{emp.fullName}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">(@{emp.username})</span>
+                    </button>
+                  );
+                })}
 
-                {pin && (
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="text-[11px] text-slate-500 hover:text-slate-300"
-                  >
-                    Hapus
-                  </button>
+                {employees.filter((e) => e.role === 'cashier').length === 0 && (
+                  <div className="w-full p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
+                    💡 Baru ada akun Owner. Login sebagai Owner (@admin) terlebih dahulu lalu buka menu <strong>Kelola Kasir</strong> untuk mendaftarkan akun kasir baru.
+                  </div>
                 )}
               </div>
-
-              {errorMessage && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-rose-400">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
             </div>
 
-            {/* Tactile Touch Numpad */}
+            {/* Form Inputs: Username & PIN */}
+            <form onSubmit={handleLogin} className="space-y-3 mb-4">
+              {/* Username Input */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Username Akun:</span>
+                  </span>
+                  {matchedUser && (
+                    <span className="text-[11px] text-emerald-400 font-medium">
+                      ✓ Terdeteksi: {matchedUser.fullName} ({matchedUser.role === 'admin' ? 'Owner' : 'Kasir'})
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    ref={usernameInputRef}
+                    type="text"
+                    required
+                    value={username}
+                    onFocus={() => setActiveFocusField('username')}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Ketik username akun (contoh: admin, kasir1)..."
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium font-mono"
+                  />
+                  {username && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsername('');
+                        setPin('');
+                      }}
+                      className="absolute right-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* PIN Input Field */}
+              <div>
+                <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>PIN Akses (4 - 6 Angka):</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {matchedUser?.role === 'admin' ? 'PIN Admin 6 Digit' : 'PIN Kasir 4 Digit'}
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    ref={pinInputRef}
+                    type="password"
+                    maxLength={6}
+                    required
+                    value={pin}
+                    onFocus={() => setActiveFocusField('pin')}
+                    onChange={(e) => {
+                      setPin(e.target.value.replace(/\D/g, ''));
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Ketik PIN pada keyboard atau numpad di bawah..."
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-bold tracking-widest font-mono"
+                  />
+                  {pin && (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      className="absolute right-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
+                    >
+                      Hapus
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
+
+            {/* Tactile Touch Numpad (for touchscreens & mouse clicks) */}
             <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <button
                   key={digit}
                   type="button"
                   onClick={() => handleNumpadClick(digit)}
-                  className="h-12 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-lg active:scale-95 transition shadow-sm"
+                  className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-base active:scale-95 transition shadow-sm"
                 >
                   {digit}
                 </button>
@@ -298,15 +387,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <button
                 type="button"
                 onClick={handleClear}
-                className="h-12 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 font-semibold text-xs active:scale-95 transition"
+                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 font-semibold text-xs active:scale-95 transition"
               >
-                C
+                Clear
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNumpadClick('0')}
-                className="h-12 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-lg active:scale-95 transition shadow-sm"
+                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-white font-bold text-base active:scale-95 transition shadow-sm"
               >
                 0
               </button>
@@ -314,9 +403,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
               <button
                 type="button"
                 onClick={handleBackspace}
-                className="h-12 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 flex items-center justify-center active:scale-95 transition"
+                className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 flex items-center justify-center active:scale-95 transition"
               >
-                <Delete className="w-5 h-5" />
+                <Delete className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -325,15 +414,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
           <div className="pt-4 max-w-xs mx-auto w-full">
             <button
               type="button"
-              disabled={isLoading || pin.length === 0}
+              disabled={isLoading || !username.trim() || pin.length === 0}
               onClick={() => handleLogin()}
-              className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg ${
-                isLoading || pin.length === 0
+              className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg ${
+                isLoading || !username.trim() || pin.length === 0
                   ? 'bg-slate-800 text-slate-600 border border-slate-700/60 cursor-not-allowed'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40 active:scale-95'
               }`}
             >
-              <span>Masuk ke Sistem (Enter)</span>
+              <span>{isLoading ? 'Memverifikasi...' : 'Masuk ke Sistem (Enter)'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -15,6 +15,7 @@ import {
   Plus,
   Calendar,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { Employee, WorkShiftTemplate } from '../../types/pos';
 import {
@@ -28,12 +29,14 @@ interface CashierManagementModalProps {
   currentUser: Employee;
   isOpen: boolean;
   onClose: () => void;
+  onLogoutAndSwitch?: () => void;
 }
 
 export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   currentUser,
   isOpen,
   onClose,
+  onLogoutAndSwitch,
 }) => {
   const [activeTab, setActiveTab] = useState<'cashiers' | 'shifts'>('cashiers');
 
@@ -359,6 +362,21 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                 <span>2. Management Shift ({shiftTemplates.length})</span>
               </button>
             </div>
+
+            {onLogoutAndSwitch && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onLogoutAndSwitch();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition shadow-sm"
+                title="Keluar dari akun Owner & buka layar login kasir"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Logout ke Layar Kasir</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -857,13 +875,29 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
           <span>
             Jadwal shift memudahkan Owner memonitor kehadiran dan jam operasional kasir.
           </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium transition"
-          >
-            Tutup Panel
-          </button>
+          <div className="flex items-center gap-2">
+            {onLogoutAndSwitch && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onLogoutAndSwitch();
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition shadow-sm"
+                title="Selesai kelola kasir, keluar dari akun Owner dan langsung buka layar login kasir"
+              >
+                <LogOut className="w-4 h-4 text-rose-400" />
+                <span>Selesai & Logout ke Layar Kasir</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium transition"
+            >
+              Tutup Panel
+            </button>
+          </div>
         </div>
       </div>
     </div>

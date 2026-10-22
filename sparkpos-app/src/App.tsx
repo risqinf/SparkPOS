@@ -54,16 +54,9 @@ export default function App() {
       const profile = await getStoreProfile();
       setStoreProfile(profile);
 
-      // Check stored user session
-      const savedUserStr = localStorage.getItem('sparkpos_current_user');
-      if (savedUserStr) {
-        try {
-          const parsedUser = JSON.parse(savedUserStr);
-          setCurrentUser(parsedUser);
-        } catch {
-          // ignore error
-        }
-      }
+      // Selalu mulai di layar login PIN agar setiap login wajib memasukkan username & PIN yang jelas
+      localStorage.removeItem('sparkpos_current_user');
+      setCurrentUser(null);
 
       // Load active shift
       const allShifts = await db.shifts.toArray();
@@ -248,6 +241,9 @@ export default function App() {
             openHeldModal={() => setIsHeldModalOpen(true)}
             isHeldModalOpen={isHeldModalOpen}
             setIsHeldModalOpen={setIsHeldModalOpen}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onOpenCashierManagement={() => setIsCashierManagementOpen(true)}
           />
         )}
 
@@ -270,6 +266,7 @@ export default function App() {
             onUpdateProfile={(newProfile) => setStoreProfile(newProfile)}
             currentUser={currentUser}
             onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
+            onLogout={handleLogout}
           />
         )}
       </main>
@@ -318,6 +315,7 @@ export default function App() {
           currentUser={currentUser}
           isOpen={isCashierManagementOpen}
           onClose={() => setIsCashierManagementOpen(false)}
+          onLogoutAndSwitch={handleLogout}
         />
       )}
     </div>
