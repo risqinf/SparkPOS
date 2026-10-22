@@ -77,7 +77,9 @@ export default function App() {
     const cleanup = initThemeListener();
     initializeApp();
     return () => {
-      cleanup();
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
     };
   }, []);
 

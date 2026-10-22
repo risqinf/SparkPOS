@@ -92,7 +92,7 @@ export function onThemeChange(listener: ThemeChangeListener): () => void {
 /**
  * Initialize listener for OS system theme changes
  */
-export function initThemeListener() {
+export function initThemeListener(): () => void {
   if (typeof window !== 'undefined' && window.matchMedia) {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = () => {
@@ -102,13 +102,20 @@ export function initThemeListener() {
     };
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handler);
+      return () => {
+        try {
+          mediaQuery.removeEventListener('change', handler);
+        } catch (_) {}
+      };
     } else {
-      // Fallback for older browsers
       (mediaQuery as any).addListener?.(handler);
+      return () => {
+        try {
+          (mediaQuery as any).removeListener?.(handler);
+        } catch (_) {}
+      };
     }
   }
+  return () => {};
 }
-
-// Auto-run listener upon module load
-initThemeListener();
 
