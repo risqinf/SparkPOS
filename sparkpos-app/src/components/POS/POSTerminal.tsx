@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   Barcode,
@@ -362,21 +362,31 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setOrderDiscountNominal(0);
     setIsPaymentOpen(false);
 
-    // Show Receipt Modal
-    setCompletedTransaction(newTx);
-    showToast(`Transaksi ${invoiceNumber} Berhasil!`, 'success');
+    // Show Receipt Modal only if autoPrint is enabled (Supports stores using manual paper receipts)
+    if (autoPrint) {
+      setCompletedTransaction(newTx);
+      showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak struk...`, 'success');
+    } else {
+      showToast(`Transaksi ${invoiceNumber} Berhasil Disimpan (Mode Nota Manual / Tanpa Struk)`, 'success');
+    }
   };
 
-  // Filter products by category & search
-  const filteredProducts = products.filter((p) => {
-    const matchCategory = selectedCategory === null || p.categoryId === selectedCategory;
-    const matchSearch =
-      searchQuery === '' ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.barcode.includes(searchQuery) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCategory && matchSearch;
-  });
+  // Optimized memoized product catalog search (including serialNumber & barcode)
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return products.filter((p) => {
+      if (selectedCategory !== null && p.categoryId !== selectedCategory) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.barcode && p.barcode.includes(q)) ||
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        (p.serialNumber && p.serialNumber.toLowerCase().includes(q))
+      );
+    });
+  }, [products, selectedCategory, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100">

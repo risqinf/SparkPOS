@@ -59,29 +59,46 @@
   scrollbar-width: none;
 }
 
-/* Print styling for 58mm & 80mm thermal receipts */
+/* Print styling for All Printers: 58mm/80mm Mini Thermal POS + A4/F4 Standard Paper */
 @media print {
-  @page {
-    margin: 0;
-    size: auto;
-  }
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
   #printable-receipt, #printable-receipt * {
-    visibility: visible;
+    visibility: visible !important;
   }
   #printable-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 2mm;
-    color: #000;
-    background: #fff;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
-    line-height: 1.25;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Thermal roll mode */
+  #printable-receipt.paper-thermal {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    padding: 2mm !important;
+  }
+  #printable-receipt.paper-thermal.paper-58mm {
+    max-width: 58mm !important;
+  }
+  #printable-receipt.paper-thermal.paper-80mm {
+    max-width: 80mm !important;
+  }
+
+  /* Standard office paper mode (A4 / F4 / Letter / Inkjet / Laserjet) */
+  #printable-receipt.paper-a4,
+  #printable-receipt.paper-f4 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    padding: 8mm 12mm !important;
+    max-width: 210mm !important;
   }
 }

@@ -601,24 +601,27 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
-                  Ukuran Lebar Kertas Struk
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Format Kertas & Jenis Printer Bawaan
                 </label>
                 <select
                   disabled={!isAdmin}
                   value={profile.paperWidth}
                   onChange={(e) =>
-                    setProfile({ ...profile, paperWidth: e.target.value as '58mm' | '80mm' })
+                    setProfile({ ...profile, paperWidth: e.target.value as any })
                   }
                   className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
-                  <option value="58mm">58mm Mini Kasir Thermal (32 Kolom Karakter)</option>
-                  <option value="80mm">80mm Standar Epson TM-T82 / Sejenis (42 Kolom Karakter)</option>
+                  <option value="auto">✨ Auto-Detect (A4/F4 jika ada Laptop/Garansi, Thermal jika Aksesoris)</option>
+                  <option value="58mm">⚡ 58mm Mini Kasir Thermal (32 Kolom)</option>
+                  <option value="80mm">🧾 80mm Standar Kasir POS Thermal (42 Kolom)</option>
+                  <option value="A4">📄 A4 Kertas Standar Kantor (Faktur Komputer & Kartu Garansi)</option>
+                  <option value="F4">📄 F4 / Folio Kertas Standar Kantor</option>
                 </select>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Mendukung printer thermal USB, LAN, maupun Bluetooth.
+                  Mendukung printer thermal USB/LAN/Bluetooth maupun printer biasa kantor (Epson/Canon/HP).
                 </p>
               </div>
 
@@ -642,7 +645,9 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     onChange={(e) => setProfile({ ...profile, autoPrintReceipt: e.target.checked })}
                     className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
                   />
-                  <span>Cetak Struk Otomatis setelah Selesai Bayar</span>
+                  <span>
+                    Cetak Struk Otomatis (Nonaktifkan jika toko Anda menggunakan nota manual kertas)
+                  </span>
                 </label>
 
                 <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">

@@ -262,11 +262,12 @@ export interface StoreProfile {
   address: string;
   phone: string;
   receiptFooter: string;
-  paperWidth: '58mm' | '80mm';
+  paperWidth: '58mm' | '80mm' | 'A4' | 'F4' | 'auto';
   taxPercent: number;
   isTaxInclusive: boolean;
   autoKickDrawer: boolean;
   autoPrintReceipt: boolean;
+  enablePrintReceipt?: boolean;
   currencySymbol: string;
   backupFolderPath?: string; // Path folder cadangan yang dipilih user (Drive D: dll)
   customDatabasePath?: string; // Path folder database operasional kustom aktif (D:\SparkPOS_Data dll)

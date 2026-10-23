@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck, ShieldCheck, Cpu } from 'lucide-react';
+import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck, ShieldCheck, Cpu, ArrowDownRight } from 'lucide-react';
 import { Product, Category, Unit, Supplier, ProductCondition } from '../../types/pos';
 import { db, getSuppliers } from '../../services/storage';
+import { formatRupiah } from '../../services/cartCalculator';
 
 interface ProductFormModalProps {
   product: Product | null; // null if adding new
   categories: Category[];
   units: Unit[];
+  initialCategoryId?: number;
+  initialCondition?: ProductCondition;
   onSave: () => void;
   onClose: () => void;
 }
@@ -15,6 +18,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   product,
   categories,
   units,
+  initialCategoryId,
+  initialCondition,
   onSave,
   onClose,
 }) => {
@@ -24,22 +29,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [barcode, setBarcode] = useState(product?.barcode || '');
   const [name, setName] = useState(product?.name || '');
   const [categoryId, setCategoryId] = useState<number>(
-    product?.categoryId || (categories[0]?.id || 1)
+    product?.categoryId || initialCategoryId || (categories[0]?.id || 1)
   );
   const [unitId, setUnitId] = useState<number>(product?.unitId || (units[0]?.id || 1));
   const [supplierId, setSupplierId] = useState<number | undefined>(product?.supplierId);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [buyPrice, setBuyPrice] = useState<string>(product?.buyPrice?.toString() || '0');
   const [sellPrice, setSellPrice] = useState<string>(product?.sellPrice?.toString() || '0');
-  const [stock, setStock] = useState<string>(product?.stock?.toString() || '0');
-  const [minStock, setMinStock] = useState<string>(product?.minStock?.toString() || '5');
+  const [stock, setStock] = useState<string>(product?.stock?.toString() || '1');
+  const [minStock, setMinStock] = useState<string>(product?.minStock?.toString() || '1');
 
   // Spesifikasi Khusus Toko Komputer (Kondisi, Kelengkapan, Garansi, SN)
-  const [condition, setCondition] = useState<ProductCondition>(product?.condition || 'BARU');
+  const [condition, setCondition] = useState<ProductCondition>(
+    product?.condition || initialCondition || 'BARU'
+  );
   const [conditionNotes, setConditionNotes] = useState(product?.conditionNotes || '');
   const [completeness, setCompleteness] = useState(product?.completeness || '');
   const [warrantyPeriod, setWarrantyPeriod] = useState(product?.warrantyPeriod || '1 Bulan Toko');
   const [serialNumber, setSerialNumber] = useState(product?.serialNumber || '');
+
+  // Pencatatan Kas Keluar (Beli unit = toko keluar uang)
+  const [recordCashOut, setRecordCashOut] = useState<boolean>(!isEditing);
+  const [cashOutSource, setCashOutSource] = useState<'CASH' | 'TRANSFER'>('CASH');
+  const [sellerName, setSellerName] = useState<string>('');
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -125,7 +137,44 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         createdAt: now,
         updatedAt: now,
       };
-      await db.products.add(newProduct as any);
+      const newProdId = await db.products.add(newProduct as any);
+
+      // Record Kas Keluar Toko (Membeli laptop = keluar uang, bukan nambah uang)
+      if (!isEditing && recordCashOut) {
+        const totalBuyCost = buy * currentStock;
+        if (totalBuyCost > 0) {
+          await db.cashFlows.add({
+            shiftId: 1,
+            cashierId: 1,
+            cashierName: 'Owner / Kasir',
+            type: 'OUT',
+            category:
+              categoryId === 3
+                ? 'Beli Unit Laptop dari Pelanggan/Supplier'
+                : 'Pembelian Stok Barang Masuk',
+            amount: totalBuyCost,
+            note: `Beli unit ${name.trim()} (${currentStock}x @${formatRupiah(
+              buy
+            )}) ${sellerName ? `dari ${sellerName.trim()}` : ''} [Sumber: ${
+              cashOutSource === 'CASH' ? 'Kas Laci Tunai' : 'Transfer Bank'
+            }]`,
+            createdAt: now,
+          });
+
+          await db.stockMovements.add({
+            id: 0,
+            productId: newProdId as number,
+            productName: name.trim(),
+            type: 'IN_PURCHASE',
+            quantity: currentStock,
+            balanceAfter: currentStock,
+            supplierName: sellerName.trim() || selectedSupplier?.name || 'Pelanggan / Supplier',
+            referenceNo: `BELI-${Date.now().toString().slice(-6)}`,
+            notes: `Pembelian unit laptop/barang - Uang kas keluar ${formatRupiah(totalBuyCost)}`,
+            createdAt: now,
+          } as any);
+        }
+      }
     }
 
     onSave();
@@ -562,6 +611,71 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-amber-400 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Pencatatan Keuangan Pembelian Unit (Kas Keluar Toko - Beli Laptop = Uang Keluar) */}
+          {!isEditing && !isServiceCategory && (
+            <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-800/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-bold text-rose-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={recordCashOut}
+                    onChange={(e) => setRecordCashOut(e.target.checked)}
+                    className="w-4 h-4 rounded text-rose-600 bg-slate-950 border-slate-700 cursor-pointer"
+                  />
+                  <span>Catat Pembelian Unit Ini Sebagai Kas Keluar Toko</span>
+                </label>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-rose-900/60 text-rose-200 border border-rose-700/60 uppercase">
+                  Uang Keluar
+                </span>
+              </div>
+
+              {recordCashOut && (
+                <div className="space-y-2 pt-2 border-t border-rose-900/40 text-xs">
+                  <div className="p-2.5 rounded-lg bg-rose-900/30 border border-rose-800/40 flex items-center justify-between">
+                    <span className="text-slate-300 text-[11px]">
+                      Total Uang Modal Keluar ({stock} unit x {formatRupiah(parseFloat(buyPrice) || 0)}):
+                    </span>
+                    <span className="text-base font-black text-rose-400 font-mono">
+                      -{formatRupiah((parseFloat(buyPrice) || 0) * (parseFloat(stock) || 0))}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                        Sumber Kas Toko:
+                      </label>
+                      <select
+                        value={cashOutSource}
+                        onChange={(e) => setCashOutSource(e.target.value as 'CASH' | 'TRANSFER')}
+                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white"
+                      >
+                        <option value="CASH">💵 Kas Tunai di Laci Kasir (Saldo Laci Berkurang)</option>
+                        <option value="TRANSFER">🏦 Transfer Bank Rekening Toko</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                        Dibeli Dari (Customer / Supplier):
+                      </label>
+                      <input
+                        type="text"
+                        value={sellerName}
+                        onChange={(e) => setSellerName(e.target.value)}
+                        placeholder="Contoh: Bpk. Hendra (Beli Laptop Second)"
+                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder:text-slate-600"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic">
+                    * Membeli laptop/hardware berarti kas toko berkurang (uang keluar) untuk menambah persediaan unit barang.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

@@ -2,6 +2,84 @@ import { Transaction, StoreProfile } from '../types/pos';
 import { formatRupiah } from './cartCalculator';
 import { playCashDrawerKickSound } from './scanner';
 
+/**
+ * Menghitung tanggal berakhirnya masa garansi unit secara presisi
+ */
+export function calculateWarrantyExpiry(
+  saleDateStr: string,
+  warrantyPeriod?: string
+): { label: string; expiryDateStr: string } {
+  if (
+    !warrantyPeriod ||
+    warrantyPeriod.trim() === '' ||
+    warrantyPeriod.toLowerCase() === 'tidak ada' ||
+    warrantyPeriod.toLowerCase() === 'non-garansi'
+  ) {
+    return { label: 'Non-Garansi', expiryDateStr: '-' };
+  }
+
+  const baseDate = new Date(saleDateStr);
+  const lower = warrantyPeriod.toLowerCase();
+  let daysToAdd = 30; // default 1 bulan jika tidak terdeteksi
+
+  const matchNum = lower.match(/(\d+)/);
+  const num = matchNum ? parseInt(matchNum[1], 10) : 1;
+
+  if (lower.includes('tahun') || lower.includes('thn') || lower.includes('year')) {
+    daysToAdd = num * 365;
+  } else if (lower.includes('minggu') || lower.includes('week')) {
+    daysToAdd = num * 7;
+  } else if (lower.includes('hari') || lower.includes('day')) {
+    daysToAdd = num;
+  } else if (lower.includes('bulan') || lower.includes('bln') || lower.includes('month')) {
+    daysToAdd = num * 30;
+  }
+
+  const expiry = new Date(baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+  const expiryFormatted = expiry.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return {
+    label: warrantyPeriod,
+    expiryDateStr: expiryFormatted,
+  };
+}
+
+/**
+ * Auto-detect ukuran kertas dan format printer paling optimal:
+ * - Jika ada penjualan unit laptop, serial number, atau nominal besar (>= Rp 1.5jt) -> Format Faktur A4/F4
+ * - Jika penjualan aksesoris/sparepart umum -> Format Struk Mini Kasir Thermal (58mm/80mm)
+ */
+export function detectOptimalPaperFormat(
+  tx: Transaction,
+  configuredPaperWidth: '58mm' | '80mm' | 'A4' | 'F4' | 'auto' = 'auto'
+): '58mm' | '80mm' | 'A4' {
+  if (configuredPaperWidth && configuredPaperWidth !== 'auto') {
+    if (configuredPaperWidth === 'F4') return 'A4';
+    return configuredPaperWidth;
+  }
+
+  const hasLaptopOrBigTicket = tx.items.some(
+    (item) =>
+      item.name.toLowerCase().includes('laptop') ||
+      item.name.toLowerCase().includes('macbook') ||
+      item.name.toLowerCase().includes('thinkpad') ||
+      item.name.toLowerCase().includes('notebook') ||
+      item.name.toLowerCase().includes('pc ') ||
+      item.serialNumber ||
+      (item.warrantyPeriod && (item.unitPrice || 0) >= 1500000)
+  );
+
+  if (hasLaptopOrBigTicket || tx.grandTotal >= 2000000) {
+    return 'A4';
+  }
+
+  return '80mm';
+}
+
 export function padBetween(left: string, right: string, width: number): string {
   const spaces = width - left.length - right.length;
   if (spaces <= 0) return `${left} ${right}`;
@@ -61,7 +139,8 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
       lines.push(`  SN: ${item.serialNumber}`);
     }
     if (item.warrantyPeriod) {
-      lines.push(`  Garansi: ${item.warrantyPeriod}`);
+      const { expiryDateStr } = calculateWarrantyExpiry(tx.createdAt, item.warrantyPeriod);
+      lines.push(`  Garansi: ${item.warrantyPeriod} (s/d ${expiryDateStr})`);
     }
   }
   lines.push(divider);
@@ -100,6 +179,21 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
     lines.push(padBetween('KEMBALIAN:', formatRupiah(tx.changeAmount), width));
   }
   lines.push(doubleDivider);
+
+  // 5.b Warranty Terms if Laptop / Hardware with warranty sold
+  const itemsWithWarranty = tx.items.filter(
+    (i) =>
+      i.warrantyPeriod &&
+      !['tidak ada', 'non-garansi', '-'].includes(i.warrantyPeriod.toLowerCase())
+  );
+  if (itemsWithWarranty.length > 0) {
+    lines.push(centerText('KETENTUAN KARTU GARANSI TOKO', width));
+    lines.push('1. Nota ini berlaku sbg kartu garansi resmi.');
+    lines.push('2. Segel toko utuh, tdk rusak/robek/hilang.');
+    lines.push('3. Tdk kena cairan, jatuh, korsleting.');
+    lines.push('4. Klaim garansi wajib bawa unit & nota.');
+    lines.push(doubleDivider);
+  }
 
   // 6. Footer
   if (profile.receiptFooter) {

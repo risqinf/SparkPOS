@@ -296,8 +296,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           )}
 
-          {/* Auto Print Receipt Toggle */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+          {/* Print Receipt Toggle (Enable / Disable untuk toko yang menggunakan nota manual) */}
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
             <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
               <input
                 type="checkbox"
@@ -306,8 +306,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 cursor-pointer"
               />
               <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Cetak struk nota belanja otomatis setelah pembayaran</span>
+              <span>Cetak struk nota belanja otomatis</span>
             </label>
+            {!autoPrint && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pl-6">
+                Mode Nota Manual Aktif: Transaksi akan selesai langsung tanpa membuka dialog struk printer.
+              </p>
+            )}
           </div>
         </div>
 

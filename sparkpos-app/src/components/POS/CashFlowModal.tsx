@@ -13,6 +13,8 @@ interface CashFlowModalProps {
 }
 
 const DEFAULT_EXPENSE_CATEGORIES = [
+  'Beli Unit Laptop / Hardware dari Pelanggan (Kas Keluar)',
+  'Pembelian Stok Laptop / Sparepart dari Distributor',
   'Beli Makan / Minum Kasir',
   'Pengamen / Keamanan / Sampah',
   'Operasional & ATK Kasir',

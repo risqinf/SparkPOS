@@ -14,7 +14,9 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
   storeProfile,
   onClose,
 }) => {
-  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(storeProfile.paperWidth);
+  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(
+    storeProfile.paperWidth === '58mm' ? '58mm' : '80mm'
+  );
   const [copied, setCopied] = useState(false);
 
   const activeProfile: StoreProfile = {

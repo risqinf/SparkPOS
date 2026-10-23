@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Boxes,
   Plus,
@@ -19,8 +19,9 @@ import {
   Copy,
   Check,
   FileDown,
+  Laptop,
 } from 'lucide-react';
-import { Product, Category, Unit, Employee } from '../../types/pos';
+import { Product, Category, Unit, Employee, ProductCondition } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
 import { db, getActiveProducts } from '../../services/storage';
 import { ProductFormModal } from './ProductFormModal';
@@ -49,6 +50,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedProductToEdit, setSelectedProductToEdit] = useState<Product | null>(null);
+  const [initialFormCategory, setInitialFormCategory] = useState<number | undefined>(undefined);
+  const [initialFormCondition, setInitialFormCondition] = useState<ProductCondition | undefined>(undefined);
 
   const [isOpnameOpen, setIsOpnameOpen] = useState(false);
   const [selectedProductForOpname, setSelectedProductForOpname] = useState<Product | null>(null);
@@ -75,25 +78,44 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   // KPI Calculations (Exclude unlimited services from low-stock warnings)
   const totalSku = products.length;
-  const physicalProducts = products.filter(
-    (p) => !p.isService && p.categoryName?.toLowerCase() !== 'jasa'
+  const physicalProducts = useMemo(
+    () => products.filter((p) => !p.isService && p.categoryName?.toLowerCase() !== 'jasa'),
+    [products]
   );
-  const totalStockValueHpp = physicalProducts.reduce((sum, p) => sum + p.buyPrice * p.stock, 0);
-  const lowStockCount = physicalProducts.filter((p) => p.stock > 0 && p.stock <= p.minStock).length;
-  const zeroStockCount = physicalProducts.filter((p) => p.stock <= 0).length;
+  const totalStockValueHpp = useMemo(
+    () => physicalProducts.reduce((sum, p) => sum + p.buyPrice * p.stock, 0),
+    [physicalProducts]
+  );
+  const lowStockCount = useMemo(
+    () => physicalProducts.filter((p) => p.stock > 0 && p.stock <= p.minStock).length,
+    [physicalProducts]
+  );
+  const zeroStockCount = useMemo(
+    () => physicalProducts.filter((p) => p.stock <= 0).length,
+    [physicalProducts]
+  );
 
-  // Filtered List
-  const filteredProducts = products.filter((p) => {
-    const matchCategory = selectedCategoryId === null || p.categoryId === selectedCategoryId;
-    const matchSearch =
-      searchQuery === '' ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.barcode && p.barcode.includes(searchQuery)) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
-    const matchLowStock = !filterLowStockOnly || (!isService && p.stock <= p.minStock);
-    return matchCategory && matchSearch && matchLowStock;
-  });
+  // Filtered List with useMemo and SN lookup
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return products.filter((p) => {
+      if (selectedCategoryId !== null && p.categoryId !== selectedCategoryId) {
+        return false;
+      }
+      const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
+      if (filterLowStockOnly && (isService || p.stock > p.minStock)) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.barcode && p.barcode.includes(q)) ||
+        p.sku.toLowerCase().includes(q) ||
+        (p.serialNumber && p.serialNumber.toLowerCase().includes(q)) ||
+        (p.supplierName && p.supplierName.toLowerCase().includes(q))
+      );
+    });
+  }, [products, selectedCategoryId, searchQuery, filterLowStockOnly]);
 
   const handleDeleteProduct = async (product: Product) => {
     if (!isAdmin) {
@@ -108,6 +130,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const handleOpenAddProduct = () => {
     setSelectedProductToEdit(null);
+    setInitialFormCategory(undefined);
+    setInitialFormCondition(undefined);
+    setIsFormOpen(true);
+  };
+
+  const handleOpenBuyLaptop = () => {
+    setSelectedProductToEdit(null);
+    const laptopCat = categories.find((c) => c.name.toLowerCase().includes('laptop'));
+    setInitialFormCategory(laptopCat ? laptopCat.id : 3);
+    setInitialFormCondition('BEKAS');
     setIsFormOpen(true);
   };
 
@@ -311,6 +343,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           >
             <FileDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Unduh (.csv)</span>
+          </button>
+
+          {/* Beli Laptop (Kas Keluar) Button */}
+          <button
+            onClick={handleOpenBuyLaptop}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition shadow-xs active:scale-95 cursor-pointer"
+            title="Beli unit laptop baru/second dari pelanggan atau supplier (Kas toko keluar uang untuk beli aset)"
+          >
+            <Laptop className="w-4 h-4" />
+            <span>Beli Unit Laptop</span>
           </button>
 
           {/* Add Product Button */}
@@ -526,6 +568,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           product={selectedProductToEdit}
           categories={categories}
           units={units}
+          initialCategoryId={initialFormCategory}
+          initialCondition={initialFormCondition}
           onSave={() => {
             setIsFormOpen(false);
             loadData();
