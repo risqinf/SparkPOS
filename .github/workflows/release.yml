@@ -58,17 +58,20 @@ jobs:
           tagName: v__VERSION__
           releaseName: 'SparkPOS Desktop v__VERSION__'
           releaseBody: |
-            ### 🚀 SparkPOS v2.0 — Major Desktop Release
+            ### 🚀 SparkPOS Desktop v__VERSION__ — High Performance & Unified Retail Release
 
-            Rilis pembaruan besar untuk operasional retail toko komputer & jasa servis laptop:
+            Pembaruan komprehensif untuk stabilitas, kecepatan, efisiensi memori, dan penyederhanaan operasional toko:
 
-            - 🔧 **Modul Service Komputer & Laptop**: Pencatatan unit masuk, diagnosa kerusakan, alokasi sparepart & biaya jasa, status pengerjaan (Diterima, Dikerjakan, Selesai, Diambil), serta cetak nota tanda terima termal 58mm/80mm.
-            - 💾 **Relokasi Lokasi Database Dinamis**: Database tidak lagi terkunci di folder default apps. Bebas dipindahkan ke Harddisk (HDD) eksternal atau Drive D: dengan penyalinan data otomatis tanpa resiko data hilang (*zero data loss*).
-            - 👥 **Sistem 3 Role**: Owner, Teknisi, dan Kasir dengan filter akses menu yang disesuaikan untuk kenyamanan kerja tim toko.
-            - 🚚 **Manajemen Supplier**: Pencatatan distributor dan pemasok komponen/hardware (HDD, SSD, RAM, sparepart).
-            - 👤 **Nama Pelanggan di Struk**: Input nama pelanggan langsung di kasir & tercetak otomatis pada struk belanja maupun nota servis.
-            - 📊 **Export Excel Offline**: Ekspor Laporan Penjualan Kasir, Valuasi Aset Stok HPP, dan Rekapitulasi Jasa Servis ke format spreadsheet Excel (*UTF-8 BOM*).
-            - 🖥️ **UI Layout Ultra Fleksibel**: Mendukung resolusi layar beragam dari monitor desktop modern hingga laptop klasik (ThinkPad X201, resolusi 1280x800).
+            - 🔐 **UI Login Sederhana & Keyboard-Only**: Form minimalis di tengah layar, fokus langsung pada pengetikan keyboard (Username & PIN), shortcut Enter, tanpa on-screen keypad yang memenuhi layar.
+            - 💳 **Metode Pembayaran Kasir 2 Pilihan**: Hanya Tunai (Cash) dengan perhitungan kembalian instan dan Transfer Bank uang pas dengan catatan bank/referensi.
+            - 🛠️ **Perbaikan Riwayat Transaksi Terpadu**: Mengatasi selisih tanggal timezone lokal WIB vs UTC, serta menyatukan transaksi belanja POS dan order servis yang dibayar ke dalam riwayat harian.
+            - 📊 **Laporan Keuangan Terpadu & Lengkap**: 1 dashboard finansial lengkap menggantikan tab-tab lama, menyajikan Modal Awal Kasir, Total Omset Toko (POS + Servis), Total Modal HPP, Pengeluaran Toko, Laba Bersih, Saldo Kas di Laci Kasir, serta rincian item per transaksi.
+            - 💵 **Modal Awal Kasir Wajib Awal Hari**: Dialog wajib input uang kas laci saat login pertama kali setiap hari kerja (07.00 - 16.30).
+            - 🧹 **Pembersihan Fitur**: Menghapus form Cabang, menyederhanakan multi-shift menjadi Laporan Kas Hari Ini (07.00 - 16.30), dan menghapus kurir/ongkir dari terminal kasir untuk transaksi langsung di tempat yang lebih cepat.
+            - 📑 **List Katalog Kasir Mode Detail**: Mengubah katalog produk dari kartu kotak menjadi tabel detail row (Barcode, Nama Lengkap tanpa terpotong, Kategori, Badge Stok Jelas, Harga Jual, dan Tombol Cepat +Keranjang).
+            - 🎨 **Peningkatan Kontras & Tema Terang/Gelap**: Warna teks tajam dan kontras pekat (High-Contrast), border tegas, serta bebas dari teks abu-abu pudar di mode terang.
+            - 📥 **Ekspor Excel Terpadu (.csv UTF-8 BOM)**: Ekspor laporan keuangan lengkap beserta rincian item yang langsung rapi di Microsoft Excel & LibreOffice.
+            - ⚡ **Optimasi Performa & Minim RAM**: Bundle diperkecil, query database IndexedDB efisien, dan siap digunakan cepat & stabil.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

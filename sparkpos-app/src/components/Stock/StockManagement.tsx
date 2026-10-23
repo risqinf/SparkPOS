@@ -355,64 +355,64 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1 flex-wrap">
-                          <span className="font-mono text-slate-400">{p.barcode || '-'}</span>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400 mt-1 flex-wrap">
+                          <span className="font-mono text-slate-700 dark:text-slate-300 font-medium">{p.barcode || '-'}</span>
                           <span>•</span>
-                          <span className="font-mono">{p.sku}</span>
+                          <span className="font-mono font-medium">{p.sku}</span>
                           {p.serialNumber && (
                             <>
                               <span>•</span>
-                              <span className="font-mono text-slate-300">SN: {p.serialNumber}</span>
+                              <span className="font-mono text-slate-700 dark:text-slate-300">SN: {p.serialNumber}</span>
                             </>
                           )}
                           {p.warrantyPeriod && (
                             <>
                               <span>•</span>
-                              <span className="text-emerald-400"><ShieldCheck className="w-3 h-3 inline mr-0.5" />{p.warrantyPeriod}</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium"><ShieldCheck className="w-3 h-3 inline mr-0.5" />{p.warrantyPeriod}</span>
                             </>
                           )}
                           {p.supplierName && (
                             <>
                               <span>•</span>
-                              <span className="text-slate-300 font-medium"><Package className="w-3 h-3 inline mr-1" />{p.supplierName}</span>
+                              <span className="text-slate-700 dark:text-slate-300 font-medium"><Package className="w-3 h-3 inline mr-1" />{p.supplierName}</span>
                             </>
                           )}
                         </div>
 
                         {(p.conditionNotes || p.completeness) && (
-                          <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
                             {p.conditionNotes && (
-                              <span className="text-amber-400/90 italic"><AlertTriangle className="w-3 h-3 inline mr-1 text-amber-500" />{p.conditionNotes}</span>
+                              <span className="text-amber-700 dark:text-amber-400 italic"><AlertTriangle className="w-3 h-3 inline mr-1 text-amber-500" />{p.conditionNotes}</span>
                             )}
                             {p.completeness && (
-                              <span className="text-slate-400"><Package className="w-3 h-3 inline mr-1" />Kelengkapan: {p.completeness}</span>
+                              <span className="text-slate-600 dark:text-slate-400"><Package className="w-3 h-3 inline mr-1" />Kelengkapan: {p.completeness}</span>
                             )}
                           </div>
                         )}
                       </td>
 
                       {/* Category */}
-                      <td className="px-4 py-3 text-slate-400">{p.categoryName || '-'}</td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium">{p.categoryName || '-'}</td>
 
                       {/* Buy Price */}
-                      <td className="px-4 py-3 text-right text-slate-400 font-medium">
+                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400 font-medium">
                         {formatRupiah(p.buyPrice)}
                       </td>
 
                       {/* Sell Price */}
-                      <td className="px-4 py-3 text-right font-semibold text-white">
+                      <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">
                         {formatRupiah(p.sellPrice)}
-                        <span className="text-[10px] text-slate-500 font-normal">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
                           /{p.unitName}
                         </span>
                       </td>
 
                       {/* Margin */}
                       <td className="px-4 py-3 text-right">
-                        <span className="text-xs text-slate-300">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           +{formatRupiah(marginNominal)}
                         </span>
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
                           ({marginPercent}%)
                         </div>
                       </td>
@@ -420,23 +420,23 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       {/* Stock Status */}
                       <td className="px-4 py-3 text-center">
                         {p.isService || p.categoryName?.toLowerCase() === 'jasa' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                             Jasa (∞)
                           </span>
                         ) : (
                           <>
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
                                 isOutOfStock
-                                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                                   : isLowStock
-                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  : 'bg-slate-800 text-slate-200 border border-slate-700'
+                                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                               }`}
                             >
                               {p.stock} {p.unitName}
                             </span>
-                            <div className="text-[10px] text-slate-500 mt-0.5">
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                               Min: {p.minStock} {p.unitName}
                             </div>
                           </>

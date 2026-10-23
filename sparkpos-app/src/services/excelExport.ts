@@ -492,4 +492,130 @@ export function exportShiftsToExcel(
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 }
 
+// ==========================================
+// UNIFIED FINANCIAL REPORT EXPORT (LAPORAN KEUANGAN TERPADU)
+// ==========================================
+
+export interface UnifiedExportTransaction {
+  invoiceNumber: string;
+  createdAt: string;
+  type: 'POS' | 'SERVICE';
+  cashierName: string;
+  customerName: string;
+  paymentMethod: string;
+  grandTotal: number;
+  totalCost: number;
+  grossProfit: number;
+  items: Array<{
+    name: string;
+    quantity: number;
+    sellPrice: number;
+    buyPrice: number;
+    subtotal: number;
+    margin: number;
+  }>;
+}
+
+export interface UnifiedFinancialExportData {
+  storeName: string;
+  periodLabel: string;
+  printedBy: string;
+  openingCash: number;
+  posRevenue: number;
+  serviceRevenue: number;
+  totalRevenue: number;
+  totalCostHpp: number;
+  operationalExpenses: number;
+  netProfit: number;
+  cashSalesTotal: number;
+  transferSalesTotal: number;
+  finalCashInDrawer: number;
+  transactions: UnifiedExportTransaction[];
+}
+
+export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExportData) {
+  const bom = '\uFEFF';
+  const lines: string[] = [];
+
+  // Kop Laporan
+  lines.push(`LAPORAN KEUANGAN TERPADU & RINCIAN TRANSAKSI - ${data.storeName.toUpperCase()}`);
+  lines.push(`Periode Laporan: ${data.periodLabel}`);
+  lines.push(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`);
+  lines.push(`Dicetak Oleh: ${data.printedBy}`);
+  lines.push('');
+
+  // Ringkasan Finansial Eksekutif
+  lines.push('RINGKASAN FINANSIAL & ARUS KAS');
+  lines.push(`Modal Awal Kasir Hari Ini,${data.openingCash}`);
+  lines.push(`Total Omset Penjualan POS Barang,${data.posRevenue}`);
+  lines.push(`Total Pendapatan Jasa Servis,${data.serviceRevenue}`);
+  lines.push(`TOTAL OMSET TOKO (PENJUALAN + SERVIS),${data.totalRevenue}`);
+  lines.push(`Total Modal HPP (Barang + Sparepart),${data.totalCostHpp}`);
+  lines.push(`Pengeluaran Operasional Kas Toko,${data.operationalExpenses}`);
+  lines.push(`TOTAL OMSET DIPOTONG MODAL & BIAYA (LABA BERSIH),${data.netProfit}`);
+  lines.push(`Penerimaan Tunai (Cash),${data.cashSalesTotal}`);
+  lines.push(`Penerimaan Transfer Bank,${data.transferSalesTotal}`);
+  lines.push(`ESTIMASI SALDO KAS FISIK DI LACI KASIR,${data.finalCashInDrawer}`);
+  lines.push(`Total Jumlah Transaksi,${data.transactions.length}`);
+  lines.push('');
+
+  // Tabel Detail Transaksi dengan Rincian Produk
+  lines.push('TABEL RINCIAN LENGKAP TRANSAKSI & PRODUK YANG DIBELI');
+  const headers = [
+    'No. Bukti / Invoice',
+    'Tanggal & Jam',
+    'Tipe',
+    'Kasir / PIC',
+    'Nama Pelanggan',
+    'Metode Bayar',
+    'Rincian Produk [Nama x Qty @Harga (Modal HPP)]',
+    'Total Omset Transaksi (Rp)',
+    'Total Modal HPP (Rp)',
+    'Laba Transaksi (Rp)',
+  ];
+  lines.push(headers.map(escapeCsvCell).join(','));
+
+  for (const t of data.transactions) {
+    const dateFormatted = new Date(t.createdAt).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const itemsDetail = t.items
+      .map(
+        (i) =>
+          `${i.name} (${i.quantity}x @Rp ${i.sellPrice.toLocaleString('id-ID')} | HPP: Rp ${i.buyPrice.toLocaleString(
+            'id-ID'
+          )})`
+      )
+      .join('; ');
+
+    lines.push(
+      [
+        escapeCsvCell(t.invoiceNumber),
+        escapeCsvCell(dateFormatted),
+        escapeCsvCell(t.type === 'POS' ? 'Penjualan Kasir' : 'Jasa Servis'),
+        escapeCsvCell(t.cashierName || 'Kasir'),
+        escapeCsvCell(t.customerName || 'Pelanggan Umum'),
+        escapeCsvCell(t.paymentMethod || 'CASH'),
+        escapeCsvCell(itemsDetail || '-'),
+        escapeCsvCell(t.grandTotal),
+        escapeCsvCell(t.totalCost),
+        escapeCsvCell(t.grossProfit),
+      ].join(',')
+    );
+  }
+
+  const csvContent = bom + lines.join('\r\n');
+  const cleanStore = data.storeName.replace(/\s+/g, '_');
+  const cleanPeriod = data.periodLabel.replace(/[\s\/:]+/g, '_');
+  const filename = `Laporan_Keuangan_Terpadu_${cleanStore}_${cleanPeriod}.csv`;
+
+  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+
 

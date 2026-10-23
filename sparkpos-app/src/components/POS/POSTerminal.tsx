@@ -16,9 +16,6 @@ import {
   LogOut,
   Users,
   User,
-  Truck,
-  ChevronDown,
-  ChevronUp,
   ShieldCheck,
   X,
 } from 'lucide-react';
@@ -79,13 +76,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   const [orderDiscountPercent, setOrderDiscountPercent] = useState<number>(0);
   const [orderDiscountNominal, setOrderDiscountNominal] = useState<number>(0);
 
-  // Biaya Pengiriman (Ongkir) & Ekspedisi
-  const [shippingCost, setShippingCost] = useState<number>(0);
-  const [shippingCourier, setShippingCourier] = useState<string>('');
-  const [shippingTrackingNumber, setShippingTrackingNumber] = useState<string>('');
-  const [shippingAddress, setShippingAddress] = useState<string>('');
-  const [isShippingOpen, setIsShippingOpen] = useState<boolean>(false);
-
   // Modals
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
@@ -113,14 +103,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Cart Financials (Termasuk Ongkir)
+  // Cart Financials
   const cartSummary: CartSummary = calculateCartSummary(
     cartItems,
     orderDiscountPercent,
     orderDiscountNominal,
     storeProfile.taxPercent,
     storeProfile.isTaxInclusive,
-    shippingCost
+    0
   );
 
   // Add product to cart logic
@@ -201,11 +191,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       setCartItems([]);
       setOrderDiscountPercent(0);
       setOrderDiscountNominal(0);
-      setShippingCost(0);
-      setShippingCourier('');
-      setShippingTrackingNumber('');
-      setShippingAddress('');
-      setIsShippingOpen(false);
     }
   };
 
@@ -281,10 +266,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       orderDiscountNominal,
       orderDiscountPercent,
       customerName: customerName.trim() || undefined,
-      shippingCost,
-      shippingCourier: shippingCourier.trim() || undefined,
-      shippingTrackingNumber: shippingTrackingNumber.trim() || undefined,
-      shippingAddress: shippingAddress.trim() || undefined,
       heldAt: new Date().toISOString(),
     };
     await db.heldCarts.add(newHeld);
@@ -292,11 +273,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setOrderDiscountPercent(0);
     setOrderDiscountNominal(0);
     setCustomerName('');
-    setShippingCost(0);
-    setShippingCourier('');
-    setShippingTrackingNumber('');
-    setShippingAddress('');
-    setIsShippingOpen(false);
     onUpdateHeldCarts();
     showToast(`Transaksi diparkir: ${label}`, 'success');
   };
@@ -312,11 +288,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setOrderDiscountPercent(cart.orderDiscountPercent);
     setOrderDiscountNominal(cart.orderDiscountNominal);
     setCustomerName(cart.customerName || '');
-    setShippingCost(cart.shippingCost || 0);
-    setShippingCourier(cart.shippingCourier || '');
-    setShippingTrackingNumber(cart.shippingTrackingNumber || '');
-    setShippingAddress(cart.shippingAddress || '');
-    setIsShippingOpen(!!(cart.shippingCost && cart.shippingCost > 0));
     await db.heldCarts.delete(cart.id);
     onUpdateHeldCarts();
     setIsHeldModalOpen(false);
@@ -345,10 +316,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       subtotal: cartSummary.subtotal,
       discountOrderAmount: cartSummary.discountOrderAmount,
       taxAmount: cartSummary.taxAmount,
-      shippingCost,
-      shippingCourier: shippingCourier.trim() || undefined,
-      shippingTrackingNumber: shippingTrackingNumber.trim() || undefined,
-      shippingAddress: shippingAddress.trim() || undefined,
       grandTotal: cartSummary.grandTotal,
       paidAmount,
       changeAmount,
@@ -393,11 +360,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     setCartItems([]);
     setOrderDiscountPercent(0);
     setOrderDiscountNominal(0);
-    setShippingCost(0);
-    setShippingCourier('');
-    setShippingTrackingNumber('');
-    setShippingAddress('');
-    setIsShippingOpen(false);
     setIsPaymentOpen(false);
 
     // Show Receipt Modal
@@ -552,79 +514,98 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
-              {filteredProducts.map((p) => {
-                const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
-                const isOutOfStock = !isService && p.stock <= 0;
-                const isLowStock = !isService && p.stock > 0 && p.stock <= p.minStock;
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <th className="py-2.5 px-3">Barcode / SKU</th>
+                    <th className="py-2.5 px-3">Nama Produk</th>
+                    <th className="py-2.5 px-3">Kategori</th>
+                    <th className="py-2.5 px-3 text-center">Status Stok</th>
+                    <th className="py-2.5 px-3 text-right">Harga Jual</th>
+                    <th className="py-2.5 px-3 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 dark:divide-slate-800/80 text-xs">
+                  {filteredProducts.map((p) => {
+                    const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
+                    const isOutOfStock = !isService && p.stock <= 0;
+                    const isLowStock = !isService && p.stock > 0 && p.stock <= p.minStock;
 
-                return (
-                  <button
-                    key={p.id}
-                    disabled={isOutOfStock}
-                    onClick={() => addToCart(p, 1)}
-                    className={`relative text-left p-3 rounded-xl border flex flex-col justify-between transition-all group ${
-                      isOutOfStock
-                        ? 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-50 cursor-not-allowed'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs shadow-2xs active:scale-[0.98]'
-                    }`}
-                  >
-                    <div>
-                      {/* Barcode & Status Pill */}
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1.5">
-                        <span className="font-mono text-slate-500 dark:text-slate-400 text-[10px] truncate max-w-[100px]">
+                    return (
+                      <tr
+                        key={p.id}
+                        onClick={() => !isOutOfStock && addToCart(p, 1)}
+                        className={`transition group cursor-pointer ${
+                          isOutOfStock
+                            ? 'opacity-40 bg-slate-50/50 dark:bg-slate-950/40 cursor-not-allowed'
+                            : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
                           {p.barcode || p.sku}
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold text-[9px] ${
-                            isService
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                              : isOutOfStock
-                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                              : isLowStock
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
+                        </td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs">{p.name}</span>
+                            {p.condition && p.condition !== 'BARU' && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+                                {p.condition}
+                              </span>
+                            )}
+                            {p.warrantyPeriod && (
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center font-medium">
+                                <ShieldCheck className="w-3 h-3 mr-0.5" />{p.warrantyPeriod}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold border border-slate-200 dark:border-slate-700">
+                            {p.categoryName || 'Umum'}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
                           <span
-                            className={`w-1 h-1 rounded-full ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                               isService
-                                ? 'bg-blue-500 dark:bg-blue-400'
+                                ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
                                 : isOutOfStock
-                                ? 'bg-rose-500 dark:bg-rose-400'
+                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                                 : isLowStock
-                                ? 'bg-amber-500 dark:bg-amber-400'
-                                : 'bg-slate-500 dark:bg-slate-400'
+                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                             }`}
-                          />
-                          <span>
+                          >
                             {isService
                               ? 'Jasa (∞)'
                               : isOutOfStock
-                              ? 'HABIS'
+                              ? 'HABIS (0)'
                               : isLowStock
-                              ? `Sisa ${p.stock}`
-                              : `Stok ${p.stock}`}
+                              ? `Sisa ${p.stock} ${p.unitName || 'pcs'}`
+                              : `Stok: ${p.stock} ${p.unitName || 'pcs'}`}
                           </span>
-                        </span>
-                      </div>
-
-                      {/* Product Name */}
-                      <h3 className="font-medium text-slate-800 dark:text-slate-200 text-xs line-clamp-2 leading-snug mb-2 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                        {p.name}
-                      </h3>
-                    </div>
-
-                    {/* Price and Unit */}
-                    <div className="flex items-baseline justify-between mt-1 pt-2 border-t border-slate-150 dark:border-slate-800/80">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight font-mono">
-                        {formatRupiah(p.sellPrice)}
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400">/{p.unitName || 'pcs'}</span>
-                    </div>
-                  </button>
-                );
-              })}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white text-sm">
+                          {formatRupiah(p.sellPrice)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            disabled={isOutOfStock}
+                            onClick={() => addToCart(p, 1)}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 text-white text-[11px] font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1"
+                            title="Tambah 1 item ke keranjang"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>+ Keranjang</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -785,128 +766,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             )}
           </div>
 
-          {/* Biaya Pengiriman (Ongkir) Toggle & Options */}
-          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setIsShippingOpen(!isShippingOpen)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition"
-              >
-                <Truck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Kirim Barang / Ongkir</span>
-                {shippingCost > 0 && (
-                  <span className="text-cyan-400 font-mono text-[11px] ml-1">
-                    (+{formatRupiah(shippingCost)})
-                  </span>
-                )}
-                {isShippingOpen ? (
-                  <ChevronUp className="w-3 h-3 text-slate-500" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 text-slate-500" />
-                )}
-              </button>
-
-              {shippingCost > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShippingCost(0);
-                    setShippingCourier('');
-                    setShippingTrackingNumber('');
-                    setShippingAddress('');
-                  }}
-                  className="text-[10px] text-slate-500 hover:text-rose-400 font-semibold"
-                >
-                  Batal Ongkir
-                </button>
-              )}
-            </div>
-
-            {isShippingOpen && (
-              <div className="pt-2 border-t border-slate-800/80 space-y-2 text-xs">
-                {/* Nominal Ongkir */}
-                <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">
-                    Biaya Ongkos Kirim (Rp):
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1.5 text-[11px] text-slate-500 font-semibold">Rp</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={shippingCost || ''}
-                      onChange={(e) => setShippingCost(parseFloat(e.target.value) || 0)}
-                      placeholder="0"
-                      className="w-full pl-8 pr-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-cyan-500 font-bold"
-                    />
-                  </div>
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    {[10000, 15000, 20000, 25000, 35000, 50000].map((amt) => (
-                      <button
-                        type="button"
-                        key={amt}
-                        onClick={() => setShippingCost(amt)}
-                        className={`text-[9px] px-1.5 py-0.5 rounded transition ${
-                          shippingCost === amt
-                            ? 'bg-cyan-600 text-white font-bold'
-                            : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
-                        }`}
-                      >
-                        +{amt / 1000}rb
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Kurir Ekspedisi */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">Pilihan Kurir:</label>
-                    <select
-                      value={shippingCourier}
-                      onChange={(e) => setShippingCourier(e.target.value)}
-                      className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500 font-medium"
-                    >
-                      <option value="">Pilih Kurir...</option>
-                      <option value="SPX Express (Shopee Xpress)">SPX Express (Shopee Xpress)</option>
-                      <option value="J&T Express">J&T Express</option>
-                      <option value="JNE Express">JNE Express</option>
-                      <option value="SiCepat">SiCepat</option>
-                      <option value="J&T Cargo">J&T Cargo (Kargo PC/Printer)</option>
-                      <option value="GoSend / Grab">GoSend / Grab Instant</option>
-                      <option value="Kurir Toko">Kurir Toko Sendiri</option>
-                      <option value="Pos Indonesia">Pos Indonesia</option>
-                      <option value="Anteraja">Anteraja</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">No. Resi (Opsional):</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. JP123456789"
-                      value={shippingTrackingNumber}
-                      onChange={(e) => setShippingTrackingNumber(e.target.value)}
-                      className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Alamat Pengiriman */}
-                <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">Alamat Pengiriman:</label>
-                  <input
-                    type="text"
-                    placeholder="Alamat lengkap penerima..."
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Subtotal, Diskon & Pajak Rows */}
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -938,14 +797,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   : 'Rp 0'}
               </span>
             </div>
-
-            {/* Ongkos Kirim Row if set */}
-            {shippingCost > 0 && (
-              <div className="flex justify-between text-sky-600 dark:text-cyan-400 font-medium">
-                <span>Ongkos Kirim ({shippingCourier || 'Ekspedisi'}):</span>
-                <span className="font-mono">+{formatRupiah(shippingCost)}</span>
-              </div>
-            )}
 
             {/* PPN Pajak */}
             {storeProfile.taxPercent > 0 && (

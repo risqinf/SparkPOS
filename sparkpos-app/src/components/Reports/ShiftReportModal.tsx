@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Shift, StoreProfile, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
-import { db, getCashFlowsByShift } from '../../services/storage';
+import { db, getCashFlowsByShift, closeTodayCashRegister } from '../../services/storage';
 import {
   generateShiftReportReceiptText,
   ShiftReportPrintData,
@@ -189,7 +189,7 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
       return;
     }
 
-    let msg = `Tutup Shift #${activeShift.id}?\n\n`;
+    let msg = `Tutup Kas Harian Toko (07.00 - 16.30)?\n\n`;
     msg += `Kas Awal     : ${formatRupiah(openingCash)}\n`;
     msg += `Penjualan    : ${formatRupiah(cashSalesTotal + nonCashSalesTotal)}\n`;
     msg += `Kas Laci Seharusnya: ${formatRupiah(expectedCash)}\n`;
@@ -207,6 +207,7 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
     }
 
     const now = new Date().toISOString();
+    await closeTodayCashRegister(actualCash, note);
     await db.shifts.update(activeShift.id, {
       endTime: now,
       closingCash: actualCash,
@@ -292,13 +293,8 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-zinc-100">
-                  Laporan Shift Kasir #{activeShift?.id || 1}
+                  Laporan Kas Hari Ini (07.00 - 16.30)
                 </h2>
-                {activeShift?.shiftName && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                    {activeShift.shiftName}
-                  </span>
-                )}
               </div>
               <span className="text-[11px] text-zinc-400">
                 Mulai: {startTimeStr} • Kasir: <strong className="text-zinc-200">{activeShift?.cashierName}</strong>
@@ -318,7 +314,7 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                Tutup Shift
+                Tutup Kas (16.30)
               </button>
               <button
                 type="button"
@@ -329,7 +325,7 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
-                Riwayat Shift ({pastShifts.length})
+                Riwayat Kas Harian ({pastShifts.length})
               </button>
             </div>
 

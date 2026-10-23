@@ -284,3 +284,17 @@ export interface DatabasePathInfo {
     employees: number;
   };
 }
+
+export interface DailyCashRegister {
+  id?: number;
+  date: string;           // YYYY-MM-DD (local date)
+  cashierId: number;
+  cashierName: string;
+  openingCash: number;    // Modal awal kasir hari ini
+  openedAt: string;       // ISO timestamp
+  closingCash?: number;   // Uang fisik saat tutup kas di akhir jam operasional
+  closedAt?: string;
+  notes?: string;
+  isClosed: boolean;
+}
+

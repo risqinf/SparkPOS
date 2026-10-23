@@ -14,7 +14,9 @@ import {
   Supplier,
   ServiceOrder,
   ServiceItem,
+  DailyCashRegister,
 } from '../types/pos';
+import { getLocalDateString } from './dateUtils';
 
 export class SparkPOSDatabase extends Dexie {
   products!: Table<Product, number>;
@@ -30,6 +32,7 @@ export class SparkPOSDatabase extends Dexie {
   suppliers!: Table<Supplier, number>;
   serviceOrders!: Table<ServiceOrder, number>;
   serviceItems!: Table<ServiceItem, string>;
+  dailyCashRegister!: Table<DailyCashRegister, number>;
 
   constructor() {
     super('SparkPOS_LocalDB');
@@ -60,6 +63,23 @@ export class SparkPOSDatabase extends Dexie {
       suppliers: '++id, name, phone, createdAt',
       serviceOrders: '++id, ticketNumber, customerName, status, assignedTechId, isPaid, receivedAt, createdAt',
       serviceItems: 'id, serviceOrderId, type, name, productId',
+    });
+
+    this.version(5).stores({
+      products: '++id, sku, barcode, name, categoryId, supplierId, stock, minStock, isActive',
+      categories: '++id, name',
+      units: '++id, name',
+      stockMovements: '++id, productId, type, createdAt',
+      transactions: '++id, invoiceNumber, shiftId, cashierId, customerName, status, createdAt',
+      shifts: '++id, cashierId, isClosed, startTime',
+      heldCarts: 'id, heldAt',
+      settings: 'key',
+      employees: '++id, username, pin, role, isActive',
+      cashFlows: '++id, shiftId, cashierId, type, category, createdAt',
+      suppliers: '++id, name, phone, createdAt',
+      serviceOrders: '++id, ticketNumber, customerName, status, assignedTechId, isPaid, receivedAt, createdAt',
+      serviceItems: 'id, serviceOrderId, type, name, productId',
+      dailyCashRegister: '++id, date, cashierId, isClosed',
     });
   }
 }
@@ -435,3 +455,58 @@ export async function updateServiceOrder(id: number, order: Partial<ServiceOrder
 export async function deleteServiceOrder(id: number): Promise<void> {
   await db.serviceOrders.delete(id);
 }
+
+// ==========================================
+// DAILY CASH REGISTER (MODAL AWAL KASIR & SALDO HARIAN)
+// ==========================================
+
+export async function getTodayCashRegister(): Promise<DailyCashRegister | undefined> {
+  const todayStr = getLocalDateString();
+  return await db.dailyCashRegister.where('date').equals(todayStr).first();
+}
+
+export async function getCashRegisterByDate(dateStr: string): Promise<DailyCashRegister | undefined> {
+  return await db.dailyCashRegister.where('date').equals(dateStr).first();
+}
+
+export async function setTodayOpeningCash(
+  openingCash: number,
+  cashierId: number,
+  cashierName: string
+): Promise<DailyCashRegister> {
+  const todayStr = getLocalDateString();
+  const existing = await getTodayCashRegister();
+  if (existing && existing.id) {
+    await db.dailyCashRegister.update(existing.id, {
+      openingCash,
+      cashierId,
+      cashierName,
+      openedAt: existing.openedAt || new Date().toISOString(),
+    });
+    return { ...existing, openingCash, cashierId, cashierName };
+  } else {
+    const record: DailyCashRegister = {
+      date: todayStr,
+      openingCash,
+      cashierId,
+      cashierName,
+      openedAt: new Date().toISOString(),
+      isClosed: false,
+    };
+    const id = await db.dailyCashRegister.add(record as any);
+    return { ...record, id: id as number };
+  }
+}
+
+export async function closeTodayCashRegister(closingCash: number, notes?: string): Promise<void> {
+  const existing = await getTodayCashRegister();
+  if (existing && existing.id) {
+    await db.dailyCashRegister.update(existing.id, {
+      closingCash,
+      closedAt: new Date().toISOString(),
+      notes: notes || '',
+      isClosed: true,
+    });
+  }
+}
+

@@ -22,9 +22,6 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
 
   // 1. Header
   lines.push(centerText(profile.storeName.toUpperCase(), width));
-  if (profile.branchName) {
-    lines.push(centerText(profile.branchName, width));
-  }
   if (profile.address) {
     lines.push(centerText(profile.address, width));
   }
@@ -143,7 +140,6 @@ export function generateServiceReceiptText(
 
   // Header Toko
   lines.push(centerText(profile.storeName.toUpperCase(), width));
-  if (profile.branchName) lines.push(centerText(profile.branchName, width));
   if (profile.address) lines.push(centerText(profile.address, width));
   if (profile.phone) lines.push(centerText(`Telp/WA: ${profile.phone}`, width));
   lines.push(doubleDivider);
@@ -264,7 +260,6 @@ export function generateShiftReportReceiptText(
 
   // 1. Header Toko
   lines.push(centerText(profile.storeName.toUpperCase(), width));
-  if (profile.branchName) lines.push(centerText(profile.branchName, width));
   if (profile.address) lines.push(centerText(profile.address, width));
   if (profile.phone) lines.push(centerText(`Telp: ${profile.phone}`, width));
   lines.push(doubleDivider);

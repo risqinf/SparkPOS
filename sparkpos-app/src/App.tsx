@@ -4,6 +4,8 @@ import {
   getStoreProfile,
   DEFAULT_STORE_PROFILE,
   ensureDatabaseCompatibility,
+  getTodayCashRegister,
+  setTodayOpeningCash,
   db,
 } from './services/storage';
 import { StoreProfile, Shift, HeldCart, Employee } from './types/pos';
@@ -17,6 +19,7 @@ import { LoginScreen } from './components/Auth/LoginScreen';
 import { AdminPinModal } from './components/Auth/AdminPinModal';
 import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
 import { CashierManagementModal } from './components/Owner/CashierManagementModal';
+import { DailyOpeningCashModal } from './components/Auth/DailyOpeningCashModal';
 import { CashFlowModal } from './components/POS/CashFlowModal';
 import { BreakTimeModal } from './components/POS/BreakTimeModal';
 import { ServiceDashboard } from './components/Service/ServiceDashboard';
@@ -38,6 +41,7 @@ export default function App() {
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
   const [isBreakTimeOpen, setIsBreakTimeOpen] = useState(false);
   const [isCashierManagementOpen, setIsCashierManagementOpen] = useState(false);
+  const [isOpeningCashModalOpen, setIsOpeningCashModalOpen] = useState(false);
 
   // Initialize DB and load global state
   const initializeApp = async () => {
@@ -110,26 +114,38 @@ export default function App() {
     localStorage.setItem('sparkpos_current_user', JSON.stringify(employee));
 
     // Cek apakah kasir ini SUDAH MEMILIKI shift aktif yang belum ditutup
-    // Contoh: login jam 07.30, apps tidak sengaja tertutup jam 13.10 -> lanjutkan shift kasir ini!
     const allShifts = await db.shifts.toArray();
     const myOpenShift = allShifts.find((s) => !s.isClosed && s.cashierId === employee.id);
 
+    // Cek Modal Awal Kasir Hari Ini (Wajib di awal hari untuk jam kerja 07.00 - 16.30)
+    const todayReg = await getTodayCashRegister();
+
     if (myOpenShift) {
+      if (todayReg && todayReg.openingCash > 0 && myOpenShift.openingCash === 0) {
+        myOpenShift.openingCash = todayReg.openingCash;
+        await db.shifts.update(myOpenShift.id, { openingCash: todayReg.openingCash });
+      }
       setActiveShift(myOpenShift);
     } else {
       // Buat shift baru untuk kasir ini
+      const initialOpening = todayReg ? todayReg.openingCash : 0;
       const newShift: Shift = {
         id: (allShifts.length || 0) + 1,
         cashierId: employee.id,
         cashierName: employee.fullName,
-        shiftName: employee.shiftSchedule || (employee.isFlexibleShift ? 'Shift Fleksibel' : 'Shift Standar'),
+        shiftName: 'Sesi Kasir Hari Ini (07.00 - 16.30)',
         startTime: new Date().toISOString(),
-        openingCash: 0,
-        expectedCash: 0,
+        openingCash: initialOpening,
+        expectedCash: initialOpening,
         isClosed: false,
       };
       await db.shifts.add(newShift);
       setActiveShift(newShift);
+    }
+
+    // Jika belum ada data modal awal kasir untuk hari ini, munculkan modal wajib
+    if (!todayReg) {
+      setIsOpeningCashModalOpen(true);
     }
 
     // Default tab based on role: Teknisi goes to Service dashboard, others to POS
@@ -138,6 +154,16 @@ export default function App() {
     } else {
       setCurrentTab('pos');
     }
+  };
+
+  const handleSaveOpeningCash = async (amount: number) => {
+    if (!currentUser) return;
+    await setTodayOpeningCash(amount, currentUser.id, currentUser.fullName);
+    if (activeShift) {
+      await db.shifts.update(activeShift.id, { openingCash: amount, expectedCash: amount });
+      setActiveShift((prev) => (prev ? { ...prev, openingCash: amount, expectedCash: amount } : null));
+    }
+    setIsOpeningCashModalOpen(false);
   };
 
   const handleLogout = () => {
@@ -344,6 +370,14 @@ export default function App() {
           isOpen={isCashierManagementOpen}
           onClose={() => setIsCashierManagementOpen(false)}
           onLogoutAndSwitch={handleLogout}
+        />
+      )}
+
+      {/* Modal Wajib: Input Modal Awal Kasir Hari Ini */}
+      {isOpeningCashModalOpen && currentUser && (
+        <DailyOpeningCashModal
+          cashierName={currentUser.fullName}
+          onSaveOpeningCash={handleSaveOpeningCash}
         />
       )}
     </div>

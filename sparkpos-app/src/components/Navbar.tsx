@@ -271,18 +271,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </button>
 
-          {/* Active Shift Indicator */}
+          {/* Laporan Kas Hari Ini (07.00 - 16.30) */}
           <button
             onClick={openShiftModal}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs transition shrink-0"
-            title="Klik untuk melihat rincian shift kasir atau tutup shift"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs transition shrink-0 cursor-pointer"
+            title="Klik untuk melihat rincian kas hari ini (07.00 - 16.30) atau tutup kas"
           >
-            <Clock className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
+            <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <div className="text-left leading-tight hidden sm:block">
-              <span className="text-slate-500 dark:text-zinc-500 text-[8px] block font-mono">
-                Shift #{activeShift?.id || 1}
+              <span className="text-slate-500 dark:text-zinc-400 text-[8px] block font-mono font-bold uppercase">
+                Kas Hari Ini (07:00-16:30)
               </span>
-              <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[10px] truncate max-w-[80px] block">
+              <span className="font-bold text-slate-800 dark:text-zinc-200 text-[10px] truncate max-w-[100px] block">
                 {activeShift?.cashierName || 'Kasir'}
               </span>
             </div>

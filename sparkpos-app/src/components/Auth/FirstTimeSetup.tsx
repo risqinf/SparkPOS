@@ -21,7 +21,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { StoreProfile, Employee } from '../../types/pos';
-import { initializeStore, DEFAULT_STORE_PROFILE } from '../../services/storage';
+import { initializeStore, DEFAULT_STORE_PROFILE, db, getStoreProfile } from '../../services/storage';
 import { importDatabaseFromJson } from '../../services/databaseBackup';
 
 interface FirstTimeSetupProps {
@@ -39,7 +39,6 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
   // Fresh Setup State
   const [appName, setAppName] = useState('SparkPOS');
   const [storeName, setStoreName] = useState('');
-  const [branchName, setBranchName] = useState('Cabang Utama');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [receiptFooter, setReceiptFooter] = useState(
@@ -146,7 +145,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
         ...DEFAULT_STORE_PROFILE,
         appName: appName.trim() || 'SparkPOS',
         storeName: storeName.trim(),
-        branchName: branchName.trim(),
+        branchName: '',
         address: address.trim(),
         phone: phone.trim(),
         receiptFooter: receiptFooter.trim(),
@@ -204,7 +203,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
         return;
       }
 
-      const { db, getStoreProfile } = await import('../../services/storage');
+      // Read restored profile and admin employee
       const profile = await getStoreProfile();
       const admin = await db.employees.where('role').equals('admin').first();
       const firstCashier = await db.employees.where('role').equals('cashier').first();
@@ -434,32 +433,17 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Nama Cabang
-                      </label>
-                      <input
-                        type="text"
-                        value={branchName}
-                        onChange={(e) => setBranchName(e.target.value)}
-                        placeholder="Contoh: Cabang Utama"
-                        className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Nama Aplikasi POS
-                      </label>
-                      <input
-                        type="text"
-                        value={appName}
-                        onChange={(e) => setAppName(e.target.value)}
-                        placeholder="Contoh: SparkPOS"
-                        className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                      Nama Aplikasi Kasir / Header
+                    </label>
+                    <input
+                      type="text"
+                      value={appName}
+                      onChange={(e) => setAppName(e.target.value)}
+                      placeholder="Contoh: SparkPOS"
+                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
                   </div>
 
                   <div>
