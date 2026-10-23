@@ -1,10 +1,43 @@
 /**
  * SparkPOS Excel / Spreadsheet Export Service
- * Produces native Excel-compatible files (.csv with UTF-8 BOM)
- * 100% offline, zero external binary dependency, opens cleanly in Microsoft Excel.
+ * Produces native Excel-compatible files (.csv with UTF-8 BOM) and
+ * Clipboard TSV (Tab-Separated Values) ready to paste into Microsoft Excel / Google Sheets.
+ * 100% offline, zero external binary dependency.
  */
 
 import { Transaction, Product, ServiceOrder } from '../types/pos';
+
+/**
+ * Universal clipboard copy helper with legacy fallback.
+ * Works reliably in Tauri WebKitGTK Linux and Web browsers.
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn('navigator.clipboard writeText failed, trying fallback textarea', err);
+  }
+
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error('Fallback copy to clipboard failed', err);
+    return false;
+  }
+}
 
 /**
  * Helper to trigger file download safely in both web browsers and Tauri WebView2.
@@ -33,16 +66,6 @@ function downloadFile(content: string, filename: string, mimeType: string) {
         // ignore
       }
     }, 60000);
-
-    // Also copy to clipboard as TSV as immediate convenience
-    try {
-      const tsvContent = content.replace(/\uFEFF/, '').replace(/,/g, '\t');
-      navigator.clipboard.writeText(tsvContent).then(() => {
-        console.log('Export data successfully copied to clipboard');
-      }).catch(() => {});
-    } catch (e) {
-      // ignore
-    }
   } catch (error) {
     console.error('Download file error, trying direct data URI fallback:', error);
     try {
@@ -65,14 +88,22 @@ function escapeCsvCell(value: any): string {
   return `"${str}"`;
 }
 
+function cleanTsvCell(value: any): string {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/[\t\r\n]+/g, ' ').trim();
+}
+
 /**
- * Export Sales Transactions to Excel (.csv with UTF-8 BOM)
+ * Export Sales Transactions to Excel (.csv with UTF-8 BOM) or Clipboard (TSV)
  */
-export function exportTransactionsToExcel(
+function buildTransactionsReport(
   transactions: Transaction[],
-  storeName: string = 'SparkPOS'
-) {
-  const bom = '\uFEFF';
+  format: 'csv' | 'tsv'
+): string {
+  const isCsv = format === 'csv';
+  const sep = isCsv ? ',' : '\t';
+  const cell = (v: any) => (isCsv ? escapeCsvCell(v) : cleanTsvCell(v));
+
   const headers = [
     'No. Invoice',
     'Tanggal & Waktu',
@@ -104,36 +135,53 @@ export function exportTransactionsToExcel(
     const totalQty = t.items.reduce((sum, item) => sum + item.quantity, 0);
 
     return [
-      escapeCsvCell(t.invoiceNumber),
-      escapeCsvCell(dateStr),
-      escapeCsvCell(t.cashierName || 'Kasir'),
-      escapeCsvCell(t.customerName || 'Pelanggan Umum'),
-      escapeCsvCell(t.paymentMethod?.toUpperCase() || 'CASH'),
-      escapeCsvCell(totalQty),
-      escapeCsvCell(t.subtotal),
-      escapeCsvCell(t.discountOrderAmount),
-      escapeCsvCell(t.grandTotal),
-      escapeCsvCell(t.paidAmount),
-      escapeCsvCell(t.changeAmount),
-      escapeCsvCell(itemsSummary),
-    ].join(',');
+      cell(t.invoiceNumber),
+      cell(dateStr),
+      cell(t.cashierName || 'Kasir'),
+      cell(t.customerName || 'Pelanggan Umum'),
+      cell(t.paymentMethod?.toUpperCase() || 'CASH'),
+      cell(totalQty),
+      cell(t.subtotal),
+      cell(t.discountOrderAmount),
+      cell(t.grandTotal),
+      cell(t.paidAmount),
+      cell(t.changeAmount),
+      cell(itemsSummary),
+    ].join(sep);
   });
 
-  const csvContent = bom + [headers.map(escapeCsvCell).join(','), ...rows].join('\r\n');
-  const dateTag = new Date().toISOString().slice(0, 10);
-  const filename = `Laporan_Penjualan_${storeName.replace(/\s+/g, '_')}_${dateTag}.csv`;
-
-  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+  return [headers.map(cell).join(sep), ...rows].join('\r\n');
 }
 
-/**
- * Export Inventory & Stock Valuation to Excel
- */
-export function exportStockToExcel(
-  products: Product[],
+export function exportTransactionsToExcel(
+  transactions: Transaction[],
   storeName: string = 'SparkPOS'
 ) {
   const bom = '\uFEFF';
+  const csvContent = bom + buildTransactionsReport(transactions, 'csv');
+  const dateTag = new Date().toISOString().slice(0, 10);
+  const filename = `Laporan_Penjualan_${storeName.replace(/\s+/g, '_')}_${dateTag}.csv`;
+  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+export async function copyTransactionsToClipboard(
+  transactions: Transaction[]
+): Promise<boolean> {
+  const tsvContent = buildTransactionsReport(transactions, 'tsv');
+  return await copyToClipboard(tsvContent);
+}
+
+/**
+ * Export Inventory & Stock Valuation to Excel (.csv with UTF-8 BOM) or Clipboard (TSV)
+ */
+function buildStockReport(
+  products: Product[],
+  format: 'csv' | 'tsv'
+): string {
+  const isCsv = format === 'csv';
+  const sep = isCsv ? ',' : '\t';
+  const cell = (v: any) => (isCsv ? escapeCsvCell(v) : cleanTsvCell(v));
+
   const headers = [
     'Kode SKU',
     'Barcode',
@@ -165,28 +213,42 @@ export function exportStockToExcel(
       : 'AMAN';
 
     return [
-      escapeCsvCell(p.sku),
-      escapeCsvCell(p.barcode || '-'),
-      escapeCsvCell(p.name),
-      escapeCsvCell(p.categoryName || '-'),
-      escapeCsvCell(p.unitName || 'PCS'),
-      escapeCsvCell(p.supplierName || 'Pemasok Umum'),
-      escapeCsvCell(p.buyPrice),
-      escapeCsvCell(p.sellPrice),
-      escapeCsvCell(marginNominal),
-      escapeCsvCell(`${marginPercent}%`),
-      escapeCsvCell(isService ? '∞' : p.stock),
-      escapeCsvCell(isService ? '-' : p.minStock),
-      escapeCsvCell(statusText),
-      escapeCsvCell(totalAsetValue),
-    ].join(',');
+      cell(p.sku),
+      cell(p.barcode || '-'),
+      cell(p.name),
+      cell(p.categoryName || '-'),
+      cell(p.unitName || 'PCS'),
+      cell(p.supplierName || 'Pemasok Umum'),
+      cell(p.buyPrice),
+      cell(p.sellPrice),
+      cell(marginNominal),
+      cell(`${marginPercent}%`),
+      cell(isService ? '∞' : p.stock),
+      cell(isService ? '-' : p.minStock),
+      cell(statusText),
+      cell(totalAsetValue),
+    ].join(sep);
   });
 
-  const csvContent = bom + [headers.map(escapeCsvCell).join(','), ...rows].join('\r\n');
+  return [headers.map(cell).join(sep), ...rows].join('\r\n');
+}
+
+export function exportStockToExcel(
+  products: Product[],
+  storeName: string = 'SparkPOS'
+) {
+  const bom = '\uFEFF';
+  const csvContent = bom + buildStockReport(products, 'csv');
   const dateTag = new Date().toISOString().slice(0, 10);
   const filename = `Laporan_Stok_Barang_${storeName.replace(/\s+/g, '_')}_${dateTag}.csv`;
-
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+export async function copyStockToClipboard(
+  products: Product[]
+): Promise<boolean> {
+  const tsvContent = buildStockReport(products, 'tsv');
+  return await copyToClipboard(tsvContent);
 }
 
 /**
@@ -533,30 +595,35 @@ export interface UnifiedFinancialExportData {
   transactions: UnifiedExportTransaction[];
 }
 
-export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExportData) {
-  const bom = '\uFEFF';
+export function buildUnifiedFinancialReportLines(
+  data: UnifiedFinancialExportData,
+  format: 'csv' | 'tsv'
+): string {
+  const isCsv = format === 'csv';
+  const sep = isCsv ? ',' : '\t';
+  const cell = (v: any) => (isCsv ? escapeCsvCell(v) : cleanTsvCell(v));
   const lines: string[] = [];
 
   // Kop Laporan
-  lines.push(`LAPORAN KEUANGAN TERPADU & RINCIAN TRANSAKSI - ${data.storeName.toUpperCase()}`);
-  lines.push(`Periode Laporan: ${data.periodLabel}`);
+  lines.push(`LAPORAN KEUANGAN TERPADU & RINCIAN TRANSAKSI - ${cleanTsvCell(data.storeName).toUpperCase()}`);
+  lines.push(`Periode Laporan: ${cleanTsvCell(data.periodLabel)}`);
   lines.push(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`);
-  lines.push(`Dicetak Oleh: ${data.printedBy}`);
+  lines.push(`Dicetak Oleh: ${cleanTsvCell(data.printedBy)}`);
   lines.push('');
 
   // Ringkasan Finansial Eksekutif
   lines.push('RINGKASAN FINANSIAL & ARUS KAS');
-  lines.push(`Modal Awal Kasir Hari Ini,${data.openingCash}`);
-  lines.push(`Total Omset Penjualan POS Barang,${data.posRevenue}`);
-  lines.push(`Total Pendapatan Jasa Servis,${data.serviceRevenue}`);
-  lines.push(`TOTAL OMSET TOKO (PENJUALAN + SERVIS),${data.totalRevenue}`);
-  lines.push(`Total Modal HPP (Barang + Sparepart),${data.totalCostHpp}`);
-  lines.push(`Pengeluaran Operasional Kas Toko,${data.operationalExpenses}`);
-  lines.push(`TOTAL OMSET DIPOTONG MODAL & BIAYA (LABA BERSIH),${data.netProfit}`);
-  lines.push(`Penerimaan Tunai (Cash),${data.cashSalesTotal}`);
-  lines.push(`Penerimaan Transfer Bank,${data.transferSalesTotal}`);
-  lines.push(`ESTIMASI SALDO KAS FISIK DI LACI KASIR,${data.finalCashInDrawer}`);
-  lines.push(`Total Jumlah Transaksi,${data.transactions.length}`);
+  lines.push([cell('Modal Awal Kasir Hari Ini'), cell(data.openingCash)].join(sep));
+  lines.push([cell('Total Omset Penjualan POS Barang'), cell(data.posRevenue)].join(sep));
+  lines.push([cell('Total Pendapatan Jasa Servis'), cell(data.serviceRevenue)].join(sep));
+  lines.push([cell('TOTAL OMSET TOKO (PENJUALAN + SERVIS)'), cell(data.totalRevenue)].join(sep));
+  lines.push([cell('Total Modal HPP (Barang + Sparepart)'), cell(data.totalCostHpp)].join(sep));
+  lines.push([cell('Pengeluaran Operasional Kas Toko'), cell(data.operationalExpenses)].join(sep));
+  lines.push([cell('TOTAL OMSET DIPOTONG MODAL & BIAYA (LABA BERSIH)'), cell(data.netProfit)].join(sep));
+  lines.push([cell('Penerimaan Tunai (Cash)'), cell(data.cashSalesTotal)].join(sep));
+  lines.push([cell('Penerimaan Transfer Bank'), cell(data.transferSalesTotal)].join(sep));
+  lines.push([cell('ESTIMASI SALDO KAS FISIK DI LACI KASIR'), cell(data.finalCashInDrawer)].join(sep));
+  lines.push([cell('Total Jumlah Transaksi'), cell(data.transactions.length)].join(sep));
   lines.push('');
 
   // Tabel Detail Transaksi dengan Rincian Produk
@@ -573,7 +640,7 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
     'Total Modal HPP (Rp)',
     'Laba Transaksi (Rp)',
   ];
-  lines.push(headers.map(escapeCsvCell).join(','));
+  lines.push(headers.map(cell).join(sep));
 
   for (const t of data.transactions) {
     const dateFormatted = new Date(t.createdAt).toLocaleString('id-ID', {
@@ -595,26 +662,38 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
 
     lines.push(
       [
-        escapeCsvCell(t.invoiceNumber),
-        escapeCsvCell(dateFormatted),
-        escapeCsvCell(t.type === 'POS' ? 'Penjualan Kasir' : 'Jasa Servis'),
-        escapeCsvCell(t.cashierName || 'Kasir'),
-        escapeCsvCell(t.customerName || 'Pelanggan Umum'),
-        escapeCsvCell(t.paymentMethod || 'CASH'),
-        escapeCsvCell(itemsDetail || '-'),
-        escapeCsvCell(t.grandTotal),
-        escapeCsvCell(t.totalCost),
-        escapeCsvCell(t.grossProfit),
-      ].join(',')
+        cell(t.invoiceNumber),
+        cell(dateFormatted),
+        cell(t.type === 'POS' ? 'Penjualan Kasir' : 'Jasa Servis'),
+        cell(t.cashierName || 'Kasir'),
+        cell(t.customerName || 'Pelanggan Umum'),
+        cell(t.paymentMethod || 'CASH'),
+        cell(itemsDetail || '-'),
+        cell(t.grandTotal),
+        cell(t.totalCost),
+        cell(t.grossProfit),
+      ].join(sep)
     );
   }
 
-  const csvContent = bom + lines.join('\r\n');
+  return lines.join('\r\n');
+}
+
+export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExportData) {
+  const bom = '\uFEFF';
+  const csvContent = bom + buildUnifiedFinancialReportLines(data, 'csv');
   const cleanStore = data.storeName.replace(/\s+/g, '_');
   const cleanPeriod = data.periodLabel.replace(/[\s\/:]+/g, '_');
   const filename = `Laporan_Keuangan_Terpadu_${cleanStore}_${cleanPeriod}.csv`;
 
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+export async function copyUnifiedFinancialReportToClipboard(
+  data: UnifiedFinancialExportData
+): Promise<boolean> {
+  const tsvContent = buildUnifiedFinancialReportLines(data, 'tsv');
+  return await copyToClipboard(tsvContent);
 }
 
 

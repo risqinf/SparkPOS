@@ -517,13 +517,13 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    <th className="py-2.5 px-3">Barcode / SKU</th>
-                    <th className="py-2.5 px-3">Nama Produk</th>
-                    <th className="py-2.5 px-3">Kategori</th>
-                    <th className="py-2.5 px-3 text-center">Status Stok</th>
-                    <th className="py-2.5 px-3 text-right">Harga Jual</th>
-                    <th className="py-2.5 px-3 text-center">Aksi</th>
+                  <tr className="bg-slate-100/80 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <th className="py-2.5 px-3 whitespace-nowrap">CODE (SKU/BARCODE)</th>
+                    <th className="py-2.5 px-3">NAMA PRODUK</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">TYPE (KATEGORI)</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">HARGA JUAL</th>
+                    <th className="py-2.5 px-3 text-center whitespace-nowrap">STOK</th>
+                    <th className="py-2.5 px-3 text-center whitespace-nowrap">AKSI</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800/80 text-xs">
@@ -542,8 +542,13 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                             : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/60'
                         }`}
                       >
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                          {p.barcode || p.sku}
+                        <td className="py-2.5 px-3 font-mono font-bold text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {p.sku || p.barcode}
+                          {p.barcode && p.sku && p.barcode !== p.sku && (
+                            <span className="block text-[10px] text-slate-400 font-normal">
+                              BC: {p.barcode}
+                            </span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -560,12 +565,15 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold border border-slate-200 dark:border-slate-700">
+                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                             {p.categoryName || 'Umum'}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900 dark:text-emerald-400 text-xs whitespace-nowrap">
+                          {formatRupiah(p.sellPrice)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                               isService
@@ -586,10 +594,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                               : `Stok: ${p.stock} ${p.unitName || 'pcs'}`}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white text-sm">
-                          {formatRupiah(p.sellPrice)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
                             disabled={isOutOfStock}

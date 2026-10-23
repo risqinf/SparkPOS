@@ -199,6 +199,7 @@ export interface Transaction {
   payments: PaymentEntry[];
   items: CartItem[];
   status: 'COMPLETED' | 'REFUNDED' | 'VOID';
+  notes?: string;
   createdAt: string;
 }
 

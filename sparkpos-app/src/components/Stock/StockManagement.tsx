@@ -16,6 +16,9 @@ import {
   FileSpreadsheet,
   Package,
   ShieldCheck,
+  Copy,
+  Check,
+  FileDown,
 } from 'lucide-react';
 import { Product, Category, Unit, Employee } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
@@ -24,7 +27,7 @@ import { ProductFormModal } from './ProductFormModal';
 import { StockOpnameModal } from './StockOpnameModal';
 import { StockHistoryModal } from './StockHistoryModal';
 import { SupplierManagementModal } from '../Supplier/SupplierManagementModal';
-import { exportStockToExcel } from '../../services/excelExport';
+import { exportStockToExcel, copyStockToClipboard } from '../../services/excelExport';
 
 interface StockManagementProps {
   currentUser?: Employee | null;
@@ -41,6 +44,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -270,28 +274,49 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           {/* Supplier Management */}
           <button
             onClick={() => setIsSupplierModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition shadow-2xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition shadow-2xs cursor-pointer"
             title="Kelola data distributor & pemasok hardware/sparepart"
           >
             <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Supplier</span>
           </button>
 
-          {/* Export Excel */}
+          {/* DUAL EXPORT 1: Salin ke Clipboard (Format Excel TSV) */}
+          <button
+            onClick={async () => {
+              const ok = await copyStockToClipboard(filteredProducts);
+              if (ok) {
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2500);
+              }
+            }}
+            disabled={filteredProducts.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 disabled:opacity-50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition shadow-2xs cursor-pointer"
+            title="Salin data stok ke clipboard siap paste (Ctrl+V) di Excel"
+          >
+            {isCopied ? (
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span>{isCopied ? 'Tersalin!' : 'Salin Excel'}</span>
+          </button>
+
+          {/* DUAL EXPORT 2: Unduh File (.csv) */}
           <button
             onClick={() => exportStockToExcel(filteredProducts)}
             disabled={filteredProducts.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 disabled:opacity-50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition shadow-2xs"
-            title="Unduh laporan daftar stok produk & valuasi aset ke Excel (.csv)"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 disabled:opacity-50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition shadow-2xs cursor-pointer"
+            title="Unduh laporan daftar stok produk & valuasi aset ke file Excel (.csv)"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Export Excel</span>
+            <FileDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Unduh (.csv)</span>
           </button>
 
           {/* Add Product Button */}
           <button
             onClick={handleOpenAddProduct}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-xs active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Produk</span>
@@ -300,25 +325,27 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
       </div>
 
-      {/* ================= PRODUCT DATA TABLE ================= */}
-      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col shadow-2xs">
-        <div className="overflow-y-auto flex-1">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-slate-400 uppercase tracking-wider text-[10px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 font-semibold">
+      {/* ================= PRODUCT DATA TABLE (DATABASE-LIKE HORIZONTAL LAYOUT) ================= */}
+      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden flex flex-col shadow-2xs">
+        <div className="overflow-x-auto overflow-y-auto flex-1">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-100 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 font-extrabold">
               <tr>
-                <th className="px-4 py-2.5 font-bold">Produk & Barcode</th>
-                <th className="px-4 py-2.5 font-bold">Kategori</th>
-                <th className="px-4 py-2.5 text-right font-bold">Harga Modal</th>
-                <th className="px-4 py-2.5 text-right font-bold">Harga Jual</th>
-                <th className="px-4 py-2.5 text-right font-bold">Margin</th>
-                <th className="px-4 py-2.5 text-center font-bold">Stok</th>
-                <th className="px-4 py-2.5 text-right font-bold">Aksi</th>
+                <th className="px-3.5 py-2.5">KODE / SKU</th>
+                <th className="px-3.5 py-2.5">BARCODE</th>
+                <th className="px-3.5 py-2.5">NAMA PRODUK</th>
+                <th className="px-3.5 py-2.5">TIPE / KATEGORI</th>
+                <th className="px-3.5 py-2.5 text-right">HARGA MODAL (HPP)</th>
+                <th className="px-3.5 py-2.5 text-right">HARGA JUAL</th>
+                <th className="px-3.5 py-2.5 text-right">MARGIN</th>
+                <th className="px-3.5 py-2.5 text-center">STOK FISIK</th>
+                <th className="px-3.5 py-2.5 text-center">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/70">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">
+                  <td colSpan={9} className="text-center py-12 text-slate-400 dark:text-slate-500">
                     Tidak ada produk yang sesuai filter.
                   </td>
                 </tr>
@@ -332,13 +359,25 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-850/60 transition">
-                      {/* Name & Barcode */}
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-slate-900 dark:text-slate-200 text-xs">{p.name}</span>
+                      {/* SKU */}
+                      <td className="px-3.5 py-2.5 font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                        {p.sku}
+                      </td>
+
+                      {/* Barcode */}
+                      <td className="px-3.5 py-2.5 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {p.barcode || '-'}
+                      </td>
+
+                      {/* Name & Badges */}
+                      <td className="px-3.5 py-2.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs">
+                            {p.name}
+                          </span>
                           {p.condition && p.condition !== 'BARU' ? (
                             <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                              className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider ${
                                 p.condition === 'MATOT'
                                   ? 'bg-rose-950/60 text-rose-400 border border-rose-800/80'
                                   : p.condition === 'MINUS'
@@ -349,103 +388,79 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                               {p.condition}
                             </span>
                           ) : (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-400 border border-emerald-800/80">
+                            <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-emerald-950/60 text-emerald-400 border border-emerald-800/80">
                               BARU
+                            </span>
+                          )}
+                          {p.warrantyPeriod && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium inline-flex items-center">
+                              <ShieldCheck className="w-3 h-3 mr-0.5" />
+                              {p.warrantyPeriod}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400 mt-1 flex-wrap">
-                          <span className="font-mono text-slate-700 dark:text-slate-300 font-medium">{p.barcode || '-'}</span>
-                          <span>•</span>
-                          <span className="font-mono font-medium">{p.sku}</span>
-                          {p.serialNumber && (
-                            <>
-                              <span>•</span>
-                              <span className="font-mono text-slate-700 dark:text-slate-300">SN: {p.serialNumber}</span>
-                            </>
-                          )}
-                          {p.warrantyPeriod && (
-                            <>
-                              <span>•</span>
-                              <span className="text-emerald-600 dark:text-emerald-400 font-medium"><ShieldCheck className="w-3 h-3 inline mr-0.5" />{p.warrantyPeriod}</span>
-                            </>
-                          )}
-                          {p.supplierName && (
-                            <>
-                              <span>•</span>
-                              <span className="text-slate-700 dark:text-slate-300 font-medium"><Package className="w-3 h-3 inline mr-1" />{p.supplierName}</span>
-                            </>
-                          )}
-                        </div>
-
-                        {(p.conditionNotes || p.completeness) && (
-                          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
-                            {p.conditionNotes && (
-                              <span className="text-amber-700 dark:text-amber-400 italic"><AlertTriangle className="w-3 h-3 inline mr-1 text-amber-500" />{p.conditionNotes}</span>
-                            )}
-                            {p.completeness && (
-                              <span className="text-slate-600 dark:text-slate-400"><Package className="w-3 h-3 inline mr-1" />Kelengkapan: {p.completeness}</span>
-                            )}
+                        {p.supplierName && (
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Supplier: {p.supplierName}
                           </div>
                         )}
                       </td>
 
                       {/* Category */}
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-medium">{p.categoryName || '-'}</td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                          {p.categoryName || 'Umum'}
+                        </span>
+                      </td>
 
                       {/* Buy Price */}
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400 font-medium">
+                      <td className="px-3.5 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
                         {formatRupiah(p.buyPrice)}
                       </td>
 
                       {/* Sell Price */}
-                      <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">
+                      <td className="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {formatRupiah(p.sellPrice)}
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal ml-0.5">
                           /{p.unitName}
                         </span>
                       </td>
 
                       {/* Margin */}
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <td className="px-3.5 py-2.5 text-right whitespace-nowrap">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                           +{formatRupiah(marginNominal)}
                         </span>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono">
                           ({marginPercent}%)
                         </div>
                       </td>
 
                       {/* Stock Status */}
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3.5 py-2.5 text-center whitespace-nowrap">
                         {p.isService || p.categoryName?.toLowerCase() === 'jasa' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                             Jasa (∞)
                           </span>
                         ) : (
-                          <>
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
-                                isOutOfStock
-                                  ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
-                                  : isLowStock
-                                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                              }`}
-                            >
-                              {p.stock} {p.unitName}
-                            </span>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                              Min: {p.minStock} {p.unitName}
-                            </div>
-                          </>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              isOutOfStock
+                                ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                                : isLowStock
+                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                                : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                            }`}
+                          >
+                            {p.stock} {p.unitName}
+                          </span>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="px-3.5 py-2.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
                           {/* Opname */}
                           <button
                             onClick={() => handleOpenOpname(p)}
