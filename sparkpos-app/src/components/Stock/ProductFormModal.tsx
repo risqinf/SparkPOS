@@ -162,7 +162,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           });
 
           await db.stockMovements.add({
-            id: 0,
             productId: newProdId as number,
             productName: name.trim(),
             type: 'IN_PURCHASE',

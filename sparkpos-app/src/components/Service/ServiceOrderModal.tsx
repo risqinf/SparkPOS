@@ -264,6 +264,14 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         finalOrder = { id, ...orderPayload };
       }
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('sparkpos_data_changed', {
+            detail: { type: 'service', id: finalOrder.id },
+          })
+        );
+      }
+
       onSaved(finalOrder, printReceipt);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Gagal menyimpan tiket servis.');

@@ -149,6 +149,9 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
       status: 'SELESAI',
       completedAt: now,
     });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sparkpos_data_changed'));
+    }
     await loadOrders();
   };
 
@@ -162,6 +165,9 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
       paidAmount: order.paidAmount || order.grandTotal,
       paymentMethod: order.paymentMethod || 'CASH',
     });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sparkpos_data_changed'));
+    }
     await loadOrders();
   };
 

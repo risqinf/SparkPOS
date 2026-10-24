@@ -19,6 +19,7 @@ import {
   generateShiftReportReceiptText,
   ShiftReportPrintData,
 } from '../../services/printer';
+import { getLocalDateString, toLocalDateString } from '../../services/dateUtils';
 
 interface ShiftReportModalProps {
   activeShift: Shift | null;
@@ -55,75 +56,102 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
   const [receiptPreviewText, setReceiptPreviewText] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  useEffect(() => {
-    const calculateShiftSales = async () => {
-      if (!activeShift) return;
+  const calculateShiftSales = async () => {
+    if (!activeShift) return;
 
-      // 1. Transaksi Penjualan Barang POS
-      const txs = await db.transactions.where('shiftId').equals(activeShift.id).toArray();
-      setTxCount(txs.length);
+    const todayStr = getLocalDateString();
+    // 1. Transaksi Penjualan Barang POS (Shift ID atau Hari Ini)
+    const allTxs = await db.transactions.toArray();
+    const txs = allTxs.filter((t) => {
+      if (t.shiftId === activeShift.id) return true;
+      const tDate = toLocalDateString(t.createdAt);
+      return tDate === todayStr;
+    });
 
-      let cashSum = 0;
-      let nonCashSum = 0;
+    setTxCount(txs.length);
 
-      for (const tx of txs) {
-        if (tx.payments && tx.payments.length > 0) {
-          for (const p of tx.payments) {
-            if (p.method === 'CASH') {
-              cashSum += p.amount;
-            } else {
-              nonCashSum += p.amount;
-            }
-          }
-        } else {
-          if (tx.paymentMethod === 'CASH') {
-            cashSum += tx.grandTotal;
+    let cashSum = 0;
+    let nonCashSum = 0;
+
+    for (const tx of txs) {
+      if (tx.payments && tx.payments.length > 0) {
+        for (const p of tx.payments) {
+          if (p.method === 'CASH') {
+            cashSum += p.amount;
           } else {
-            nonCashSum += tx.grandTotal;
+            nonCashSum += p.amount;
+          }
+        }
+      } else {
+        if (tx.paymentMethod === 'CASH') {
+          cashSum += tx.grandTotal;
+        } else {
+          nonCashSum += tx.grandTotal;
+        }
+      }
+    }
+
+    setCashSalesTotal(cashSum);
+    setNonCashSalesTotal(nonCashSum);
+
+    // 2. Transaksi Jasa & Servis Masuk
+    try {
+      const serviceOrders = await db.serviceOrders.toArray();
+      let sCash = 0;
+      let sNonCash = 0;
+      let sCnt = 0;
+
+      for (const ord of serviceOrders) {
+        const shiftTime = new Date(activeShift.startTime).getTime();
+        const ordTime = new Date(ord.updatedAt || ord.createdAt).getTime();
+        const ordDate = toLocalDateString(ord.updatedAt || ord.createdAt);
+
+        if ((ordTime >= shiftTime || ordDate === todayStr) && ord.paidAmount > 0) {
+          sCnt++;
+          if (ord.paymentMethod === 'CASH') {
+            sCash += ord.paidAmount;
+          } else {
+            sNonCash += ord.paidAmount;
           }
         }
       }
 
-      setCashSalesTotal(cashSum);
-      setNonCashSalesTotal(nonCashSum);
+      setServiceCashTotal(sCash);
+      setServiceNonCashTotal(sNonCash);
+      setServiceCount(sCnt);
+    } catch (e) {
+      console.error('Error calculating shift services', e);
+    }
 
-      // 2. Transaksi Jasa & Servis Masuk
-      try {
-        const serviceOrders = await db.serviceOrders.toArray();
-        let sCash = 0;
-        let sNonCash = 0;
-        let sCnt = 0;
+    // 3. Arus Kas Masuk / Keluar (Petty Cash)
+    const allFlows = await db.cashFlows.toArray();
+    const flows = allFlows.filter((f) => {
+      if (f.shiftId === activeShift.id) return true;
+      return toLocalDateString(f.createdAt) === todayStr;
+    });
+    const inSum = flows.filter((f) => f.type === 'IN').reduce((sum, f) => sum + f.amount, 0);
+    const outSum = flows.filter((f) => f.type === 'OUT').reduce((sum, f) => sum + f.amount, 0);
+    setCashInTotal(inSum);
+    setCashOutTotal(outSum);
+  };
 
-        for (const ord of serviceOrders) {
-          const shiftTime = new Date(activeShift.startTime).getTime();
-          const ordTime = new Date(ord.updatedAt || ord.createdAt).getTime();
+  useEffect(() => {
+    calculateShiftSales();
 
-          if (ordTime >= shiftTime && ord.paidAmount > 0) {
-            sCnt++;
-            if (ord.paymentMethod === 'CASH') {
-              sCash += ord.paidAmount;
-            } else {
-              sNonCash += ord.paidAmount;
-            }
-          }
-        }
-
-        setServiceCashTotal(sCash);
-        setServiceNonCashTotal(sNonCash);
-        setServiceCount(sCnt);
-      } catch (e) {
-        console.error('Error calculating shift services', e);
-      }
-
-      // 3. Arus Kas Masuk / Keluar (Petty Cash)
-      const flows = await getCashFlowsByShift(activeShift.id);
-      const inSum = flows.filter((f) => f.type === 'IN').reduce((sum, f) => sum + f.amount, 0);
-      const outSum = flows.filter((f) => f.type === 'OUT').reduce((sum, f) => sum + f.amount, 0);
-      setCashInTotal(inSum);
-      setCashOutTotal(outSum);
+    const handleUpdate = () => {
+      calculateShiftSales();
     };
 
-    calculateShiftSales();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sparkpos_data_changed', handleUpdate);
+      window.addEventListener('focus', handleUpdate);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('sparkpos_data_changed', handleUpdate);
+        window.removeEventListener('focus', handleUpdate);
+      }
+    };
   }, [activeShift]);
 
   // Load past closed shifts

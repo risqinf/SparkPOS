@@ -49,7 +49,6 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
 
     // 2. Record Stock Movement
     await db.stockMovements.add({
-      id: 0,
       productId: selectedProduct.id,
       productName: selectedProduct.name,
       type,

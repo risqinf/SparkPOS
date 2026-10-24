@@ -30,6 +30,7 @@ import {
   Save,
   FileDown,
   AlertCircle,
+  Lock,
 } from 'lucide-react';
 import {
   Transaction,
@@ -60,6 +61,8 @@ import {
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
   currentUser?: Employee | null;
+  onOpenShiftModal?: () => void;
+  onOpenCashFlow?: () => void;
 }
 
 export interface UnifiedTransactionRecord {
@@ -102,6 +105,8 @@ type PeriodFilter =
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   storeProfile,
   currentUser,
+  onOpenShiftModal,
+  onOpenCashFlow,
 }) => {
   // Raw Data State
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -111,13 +116,11 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Filter States
+  // Filter States: Default to 'all' so kasir & owner see all transactions by default
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('today');
   const [customStartDate, setCustomStartDate] = useState<string>(getLocalDateString());
   const [customEndDate, setCustomEndDate] = useState<string>(getLocalDateString());
-  const [selectedCashierId, setSelectedCashierId] = useState<number | 'all'>(
-    currentUser?.role === 'kasir' ? currentUser.id : 'all'
-  );
+  const [selectedCashierId, setSelectedCashierId] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'POS' | 'SERVICE'>('all');
 
@@ -180,6 +183,23 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   useEffect(() => {
     loadData();
+
+    const handleUpdate = () => {
+      loadData();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sparkpos_data_changed', handleUpdate);
+      window.addEventListener('focus', handleUpdate);
+      document.addEventListener('visibilitychange', handleUpdate);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('sparkpos_data_changed', handleUpdate);
+        window.removeEventListener('focus', handleUpdate);
+        document.removeEventListener('visibilitychange', handleUpdate);
+      }
+    };
   }, []);
 
   // Compute Active Date Range (YYYY-MM-DD local dates)
@@ -337,7 +357,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   // Filtered Unified Records by Date Range, Cashier, Type & Search Query
   const filteredRecords = useMemo(() => {
-    const effectiveCashierId = currentUser?.role === 'kasir' ? currentUser.id : selectedCashierId;
+    const effectiveCashierId = selectedCashierId;
     const { start, end } = dateRange;
     const q = searchQuery.trim().toLowerCase();
 
@@ -449,6 +469,11 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       count: filteredRecords.length,
     };
   }, [filteredRecords, dateRange, dailyRegisters, cashFlows]);
+
+  const todayRegister = useMemo(() => {
+    return dailyRegisters.find((r) => r.date === getLocalDateString());
+  }, [dailyRegisters]);
+  const isTodayClosed = todayRegister?.isClosed;
 
   const toggleRowExpansion = (id: string) => {
     setExpandedRowIds((prev) => ({
@@ -655,11 +680,43 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Status Sesi Kasir Hari Ini & Tombol Tutup Kasir */}
+          {isTodayClosed ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Sesi Kasir Hari Ini Ditutup</span>
+            </div>
+          ) : (
+            onOpenShiftModal && (
+              <button
+                type="button"
+                onClick={onOpenShiftModal}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
+                title="Tutup Kasir & Sesi Toko Hari Ini (07.00 - 16.30)"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Tutup Kasir (16:30)</span>
+              </button>
+            )
+          )}
+
+          {/* Quick Cash In / Out */}
+          <button
+            type="button"
+            onClick={onOpenCashFlow || (() => setIsAddExpenseOpen(true))}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer shadow-2xs"
+            title="Catat Uang Kas Masuk / Keluar Operasional Toko"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Catat Kas</span>
+          </button>
+
+          {/* Segarkan / Refresh */}
           <button
             type="button"
             onClick={loadData}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer shadow-2xs"
-            title="Refresh Data Terbaru"
+            title="Refresh Data Terbaru (Otomatis Realtime)"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Segarkan</span>
@@ -733,26 +790,24 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               ))}
             </div>
 
-            {/* Cashier Filter */}
-            {currentUser?.role !== 'kasir' && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Kasir:</span>
-                <select
-                  value={selectedCashierId}
-                  onChange={(e) =>
-                    setSelectedCashierId(e.target.value === 'all' ? 'all' : Number(e.target.value))
-                  }
-                  className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-                >
-                  <option value="all">Semua Kasir / Staf</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.fullName} (@{emp.username})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Cashier Filter (Dapat dipilih oleh semua role, default Semua Kasir) */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Kasir:</span>
+              <select
+                value={selectedCashierId}
+                onChange={(e) =>
+                  setSelectedCashierId(e.target.value === 'all' ? 'all' : Number(e.target.value))
+                }
+                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+              >
+                <option value="all">Semua Kasir / Staf</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.fullName} (@{emp.username})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Custom Date Range Inputs (If Custom Selected) */}

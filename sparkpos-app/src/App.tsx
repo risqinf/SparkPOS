@@ -21,7 +21,6 @@ import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
 import { CashierManagementModal } from './components/Owner/CashierManagementModal';
 import { DailyOpeningCashModal } from './components/Auth/DailyOpeningCashModal';
 import { CashFlowModal } from './components/POS/CashFlowModal';
-import { BreakTimeModal } from './components/POS/BreakTimeModal';
 import { ServiceDashboard } from './components/Service/ServiceDashboard';
 import { applyTheme, initThemeListener } from './services/theme';
 
@@ -39,7 +38,6 @@ export default function App() {
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
-  const [isBreakTimeOpen, setIsBreakTimeOpen] = useState(false);
   const [isCashierManagementOpen, setIsCashierManagementOpen] = useState(false);
   const [isOpeningCashModalOpen, setIsOpeningCashModalOpen] = useState(false);
 
@@ -269,7 +267,6 @@ export default function App() {
         onLogout={handleLogout}
         onRequestAdminAccess={() => setIsAdminPinModalOpen(true)}
         onOpenCashFlow={() => setIsCashFlowOpen(true)}
-        onOpenBreakTime={() => setIsBreakTimeOpen(true)}
         onOpenCashierManagement={() => setIsCashierManagementOpen(true)}
       />
 
@@ -309,6 +306,8 @@ export default function App() {
           <TransactionHistory
             storeProfile={storeProfile}
             currentUser={currentUser}
+            onOpenShiftModal={() => setIsShiftModalOpen(true)}
+            onOpenCashFlow={() => setIsCashFlowOpen(true)}
           />
         )}
 
@@ -351,15 +350,6 @@ export default function App() {
           currentUser={currentUser}
           isOpen={isCashFlowOpen}
           onClose={() => setIsCashFlowOpen(false)}
-        />
-      )}
-
-      {/* Mode Istirahat Kasir Modal */}
-      {isBreakTimeOpen && currentUser && (
-        <BreakTimeModal
-          currentUser={currentUser}
-          isOpen={isBreakTimeOpen}
-          onEndBreak={() => setIsBreakTimeOpen(false)}
         />
       )}
 

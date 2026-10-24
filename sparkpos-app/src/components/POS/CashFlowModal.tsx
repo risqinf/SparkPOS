@@ -78,6 +78,13 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
       });
 
       const typeLabel = flowType === 'OUT' ? 'Uang Keluar' : 'Uang Masuk';
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('sparkpos_data_changed', {
+            detail: { type: 'cash_flow', flowType, amount },
+          })
+        );
+      }
       if (onSuccess) {
         onSuccess(`${typeLabel} sebesar ${formatRupiah(amount)} berhasil dicatat!`);
       }

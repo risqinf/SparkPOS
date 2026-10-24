@@ -14,12 +14,12 @@ import {
   ShieldCheck,
   LogOut,
   ArrowDownUp,
-  Coffee,
   Users,
   Wrench,
   Sun,
   Moon,
   Monitor,
+  TrendingUp,
 } from 'lucide-react';
 import { Shift, StoreProfile, Employee } from '../types/pos';
 import { getSavedTheme, cycleTheme, onThemeChange, ThemeMode } from '../services/theme';
@@ -36,7 +36,6 @@ interface NavbarProps {
   onLogout: () => void;
   onRequestAdminAccess?: () => void;
   onOpenCashFlow?: () => void;
-  onOpenBreakTime?: () => void;
   onOpenCashierManagement?: () => void;
 }
 
@@ -52,7 +51,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onRequestAdminAccess,
   onOpenCashFlow,
-  onOpenBreakTime,
   onOpenCashierManagement,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -181,18 +179,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </button>
 
-          {/* Tab 4: Transaksi & Rekap */}
+          {/* Tab 4: Laporan Keuangan */}
           <button
             onClick={() => handleTabClick('reports')}
-            className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition ${
               currentTab === 'reports'
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Riwayat Transaksi, Rekap Harian & Bulanan (F7)"
+            title="Laporan Keuangan, Omset, Laba Bersih & Riwayat Transaksi Lengkap (F7)"
           >
-            <Receipt className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-            <span>Transaksi & Rekap</span>
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <span>Laporan Keuangan</span>
             <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
               F7
             </kbd>
@@ -241,18 +239,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Istirahat Kasir */}
-          {onOpenBreakTime && (
-            <button
-              onClick={onOpenBreakTime}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-amber-100 dark:hover:bg-amber-500/10 border border-slate-200 dark:border-zinc-800 text-amber-700 dark:text-amber-300 text-xs font-medium transition shrink-0"
-              title="Kunci Layar Kasir Saat Sedang Istirahat"
-            >
-              <Coffee className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span className="hidden md:inline">Istirahat</span>
-            </button>
-          )}
-
           {/* Held Carts / Parkir */}
           <button
             onClick={openHeldModal}
@@ -271,11 +257,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </button>
 
-          {/* Laporan Kas Hari Ini (07.00 - 16.30) */}
+          {/* Kas Hari Ini (Shortcut Langsung ke Laporan Keuangan) */}
           <button
-            onClick={openShiftModal}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs transition shrink-0 cursor-pointer"
-            title="Klik untuk melihat rincian kas hari ini (07.00 - 16.30) atau tutup kas"
+            onClick={() => handleTabClick('reports')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs transition shrink-0 cursor-pointer ${
+              currentTab === 'reports'
+                ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200'
+                : 'bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300'
+            }`}
+            title="Klik untuk membuka Laporan Keuangan & Kas Hari Ini (07.00 - 16.30)"
           >
             <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <div className="text-left leading-tight hidden sm:block">

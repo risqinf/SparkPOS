@@ -301,73 +301,101 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     changeAmount: number,
     autoPrint: boolean
   ) => {
-    const now = new Date().toISOString();
-    const dateCode = new Date().toISOString().slice(2, 10).replace(/-/g, '');
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const invoiceNumber = `INV-${dateCode}-${randomSuffix}`;
+    try {
+      const now = new Date().toISOString();
+      const dateCode = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const invoiceNumber = `INV-${dateCode}-${randomSuffix}`;
 
-    const newTx: Transaction = {
-      id: 0,
-      invoiceNumber,
-      shiftId: activeShift?.id || 1,
-      cashierId: currentUser?.id || activeShift?.cashierId || 1,
-      cashierName: currentUser?.fullName || activeShift?.cashierName || 'Kasir',
-      customerName: customerName.trim() || undefined,
-      subtotal: cartSummary.subtotal,
-      discountOrderAmount: cartSummary.discountOrderAmount,
-      taxAmount: cartSummary.taxAmount,
-      grandTotal: cartSummary.grandTotal,
-      paidAmount,
-      changeAmount,
-      paymentMethod: payments.map((p) => p.method).join(' + '),
-      payments,
-      items: [...cartItems],
-      status: 'COMPLETED',
-      createdAt: now,
-    };
+      // Clean payload without id: 0 so Dexie auto-increments primary key without collision
+      const txPayload: Omit<Transaction, 'id'> = {
+        invoiceNumber,
+        shiftId: activeShift?.id || 1,
+        cashierId: currentUser?.id || activeShift?.cashierId || 1,
+        cashierName: currentUser?.fullName || activeShift?.cashierName || 'Kasir',
+        customerName: customerName.trim() || undefined,
+        subtotal: cartSummary.subtotal,
+        discountOrderAmount: cartSummary.discountOrderAmount,
+        taxAmount: cartSummary.taxAmount,
+        grandTotal: cartSummary.grandTotal,
+        paidAmount,
+        changeAmount,
+        paymentMethod: payments.map((p) => p.method).join(' + '),
+        payments,
+        items: [...cartItems],
+        status: 'COMPLETED',
+        createdAt: now,
+      };
 
-    // 1. Save Transaction to DB
-    const txId = await db.transactions.add(newTx as any);
-    newTx.id = txId;
+      // 1. Save Transaction to DB
+      const txId = await db.transactions.add(txPayload as any);
+      const newTx: Transaction = {
+        ...txPayload,
+        id: txId as number,
+      };
 
-    // 2. Reduce Stock & Record Stock Movements (Skip for Service items)
-    for (const item of cartItems) {
-       const prod = await db.products.get(item.productId);
-       if (prod) {
-         const isService = prod.isService || prod.categoryName?.toLowerCase() === 'jasa';
-         if (!isService) {
-           const newStock = Math.max(0, prod.stock - item.quantity);
-           await db.products.update(prod.id, { stock: newStock, updatedAt: now });
+      // 2. Reduce Stock & Record Stock Movements (Skip for Service items)
+      for (const item of cartItems) {
+        const prod = await db.products.get(item.productId);
+        if (prod) {
+          const isService = prod.isService || prod.categoryName?.toLowerCase() === 'jasa';
+          if (!isService) {
+            const newStock = Math.max(0, prod.stock - item.quantity);
+            await db.products.update(prod.id, { stock: newStock, updatedAt: now });
 
-           await db.stockMovements.add({
-             id: 0,
-             productId: prod.id,
-             productName: prod.name,
-             type: 'OUT_SALE',
-             quantity: item.quantity,
-             balanceAfter: newStock,
-             referenceNo: invoiceNumber,
-             createdAt: now,
-           } as any);
-         }
-       }
-    }
+            await db.stockMovements.add({
+              productId: prod.id,
+              productName: prod.name,
+              type: 'OUT_SALE',
+              quantity: item.quantity,
+              balanceAfter: newStock,
+              referenceNo: invoiceNumber,
+              createdAt: now,
+            } as any);
+          }
+        }
+      }
 
-    // Refresh products
-    await loadCatalog();
+      // 3. Update shift expected cash if cash was received
+      if (activeShift) {
+        const cashPaymentTotal = payments
+          .filter((p) => p.method === 'CASH')
+          .reduce((sum, p) => sum + (p.amount - changeAmount), 0);
+        if (cashPaymentTotal > 0) {
+          const updatedExpected = (activeShift.expectedCash || 0) + cashPaymentTotal;
+          await db.shifts.update(activeShift.id, { expectedCash: updatedExpected });
+        }
+      }
 
-    // Reset Cart
-    setCartItems([]);
-    setOrderDiscountPercent(0);
-    setOrderDiscountNominal(0);
-    setIsPaymentOpen(false);
+      // 4. Broadcast global event for 100% REALTIME sync with Laporan Keuangan & Recap
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('sparkpos_data_changed', {
+            detail: { type: 'transaction', invoiceNumber, id: txId },
+          })
+        );
+      }
 
-    // Show Receipt Modal only if autoPrint is enabled (Supports stores using manual paper receipts)
-    if (autoPrint) {
-      setCompletedTransaction(newTx);
-      showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak struk...`, 'success');
-    } else {
-      showToast(`Transaksi ${invoiceNumber} Berhasil Disimpan (Mode Nota Manual / Tanpa Struk)`, 'success');
+      // Refresh products catalog
+      await loadCatalog();
+
+      // Reset Cart
+      setCartItems([]);
+      setCustomerName('');
+      setOrderDiscountPercent(0);
+      setOrderDiscountNominal(0);
+      setIsPaymentOpen(false);
+
+      // Show Receipt Modal only if autoPrint is enabled (Supports stores using manual paper receipts)
+      if (autoPrint) {
+        setCompletedTransaction(newTx);
+        showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak struk...`, 'success');
+      } else {
+        showToast(`Transaksi ${invoiceNumber} Berhasil Disimpan (Mode Nota Manual / Tanpa Struk)`, 'success');
+      }
+    } catch (err: any) {
+      console.error('Failed to complete transaction:', err);
+      showToast(`Gagal menyimpan transaksi: ${err?.message || 'Error database'}`, 'error');
     }
   };
 
