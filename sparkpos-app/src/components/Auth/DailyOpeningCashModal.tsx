@@ -80,7 +80,7 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100">
                 Wajib Awal Hari
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-bold flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 07.00 - 16.30
               </span>
@@ -88,7 +88,7 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
             <h2 className="text-lg font-extrabold text-slate-900 dark:text-white mt-1">
               Modal Awal Kasir Hari Ini
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+            <p className="text-xs text-slate-700 dark:text-slate-200 font-medium mt-0.5">
               {formatLocalDateOnly(new Date())} • Kasir: <strong>{cashierName}</strong>
             </p>
           </div>
@@ -98,17 +98,17 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
         <div className="p-6 space-y-5">
           <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-300">
             <ShieldAlert className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-            <p className="leading-relaxed">
+            <p className="leading-relaxed font-medium">
               Masukkan total uang fisik (pecahan/kembalian) yang saat ini berada di laci kasir sebelum melayani transaksi pertama hari ini.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mb-2">
               Nominal Uang di Laci Kasir (Rp)
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-3 text-lg font-extrabold text-slate-400 dark:text-slate-500">
+              <span className="absolute left-4 top-3 text-lg font-extrabold text-slate-600 dark:text-slate-400">
                 Rp
               </span>
               <input
@@ -125,14 +125,14 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
                 className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 focus:border-emerald-600 dark:focus:border-emerald-500 rounded-2xl text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono focus:outline-none transition shadow-inner"
               />
             </div>
-            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 text-right font-mono">
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 text-right font-mono">
               Terbaca: {formatRupiah(amount)}
             </p>
           </div>
 
           {/* Quick Buttons */}
           <div>
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 block">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 block">
               Pilihan Cepat Nominal:
             </span>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">

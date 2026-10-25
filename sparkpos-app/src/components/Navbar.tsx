@@ -117,8 +117,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               Pro
             </span>
           </div>
-          <div className="text-[10px] text-slate-500 dark:text-zinc-400 flex items-center gap-1 font-medium truncate max-w-[130px] lg:max-w-[160px]">
-            <Store className="w-2.5 h-2.5 text-slate-400 dark:text-zinc-500 shrink-0" />
+          <div className="text-[10px] text-slate-700 dark:text-zinc-300 flex items-center gap-1 font-semibold truncate max-w-[130px] lg:max-w-[160px]">
+            <Store className="w-2.5 h-2.5 text-slate-500 dark:text-zinc-400 shrink-0" />
             <span className="truncate">{storeProfile.storeName}</span>
           </div>
         </div>
@@ -269,7 +269,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <div className="text-left leading-tight hidden sm:block">
-              <span className="text-slate-500 dark:text-zinc-400 text-[8px] block font-mono font-bold uppercase">
+              <span className="text-slate-700 dark:text-zinc-300 text-[8px] block font-mono font-bold uppercase">
                 Kas Hari Ini (07:00-16:30)
               </span>
               <span className="font-bold text-slate-800 dark:text-zinc-200 text-[10px] truncate max-w-[100px] block">
@@ -291,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] font-bold text-slate-800 dark:text-zinc-200 block truncate max-w-[70px]">
                 {currentUser?.fullName?.split(' ')[0] || 'User'}
               </span>
-              <span className="text-[7.5px] font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">
+              <span className="text-[7.5px] font-extrabold text-slate-700 dark:text-zinc-300 uppercase tracking-wider block">
                 {isAdmin
                   ? 'Owner'
                   : currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor'

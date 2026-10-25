@@ -65,13 +65,13 @@ export const HoldCartModal: React.FC<HoldCartModalProps> = ({
                         {timeStr}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-slate-200 font-medium">
                       {totalQty} item produk •{' '}
                       <span className="font-semibold text-emerald-400">
                         {formatRupiah(totalAmount)}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 truncate max-w-sm">
+                    <div className="text-[11px] text-slate-300 truncate max-w-sm font-medium">
                       {cart.items.map((i) => `${i.name} (${i.quantity})`).join(', ')}
                     </div>
                   </div>

@@ -240,7 +240,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
               Manajemen Servis Komputer, Laptop & Printer
             </h1>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
             Tracking antrean perbaikan unit masuk, estimasi biaya sparepart, diagnosa teknisi, hingga penyerahan ke pelanggan.
           </p>
         </div>
@@ -259,11 +259,11 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             type="button"
             onClick={() => exportServicesToExcel(filteredOrders, storeProfile.storeName)}
             disabled={filteredOrders.length === 0}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 disabled:opacity-50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition shadow-2xs"
-            title="Export data antrean service ke format Excel (.csv)"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 disabled:opacity-50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition shadow-2xs cursor-pointer"
+            title="Export data antrean service ke format Excel (.xlsx)"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">Export Excel</span>
+            <span className="hidden sm:inline">Export Excel (.xlsx)</span>
           </button>
 
           <button
@@ -303,7 +303,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             <Inbox className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block">
+            <span className="text-[10px] text-slate-700 dark:text-slate-300 uppercase font-bold tracking-wider block">
               Unit Masuk
             </span>
             <span className="text-lg font-black text-slate-900 dark:text-white">{countDiterima} unit</span>
@@ -315,7 +315,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             <Settings className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block">
+            <span className="text-[10px] text-slate-700 dark:text-slate-300 uppercase font-bold tracking-wider block">
               Dikerjakan
             </span>
             <span className="text-lg font-black text-amber-600 dark:text-amber-400">{countDikerjakan} unit</span>
@@ -327,7 +327,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider block">
+            <span className="text-[10px] text-slate-700 dark:text-slate-300 uppercase font-bold tracking-wider block">
               Selesai Siap Ambil
             </span>
             <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{countSelesai} unit</span>
@@ -339,7 +339,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
             <Check className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase font-bold tracking-wider block">
+            <span className="text-[10px] text-slate-700 dark:text-zinc-300 uppercase font-bold tracking-wider block">
               Sudah Diambil
             </span>
             <span className="text-base font-bold text-slate-900 dark:text-zinc-200">{countDiambil} unit</span>
@@ -441,7 +441,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                       {/* Ticket No & Date */}
                       <td className="py-2.5 px-4 font-mono">
                         <span className="font-bold text-amber-600 dark:text-amber-400 block">{order.ticketNumber}</span>
-                        <span className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
                           <Clock className="w-3 h-3" />
                           <span>{dateStr}</span>
                         </span>
@@ -449,45 +449,45 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
 
                       {/* Customer Info */}
                       <td className="py-3 px-4">
-                        <span className="font-bold text-white block">{order.customerName}</span>
+                        <span className="font-bold text-slate-900 dark:text-white block">{order.customerName}</span>
                         {order.customerPhone ? (
                           <a
                             href={`https://wa.me/${order.customerPhone.replace(/\D/g, '').replace(/^0/, '62')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 mt-0.5 font-mono"
+                            className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold hover:underline flex items-center gap-1 mt-0.5 font-mono"
                           >
                             <Phone className="w-3 h-3" />
                             <span>{order.customerPhone}</span>
                           </a>
                         ) : (
-                          <span className="text-[10px] text-slate-500">Tanpa no HP</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Tanpa no HP</span>
                         )}
                       </td>
 
                       {/* Device & Complaint */}
                       <td className="py-3 px-4 max-w-xs">
-                        <span className="font-semibold text-slate-200 block truncate flex items-center gap-1.5">
-                          <Laptop className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="font-semibold text-slate-900 dark:text-slate-200 block truncate flex items-center gap-1.5">
+                          <Laptop className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
                           <span>{order.deviceType}</span>
                           {order.deviceSerial && (
-                            <span className="text-[10px] text-slate-500 font-mono">({order.deviceSerial})</span>
+                            <span className="text-[10px] text-slate-600 dark:text-slate-400 font-mono font-medium">({order.deviceSerial})</span>
                           )}
                         </span>
-                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                        <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium line-clamp-1 mt-0.5">
                           {order.complaint}
                         </p>
 
                         {/* Kelengkapan & Kondisi Fisik */}
                         {(order.completeness || order.physicalCondition) && (
-                          <div className="text-[10px] text-slate-400 mt-1 flex flex-wrap gap-1">
+                          <div className="text-[10px] text-slate-700 dark:text-slate-300 font-medium mt-1 flex flex-wrap gap-1">
                             {order.completeness && (
-                              <span className="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded">
                                 <Package className="w-3 h-3 inline mr-1" />{order.completeness}
                               </span>
                             )}
                             {order.physicalCondition && (
-                              <span className="bg-amber-950/40 text-amber-300 border border-amber-900/60 px-1.5 py-0.5 rounded">
+                              <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 px-1.5 py-0.5 rounded">
                                 <AlertTriangle className="w-3 h-3 inline mr-1 text-amber-500" />{order.physicalCondition}
                               </span>
                             )}
@@ -496,14 +496,14 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
 
                         {/* Device Password & Warranty */}
                         {(order.devicePassword || (order.warrantyDays !== undefined && order.warrantyDays > 0)) && (
-                          <div className="text-[10px] text-slate-400 mt-1 flex flex-wrap gap-1">
+                          <div className="text-[10px] text-slate-700 dark:text-slate-300 font-medium mt-1 flex flex-wrap gap-1">
                             {order.devicePassword && (
-                              <span className="bg-slate-800 text-zinc-300 font-mono px-1.5 py-0.5 rounded">
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-zinc-200 font-mono px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                 <KeyRound className="w-3 h-3 inline mr-1" />{order.devicePassword}
                               </span>
                             )}
                             {order.warrantyDays !== undefined && order.warrantyDays > 0 && (
-                              <span className="bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 px-1.5 py-0.5 rounded">
+                              <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 px-1.5 py-0.5 rounded">
                                 <ShieldCheck className="w-3 h-3 inline mr-1" />{order.warrantyDays} Hari Garansi
                               </span>
                             )}
@@ -511,12 +511,12 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
                         )}
 
                         {order.diagnosis && (
-                          <div className="text-[10px] text-cyan-300 mt-1 bg-cyan-950/50 border border-cyan-800/40 rounded px-1.5 py-0.5 line-clamp-1">
+                          <div className="text-[10px] text-cyan-800 dark:text-cyan-300 mt-1 bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-200 dark:border-cyan-800/40 rounded px-1.5 py-0.5 line-clamp-1">
                             <Search className="w-3 h-3 inline mr-1" /><strong>Diagnosa:</strong> {order.diagnosis}
                           </div>
                         )}
                         {order.notes && (
-                          <div className="text-[10px] text-amber-300 mt-1 bg-amber-950/50 border border-amber-800/40 rounded px-1.5 py-0.5 line-clamp-2">
+                          <div className="text-[10px] text-amber-800 dark:text-amber-300 mt-1 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/40 rounded px-1.5 py-0.5 line-clamp-2">
                             <MessageSquare className="w-3 h-3 inline mr-1" /><strong>Info Teknisi:</strong> {order.notes}
                           </div>
                         )}
@@ -524,14 +524,14 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
 
                       {/* Technician */}
                       <td className="py-3 px-4">
-                        <span className="font-medium text-slate-300 block">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                           {order.assignedTechName || 'Belum Ditentukan'}
                         </span>
                       </td>
 
                       {/* Financial Total */}
                       <td className="py-3 px-4 text-right font-mono">
-                        <span className="font-bold text-emerald-400 text-sm block">
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm block">
                           {formatRupiah(order.grandTotal)}
                         </span>
                         {order.downPayment !== undefined && order.downPayment > 0 && !order.isPaid && (

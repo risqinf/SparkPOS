@@ -153,11 +153,11 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Nominal Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
               Nominal Uang (Rp) <span className="text-rose-400">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-xs text-slate-500 font-bold">Rp</span>
+              <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">Rp</span>
               <input
                 type="number"
                 min="1"
@@ -178,7 +178,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
                   key={nom}
                   type="button"
                   onClick={() => handleAmountQuickAdd(nom)}
-                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium border border-slate-700"
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700"
                 >
                   +{nom.toLocaleString('id-ID')}
                 </button>
@@ -186,7 +186,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAmountStr('')}
-                className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 text-[11px]"
+                className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-300 text-[11px] font-medium"
               >
                 Reset
               </button>
@@ -195,7 +195,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
 
           {/* Category Dropdown */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
               Kategori Keperluan
             </label>
             <select
@@ -214,7 +214,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
           {/* Custom Category Input if 'Lain-lain' */}
           {selectedCategory === 'Lain-lain' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 Ketik Kategori Kustom
               </label>
               <input
@@ -229,7 +229,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
 
           {/* Note / Remarks */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
               Catatan / Keterangan Tambahan
             </label>
             <input

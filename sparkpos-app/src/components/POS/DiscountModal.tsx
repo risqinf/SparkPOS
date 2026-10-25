@@ -94,7 +94,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
 
           {/* Quick presets */}
           <div>
-            <span className="text-xs text-slate-400 font-medium mb-1.5 block">Preset Cepat:</span>
+            <span className="text-xs text-slate-200 font-bold mb-1.5 block">Preset Cepat:</span>
             <div className="flex flex-wrap gap-2">
               {mode === 'percent'
                 ? [5, 10, 15, 20, 50].map((p) => (
@@ -122,7 +122,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
 
           {/* Input field */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
               {mode === 'percent' ? 'Besar Diskon (%)' : 'Jumlah Potongan Harga (Rp)'}
             </label>
             <input
@@ -138,7 +138,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
 
           {/* Summary preview */}
           <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-medium">Total Potongan Diskon:</span>
+            <span className="text-xs text-slate-200 font-semibold">Total Potongan Diskon:</span>
             <span className="text-lg font-bold text-amber-400">
               -{formatRupiah(calculatedDiscount)}
             </span>

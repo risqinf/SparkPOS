@@ -412,55 +412,55 @@ export const ShiftReportModal: React.FC<ShiftReportModalProps> = ({
             <div className="p-4 space-y-3 overflow-y-auto flex-1 text-xs">
             {/* Ringkasan Kas Laci Grid */}
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
+              <span className="text-[10px] font-extrabold text-zinc-200 uppercase tracking-wider block mb-1.5">
                 Rincian Arus Keuangan Shift Ini
               </span>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Modal Kas Awal:</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Modal Kas Awal:</span>
                   <span className="text-sm font-bold text-zinc-100 font-mono">
                     {formatRupiah(openingCash)}
                   </span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Penjualan Tunai:</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Penjualan Tunai:</span>
                   <span className="text-sm font-bold text-emerald-400 font-mono">
                     +{formatRupiah(cashSalesTotal)}
                   </span>
-                  <span className="text-[9px] text-zinc-500 block">{txCount} transaksi nota</span>
+                  <span className="text-[9px] text-zinc-400 font-medium block">{txCount} transaksi nota</span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Penjualan Non-Tunai:</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Penjualan Non-Tunai:</span>
                   <span className="text-sm font-bold text-sky-400 font-mono">
                     {formatRupiah(nonCashSalesTotal)}
                   </span>
-                  <span className="text-[9px] text-zinc-500 block">QRIS / Transfer</span>
+                  <span className="text-[9px] text-zinc-400 font-medium block">QRIS / Transfer</span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Servis Komputer:</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Servis Komputer:</span>
                   <span className="text-sm font-bold text-amber-400 font-mono">
                     +{formatRupiah(serviceCashTotal)}
                   </span>
-                  <span className="text-[9px] text-zinc-500 block">{serviceCount} tiket selesai</span>
+                  <span className="text-[9px] text-zinc-400 font-medium block">{serviceCount} tiket selesai</span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Kas Masuk (+):</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Kas Masuk (+):</span>
                   <span className="text-sm font-bold text-emerald-400 font-mono">
                     +{formatRupiah(cashInTotal)}
                   </span>
-                  <span className="text-[9px] text-zinc-500 block">Manual petty cash</span>
+                  <span className="text-[9px] text-zinc-400 font-medium block">Manual petty cash</span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800">
-                  <span className="text-zinc-400 text-[10px] block">Kas Keluar (-):</span>
+                  <span className="text-zinc-200 text-[10px] font-bold block">Kas Keluar (-):</span>
                   <span className="text-sm font-bold text-rose-400 font-mono">
                     -{formatRupiah(cashOutTotal)}
                   </span>
-                  <span className="text-[9px] text-zinc-500 block">Operasional / konsumsi</span>
+                  <span className="text-[9px] text-zinc-400 font-medium block">Operasional / konsumsi</span>
                 </div>
               </div>
             </div>

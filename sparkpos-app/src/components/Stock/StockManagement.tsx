@@ -160,15 +160,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* Total SKU */}
         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
           <div>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
               Total Master SKU
             </span>
             <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{totalSku} Produk</div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 block mt-0.5">
               Aktif di Katalog
             </span>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
+          <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300">
             <Boxes className="w-4.5 h-4.5" />
           </div>
         </div>
@@ -176,13 +176,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* Nilai HPP */}
         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
           <div>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
               Nilai Persediaan (HPP)
             </span>
             <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
               {formatRupiah(totalStockValueHpp)}
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 block mt-0.5">
               Modal barang berjalan
             </span>
           </div>
@@ -194,7 +194,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* Stok Menipis */}
         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
           <div>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
               Stok Menipis (Warning)
             </span>
             <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
@@ -203,7 +203,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
               )}
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 block mt-0.5">
               Di bawah batas minimum
             </span>
           </div>
@@ -215,7 +215,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         {/* Stok Habis */}
         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-2xs">
           <div>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
               Stok Habis (Kosong)
             </span>
             <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
@@ -224,7 +224,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <span className="w-2 h-2 rounded-full bg-rose-500"></span>
               )}
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
+            <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 block mt-0.5">
               Perlu order ulang
             </span>
           </div>
@@ -334,15 +334,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <span>{isCopied ? 'Tersalin!' : 'Salin Excel'}</span>
           </button>
 
-          {/* DUAL EXPORT 2: Unduh File (.csv) */}
+          {/* DUAL EXPORT 2: Unduh File (.xlsx Native) */}
           <button
             onClick={() => exportStockToExcel(filteredProducts)}
             disabled={filteredProducts.length === 0}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 disabled:opacity-50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition shadow-2xs cursor-pointer"
-            title="Unduh laporan daftar stok produk & valuasi aset ke file Excel (.csv)"
+            title="Unduh laporan daftar stok produk & valuasi aset ke file Excel (.xlsx) resmi yang rapih di Excel & LibreOffice"
           >
             <FileDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Unduh (.csv)</span>
+            <span>Unduh (.xlsx)</span>
           </button>
 
           {/* Beli Laptop (Kas Keluar) Button */}
@@ -407,7 +407,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       </td>
 
                       {/* Barcode */}
-                      <td className="px-3.5 py-2.5 font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      <td className="px-3.5 py-2.5 font-mono text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">
                         {p.barcode || '-'}
                       </td>
 
@@ -443,7 +443,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         </div>
 
                         {p.supplierName && (
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-0.5">
                             Supplier: {p.supplierName}
                           </div>
                         )}
@@ -457,14 +457,14 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       </td>
 
                       {/* Buy Price */}
-                      <td className="px-3.5 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                         {formatRupiah(p.buyPrice)}
                       </td>
 
                       {/* Sell Price */}
                       <td className="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {formatRupiah(p.sellPrice)}
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal ml-0.5">
+                        <span className="text-[10px] text-slate-700 dark:text-slate-300 font-medium ml-0.5">
                           /{p.unitName}
                         </span>
                       </td>
@@ -474,7 +474,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                           +{formatRupiah(marginNominal)}
                         </span>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono">
+                        <div className="text-[10px] text-slate-700 dark:text-slate-300 font-bold font-mono">
                           ({marginPercent}%)
                         </div>
                       </td>
@@ -552,10 +552,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </div>
 
         {/* Footer Info */}
-        <div className="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-3 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 font-medium">
           <span>Menampilkan {filteredProducts.length} dari total {products.length} SKU</span>
           {!isAdmin && (
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
               * Mode Kasir: Modifikasi harga & hapus produk memerlukan hak Administrator.
             </span>
           )}

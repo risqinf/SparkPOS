@@ -423,7 +423,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             <div className="grid grid-cols-2 gap-5 items-start">
               {/* App Name */}
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label className="block text-xs font-bold text-slate-200 mb-1.5">
                   Nama Aplikasi / Brand Kasir
                 </label>
                 <input
@@ -437,14 +437,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] font-medium text-slate-400 mt-1">
                   Nama ini akan tampil di bagian header aplikasi dan nota penjualan.
                 </p>
               </div>
 
               {/* Logo Upload & Preview */}
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label className="block text-xs font-bold text-slate-200 mb-1.5">
                   Logo Toko / Icon Aplikasi
                 </label>
                 <div className="flex items-center gap-4">
@@ -515,7 +515,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-bold text-slate-200 mb-1">
                   Nama Toko / Usaha
                 </label>
                 <input
@@ -532,7 +532,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-bold text-slate-200 mb-1">
                   Alamat Lengkap Toko
                 </label>
                 <input
@@ -548,7 +548,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-bold text-slate-200 mb-1">
                   No. Telepon / WhatsApp
                 </label>
                 <input
@@ -565,7 +565,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-xs font-bold text-slate-200 mb-1">
                 Catatan Kaki Struk (Receipt Footer)
               </label>
               <textarea
@@ -677,7 +677,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-bold text-slate-200 mb-1">
                   Tarif Pajak PPN (%)
                 </label>
                 <div className="relative">
@@ -694,14 +694,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                       !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 font-bold">
+                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-bold">
                     %
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-bold text-slate-200 mb-1">
                   Skema Perhitungan Pajak
                 </label>
                 <select

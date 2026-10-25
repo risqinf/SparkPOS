@@ -514,20 +514,20 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     };
   };
 
-  // 1. Ekspor dalam bentuk File (.csv UTF-8 BOM)
+  // 1. Ekspor dalam bentuk File (.xlsx Excel Asli)
   const handleExportExcelFile = () => {
     const data = getExportData();
     exportUnifiedFinancialReportToExcel(data);
-    showToast('File Excel (.csv) berhasil diunduh!');
+    showToast('File Excel (.xlsx) berhasil diunduh!');
   };
 
-  // 2. Salin ke Clipboard (Format Excel TSV)
+  // 2. Salin ke Clipboard (Format Excel TSV & HTML)
   const handleCopyClipboard = async () => {
     const data = getExportData();
     const ok = await copyUnifiedFinancialReportToClipboard(data);
     if (ok) {
       setIsCopied(true);
-      showToast('Laporan berhasil disalin ke clipboard! Langsung tempel (Ctrl+V) di Excel.');
+      showToast('Laporan berhasil disalin ke clipboard! Format tabel siap ditempel (Ctrl+V) di Excel/LibreOffice.');
       setTimeout(() => setIsCopied(false), 2500);
     } else {
       showToast('Gagal menyalin ke clipboard', 'error');
@@ -738,16 +738,16 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <span>{isCopied ? 'Tersalin!' : 'Salin Clipboard (Excel)'}</span>
           </button>
 
-          {/* DUAL EXPORT 2: Unduh File Excel (.csv UTF-8 BOM) */}
+          {/* DUAL EXPORT 2: Unduh File Excel (.xlsx Native) */}
           <button
             type="button"
             onClick={handleExportExcelFile}
             disabled={filteredRecords.length === 0}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-            title="Unduh laporan keuangan lengkap beserta rincian produk dalam bentuk file .csv yang kompatibel 100% dengan Microsoft Excel"
+            title="Unduh laporan keuangan lengkap beserta rincian produk dalam bentuk file Excel (.xlsx) resmi yang langsung rapih di Excel & LibreOffice"
           >
             <FileDown className="w-4 h-4" />
-            <span>Unduh File (.csv)</span>
+            <span>Unduh File (.xlsx)</span>
           </button>
         </div>
       </div>
@@ -901,7 +901,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Ringkasan Finansial Periode Terpilih</span>
             </h2>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
               Nilai dapat dikoreksi kapan saja sewaktu-waktu
             </span>
           </div>
@@ -911,7 +911,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Modal Awal Kasir
                   </span>
                   <button
@@ -928,7 +928,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   {formatRupiah(financialSummary.openingCash)}
                 </div>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 block">
+              <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
                 Uang fisik awal hari
               </span>
             </div>
@@ -937,7 +937,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Total Omset Toko
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
@@ -948,7 +948,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   {formatRupiah(financialSummary.totalRevenue)}
                 </div>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 block truncate" title={`POS: ${formatRupiah(financialSummary.posRevenue)} • Servis: ${formatRupiah(financialSummary.serviceRevenue)}`}>
+              <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block truncate" title={`POS: ${formatRupiah(financialSummary.posRevenue)} • Servis: ${formatRupiah(financialSummary.serviceRevenue)}`}>
                 POS: {formatRupiah(financialSummary.posRevenue)} • Servis: {formatRupiah(financialSummary.serviceRevenue)}
               </span>
             </div>
@@ -957,7 +957,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Total Modal HPP
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
@@ -968,7 +968,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   {formatRupiah(financialSummary.totalCostHpp)}
                 </div>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 block">
+              <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
                 Modal pokok penjualan
               </span>
             </div>
@@ -977,7 +977,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Pengeluaran Toko
                   </span>
                   <button
@@ -997,7 +997,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   {formatRupiah(financialSummary.operationalExpenses)}
                 </div>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 block">
+              <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
                 Arus kas operasional
               </span>
             </div>
@@ -1108,7 +1108,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           <td className="py-3 px-3 font-mono font-bold text-slate-900 dark:text-slate-100">
                             {rec.invoiceNumber}
                           </td>
-                          <td className="py-3 px-3 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
+                          <td className="py-3 px-3 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap">
                             {formatLocalDateTime(rec.createdAt)}
                           </td>
                           <td className="py-3 px-3">
@@ -1214,7 +1214,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                      <tr className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                      <tr className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                                         <th className="py-1.5 px-3">Nama Produk / Jasa</th>
                                         <th className="py-1.5 px-3 text-center">Qty</th>
                                         <th className="py-1.5 px-3 text-right">Harga Jual</th>
@@ -1235,7 +1235,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                           <td className="py-1.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
                                             {formatRupiah(item.sellPrice)}
                                           </td>
-                                          <td className="py-1.5 px-3 text-right font-mono text-slate-500 dark:text-slate-400">
+                                          <td className="py-1.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300 font-semibold">
                                             {formatRupiah(item.buyPrice)}
                                           </td>
                                           <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">

@@ -127,7 +127,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
                 Pembayaran Kasir
               </h2>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                 Pilih metode bayar Tunai atau Transfer Bank
               </span>
             </div>
@@ -135,7 +135,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -146,11 +146,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {/* Grand Total Display */}
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200 block">
                 Total Belanja
               </span>
               {customerName && (
-                <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
                   Pelanggan: {customerName}
                 </span>
               )}
@@ -202,7 +202,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   Nominal Uang Diterima (Rp)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-3 text-lg font-bold text-slate-400 dark:text-slate-500">
+                  <span className="absolute left-4 top-3 text-lg font-bold text-slate-600 dark:text-slate-400">
                     Rp
                   </span>
                   <input
@@ -221,7 +221,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               {/* Quick Cash Buttons */}
               <div>
-                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 block">
                   Pilihan Cepat Uang Kasir:
                 </span>
                 <div className="grid grid-cols-4 gap-2">

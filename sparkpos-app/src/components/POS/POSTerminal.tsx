@@ -580,10 +580,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                             : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/60'
                         }`}
                       >
-                        <td className="py-2.5 px-3 font-mono font-bold text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        <td className="py-2.5 px-3 font-mono font-bold text-xs text-slate-800 dark:text-slate-200 whitespace-nowrap">
                           {p.sku || p.barcode}
                           {p.barcode && p.sku && p.barcode !== p.sku && (
-                            <span className="block text-[10px] text-slate-400 font-normal">
+                            <span className="block text-[10px] text-slate-600 dark:text-slate-400 font-medium">
                               BC: {p.barcode}
                             </span>
                           )}
@@ -603,7 +603,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                             {p.categoryName || 'Umum'}
                           </span>
@@ -744,7 +744,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                       </span>
                     )}
                     {item.serialNumber && (
-                      <span className="text-slate-400 text-[10px]">SN: {item.serialNumber}</span>
+                      <span className="text-slate-600 dark:text-slate-400 text-[10px] font-medium">SN: {item.serialNumber}</span>
                     )}
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                 <div className="flex items-center gap-1 shrink-0 bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800">
                   <button
                     onClick={() => updateItemQuantity(item.productId, -1)}
-                    className="p-1 rounded text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
@@ -762,7 +762,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   </span>
                   <button
                     onClick={() => updateItemQuantity(item.productId, 1)}
-                    className="p-1 rounded text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -770,12 +770,12 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
                 {/* Subtotal & Delete */}
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-bold text-slate-100 font-mono">
+                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
                     {formatRupiah(item.subtotal)}
                   </div>
                   <button
                     onClick={() => removeItem(item.productId)}
-                    className="text-[10px] text-slate-500 hover:text-rose-400 transition"
+                    className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-500 transition"
                   >
                     Hapus
                   </button>
@@ -811,15 +811,15 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
           {/* Subtotal, Diskon & Pajak Rows */}
           <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between text-slate-800 dark:text-slate-200 font-semibold">
               <span>Subtotal Belanja:</span>
-              <span className="font-semibold text-slate-900 dark:text-slate-200 font-mono">
+              <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
                 {formatRupiah(cartSummary.subtotal)}
               </span>
             </div>
 
             {/* Diskon Order */}
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between items-center text-slate-800 dark:text-slate-200 font-semibold">
               <button
                 onClick={() => setIsDiscountOpen(true)}
                 disabled={cartItems.length === 0}
@@ -843,12 +843,12 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
             {/* PPN Pajak */}
             {storeProfile.taxPercent > 0 && (
-              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <div className="flex justify-between text-slate-800 dark:text-slate-200 font-semibold">
                 <span>
                   PPN {storeProfile.taxPercent}%{' '}
                   {storeProfile.isTaxInclusive ? '(Termasuk)' : ''}:
                 </span>
-                <span className="font-medium text-slate-900 dark:text-slate-200 font-mono">
+                <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
                   {formatRupiah(cartSummary.taxAmount)}
                 </span>
               </div>

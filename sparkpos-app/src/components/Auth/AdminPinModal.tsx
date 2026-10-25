@@ -75,22 +75,22 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           </button>
         </div>
 
-        <p className="text-xs text-slate-400 mt-3">{description}</p>
+        <p className="text-xs text-slate-200 font-medium mt-3">{description}</p>
 
         {/* PIN Display */}
         <div className="my-4">
           <div className="h-12 w-full bg-slate-950 border border-slate-800 rounded-xl px-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-slate-500" />
+              <Lock className="w-4 h-4 text-slate-400" />
               <div className="tracking-widest text-lg font-mono text-emerald-400">
-                {pin ? '●'.repeat(pin.length) : <span className="text-xs text-slate-600 font-sans">Ketik PIN Admin...</span>}
+                {pin ? '●'.repeat(pin.length) : <span className="text-xs text-slate-400 font-sans">Ketik PIN Admin...</span>}
               </div>
             </div>
             {pin && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-[11px] text-slate-500 hover:text-slate-300"
+                className="text-[11px] text-slate-400 hover:text-slate-200 font-bold"
               >
                 Reset
               </button>
@@ -120,7 +120,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           <button
             type="button"
             onClick={handleClear}
-            className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 font-semibold text-xs active:scale-95 transition"
+            className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold text-xs active:scale-95 transition"
           >
             C
           </button>
@@ -134,7 +134,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
           <button
             type="button"
             onClick={handleBackspace}
-            className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-400 font-semibold text-xs active:scale-95 transition"
+            className="h-11 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold text-xs active:scale-95 transition"
           >
             ⌫
           </button>

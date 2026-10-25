@@ -211,7 +211,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Barcode & SKU Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 SKU / Kode Barang
               </label>
               <input
@@ -225,7 +225,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Barcode (Opsional)
                 </label>
                 <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Product Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
               Nama Produk / Layanan Jasa
             </label>
             <input
@@ -278,7 +278,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Category & Unit */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 Kategori
               </label>
               <select
@@ -295,7 +295,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 Satuan Jual
               </label>
               <select
@@ -344,7 +344,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Price (Buy vs Sell) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 Harga Modal (HPP)
               </label>
               <div className="relative">
@@ -362,7 +362,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                 Harga Jual Kasir
               </label>
               <div className="relative">
@@ -393,7 +393,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               {/* Pilihan Kondisi Unit */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-200 mb-1.5">
                   Kondisi Barang:
                 </label>
                 <div className="grid grid-cols-4 gap-1.5">
@@ -412,7 +412,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       className={`p-2 rounded-lg border text-left transition flex flex-col justify-between ${
                         condition === c.key
                           ? `${c.color} ring-1 ring-emerald-500 font-bold`
-                          : 'border-slate-800 bg-slate-950/50 text-slate-400 hover:border-slate-700'
+                          : 'border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700 font-medium'
                       }`}
                     >
                       <span className="text-xs">{c.label}</span>
@@ -441,7 +441,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* Kelengkapan Unit & Serial Number */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-200 mb-1">
                     Kelengkapan Unit (Laptop / Printer / PC):
                   </label>
                   <input
@@ -476,7 +476,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           completeness.includes(tag)
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {completeness.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
@@ -486,7 +486,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-200 mb-1">
                     Masa Garansi Toko / Pabrik:
                   </label>
                   <div className="relative">
@@ -497,7 +497,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       placeholder="1 Bulan Toko / 1 Tahun Resmi..."
                       className="w-full pl-7 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                     />
-                    <ShieldCheck className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" />
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {['3 Hari Tes', '7 Hari Toko', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Non Garansi'].map((w) => (
@@ -508,7 +508,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           warrantyPeriod === w
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {w}
@@ -521,7 +521,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* Quick Chips Minus untuk Printer / Komputer jika bukan BARU */}
               {condition !== 'BARU' && (
                 <div className="pt-2 border-t border-slate-800/60">
-                  <span className="text-[10px] text-slate-400 block mb-1">Pilih Cepat Minus Printer / PC / Laptop:</span>
+                  <span className="text-[10px] font-bold text-slate-200 block mb-1">Pilih Cepat Minus Printer / PC / Laptop:</span>
                   <div className="flex flex-wrap gap-1">
                     {[
                       'Head Buntu / Bergaris',
@@ -547,7 +547,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           conditionNotes.includes(m)
                             ? 'bg-amber-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {conditionNotes.includes(m) ? `✓ ${m}` : `+ ${m}`}
@@ -559,7 +559,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               {/* Serial Number (SN / IMEI) */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                <label className="block text-[11px] font-bold text-slate-200 mb-1">
                   Serial Number / No. Seri Mesin (Opsional):
                 </label>
                 <input
@@ -586,7 +586,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                   Stok Awal Fisik
                 </label>
                 <input
@@ -599,7 +599,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
                   Batas Minimum Stok (Peringatan)
                 </label>
                 <input
