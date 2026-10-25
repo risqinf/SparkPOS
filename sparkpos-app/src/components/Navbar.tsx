@@ -30,7 +30,6 @@ interface NavbarProps {
   activeShift: Shift | null;
   heldCount: number;
   openHeldModal: () => void;
-  openShiftModal: () => void;
   storeProfile: StoreProfile;
   currentUser: Employee | null;
   onLogout: () => void;
@@ -45,7 +44,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeShift,
   heldCount,
   openHeldModal,
-  openShiftModal,
   storeProfile,
   currentUser,
   onLogout,
@@ -265,12 +263,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200'
                 : 'bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300'
             }`}
-            title="Klik untuk membuka Laporan Keuangan & Kas Hari Ini (07.00 - 16.30)"
+            title="Klik untuk membuka Laporan Keuangan & Kas Hari Ini (07:30 - 16:30)"
           >
             <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <div className="text-left leading-tight hidden sm:block">
               <span className="text-slate-700 dark:text-zinc-300 text-[8px] block font-mono font-bold uppercase">
-                Kas Hari Ini (07:00-16:30)
+                Operasional (07:30 - 16:30)
               </span>
               <span className="font-bold text-slate-800 dark:text-zinc-200 text-[10px] truncate max-w-[100px] block">
                 {activeShift?.cashierName || 'Kasir'}

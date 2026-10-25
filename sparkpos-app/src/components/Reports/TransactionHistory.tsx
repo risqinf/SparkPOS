@@ -61,7 +61,6 @@ import {
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
   currentUser?: Employee | null;
-  onOpenShiftModal?: () => void;
   onOpenCashFlow?: () => void;
 }
 
@@ -105,7 +104,6 @@ type PeriodFilter =
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   storeProfile,
   currentUser,
-  onOpenShiftModal,
   onOpenCashFlow,
 }) => {
   // Raw Data State
@@ -697,34 +695,14 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Status Sesi Kasir Hari Ini & Tombol Tutup Kasir */}
-          {isTodayClosed ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold shadow-2xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Sesi Kasir Hari Ini Ditutup</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold shadow-2xs">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span>Real-Time Aktif (Shift Berjalan)</span>
-              </div>
-              {onOpenShiftModal && (
-                <button
-                  type="button"
-                  onClick={onOpenShiftModal}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-                  title="Tutup Kasir & Sesi Toko Hari Ini (07.00 - 16.30)"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Tutup Kasir (16:30)</span>
-                </button>
-              )}
-            </div>
-          )}
+          {/* Status Real-Time Toko Otomatis Sesuai Waktu Sistem (07:30 - 16:30) */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold shadow-2xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Real-Time Sistem (07:30 - 16:30)</span>
+          </div>
 
           {/* Quick Cash In / Out */}
           <button

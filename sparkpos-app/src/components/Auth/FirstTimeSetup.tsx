@@ -56,7 +56,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
   const [cashierFullName, setCashierFullName] = useState('Kasir 1');
   const [cashierUsername, setCashierUsername] = useState('kasir1');
   const [cashierPin, setCashierPin] = useState('1234');
-  const [cashierShiftSchedule, setCashierShiftSchedule] = useState('Shift Pagi (08:00 - 16:00)');
+  const [cashierShiftSchedule, setCashierShiftSchedule] = useState('Jam Kerja Standar (07:30 - 16:30)');
   const [cashierIsFlexible, setCashierIsFlexible] = useState(false);
 
   // Options
@@ -610,10 +610,8 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                             onChange={(e) => setCashierShiftSchedule(e.target.value)}
                             className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40"
                           >
-                            <option value="Shift Pagi (08:00 - 16:00)">Shift Pagi (08:00 - 16:00)</option>
-                            <option value="Shift Siang (12:00 - 20:00)">Shift Siang (12:00 - 20:00)</option>
-                            <option value="Shift Malam (16:00 - 24:00)">Shift Malam (16:00 - 24:00)</option>
-                            <option value="Full Day (08:00 - 21:00)">Full Day (08:00 - 21:00)</option>
+                            <option value="Jam Kerja Standar (07:30 - 16:30)">Jam Kerja Standar (07:30 - 16:30)</option>
+                            <option value="Shift Fleksibel">Shift Fleksibel</option>
                           </select>
                         </div>
 

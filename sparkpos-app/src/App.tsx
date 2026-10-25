@@ -14,7 +14,6 @@ import { POSTerminal } from './components/POS/POSTerminal';
 import { StockManagement } from './components/Stock/StockManagement';
 import { TransactionHistory } from './components/Reports/TransactionHistory';
 import { StoreSettings } from './components/Settings/StoreSettings';
-import { ShiftReportModal } from './components/Reports/ShiftReportModal';
 import { LoginScreen } from './components/Auth/LoginScreen';
 import { AdminPinModal } from './components/Auth/AdminPinModal';
 import { FirstTimeSetup } from './components/Auth/FirstTimeSetup';
@@ -34,7 +33,6 @@ export default function App() {
   const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
 
   // Modals
-  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
@@ -261,7 +259,6 @@ export default function App() {
         activeShift={activeShift}
         heldCount={heldCarts.length}
         openHeldModal={() => setIsHeldModalOpen(true)}
-        openShiftModal={() => setIsShiftModalOpen(true)}
         storeProfile={storeProfile}
         currentUser={currentUser}
         onLogout={handleLogout}
@@ -306,7 +303,6 @@ export default function App() {
           <TransactionHistory
             storeProfile={storeProfile}
             currentUser={currentUser}
-            onOpenShiftModal={() => setIsShiftModalOpen(true)}
             onOpenCashFlow={() => setIsCashFlowOpen(true)}
           />
         )}
@@ -321,17 +317,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Global Shift Summary Modal */}
-      {isShiftModalOpen && (
-        <ShiftReportModal
-          activeShift={activeShift}
-          storeProfile={storeProfile}
-          currentUser={currentUser}
-          onShiftClosed={refreshShift}
-          onClose={() => setIsShiftModalOpen(false)}
-        />
-      )}
 
       {/* Supervisor / Admin PIN Elevate Modal */}
       {isAdminPinModalOpen && (

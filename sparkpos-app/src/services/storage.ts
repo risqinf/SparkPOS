@@ -254,7 +254,7 @@ export async function initializeStore(
       fullName: cashierData.fullName.trim() || 'Kasir 1',
       pin: cashierData.pin.trim() || '1234',
       role: 'kasir',
-      shiftSchedule: cashierData.shiftSchedule || 'Shift Pagi (08:00 - 16:00)',
+      shiftSchedule: cashierData.shiftSchedule || 'Jam Kerja Standar (07:30 - 16:30)',
       shiftStart: cashierData.shiftStart,
       shiftEnd: cashierData.shiftEnd,
       isFlexibleShift: cashierData.isFlexibleShift,
@@ -352,12 +352,9 @@ export async function getCashFlowsByShift(shiftId: number): Promise<CashFlow[]> 
   }
 }
 
-// Master Template Jadwal & Jam Kerja Shift
+// Master Template Jadwal & Jam Kerja Operasional Toko (Default 07:30 - 16:30)
 export const DEFAULT_WORK_SHIFTS: WorkShiftTemplate[] = [
-  { id: 'shift-pagi', name: 'Shift Pagi', startTime: '08:00', endTime: '16:00', isFlexible: false, description: 'Shift kerja pagi (08:00 - 16:00)' },
-  { id: 'shift-siang', name: 'Shift Siang', startTime: '12:00', endTime: '20:00', isFlexible: false, description: 'Shift kerja siang ke malam (12:00 - 20:00)' },
-  { id: 'shift-malam', name: 'Shift Malam', startTime: '16:00', endTime: '24:00', isFlexible: false, description: 'Shift kerja malam (16:00 - 24:00)' },
-  { id: 'shift-fullday', name: 'Full Day', startTime: '08:00', endTime: '21:00', isFlexible: false, description: 'Shift operasional seharian penuh' },
+  { id: 'shift-standar', name: 'Jam Kerja Standar', startTime: '07:30', endTime: '16:30', isFlexible: false, description: 'Jam operasional toko (07:30 - 16:30)' },
   { id: 'shift-fleksibel', name: 'Shift Fleksibel', isFlexible: true, description: 'Shift bebas tanpa batasan jam tetap' },
 ];
 

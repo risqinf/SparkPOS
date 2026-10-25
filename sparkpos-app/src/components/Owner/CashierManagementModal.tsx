@@ -65,8 +65,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   // Master Shift Template Form state
   const [newShiftName, setNewShiftName] = useState('');
   const [newShiftIsFlexible, setNewShiftIsFlexible] = useState(false);
-  const [newShiftStart, setNewShiftStart] = useState('08:00');
-  const [newShiftEnd, setNewShiftEnd] = useState('16:00');
+  const [newShiftStart, setNewShiftStart] = useState('07:30');
+  const [newShiftEnd, setNewShiftEnd] = useState('16:30');
   const [newShiftDesc, setNewShiftDesc] = useState('');
 
   const loadData = async () => {
@@ -102,8 +102,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
     setStaffRole('kasir');
     setShiftMode('template');
     setSelectedTemplateId(shiftTemplates[0]?.id || 'shift-pagi');
-    setCustomStart('08:00');
-    setCustomEnd('16:00');
+    setCustomStart('07:30');
+    setCustomEnd('16:30');
     setEditingId(null);
     setErrorMessage(null);
   };
@@ -111,8 +111,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   const resetShiftTemplateForm = () => {
     setNewShiftName('');
     setNewShiftIsFlexible(false);
-    setNewShiftStart('08:00');
-    setNewShiftEnd('16:00');
+    setNewShiftStart('07:30');
+    setNewShiftEnd('16:30');
     setNewShiftDesc('');
   };
 
