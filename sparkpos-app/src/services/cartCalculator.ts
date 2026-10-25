@@ -99,3 +99,32 @@ export function formatRupiah(amount: number): string {
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('id-ID').format(value || 0);
 }
+
+export function formatCompactRupiah(value: number): string {
+  const num = value || 0;
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+
+  if (abs >= 1_000_000_000) {
+    const formatted = (abs / 1_000_000_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+    return `${sign}${formatted} M`; // Miliar
+  }
+  if (abs >= 1_000_000) {
+    const formatted = (abs / 1_000_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+    return `${sign}${formatted} Jt`; // Juta
+  }
+  if (abs >= 1_000) {
+    const formatted = (abs / 1_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    });
+    return `${sign}${formatted} Rb`; // Ribu
+  }
+  return `${sign}${abs.toLocaleString('id-ID')}`;
+}

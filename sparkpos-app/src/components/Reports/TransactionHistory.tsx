@@ -41,7 +41,7 @@ import {
   Employee,
   PaymentMethod,
 } from '../../types/pos';
-import { formatRupiah } from '../../services/cartCalculator';
+import { formatRupiah, formatCompactRupiah } from '../../services/cartCalculator';
 import { db, getTodayCashRegister, setTodayOpeningCash } from '../../services/storage';
 import { ReceiptModal } from '../POS/ReceiptModal';
 import { ServiceReceiptModal } from '../Service/ServiceReceiptModal';
@@ -158,8 +158,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   };
 
   // Load all master transactions & service orders
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (isBackground = false) => {
+    if (!isBackground) setIsLoading(true);
     try {
       const [txs, services, flows, registers, emps] = await Promise.all([
         db.transactions.reverse().sortBy('createdAt'),
@@ -175,9 +175,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       setEmployees(emps);
     } catch (err) {
       console.error('Failed to load transaction history', err);
-      showToast('Gagal memuat data transaksi', 'error');
+      if (!isBackground) showToast('Gagal memuat data transaksi', 'error');
     } finally {
-      setIsLoading(false);
+      if (!isBackground) setIsLoading(false);
     }
   };
 
@@ -185,8 +185,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     loadData();
 
     const handleUpdate = () => {
-      loadData();
+      loadData(true);
     };
+
+    // Auto-sync polling every 5s so data is strictly realtime without closing shift
+    const intervalTimer = setInterval(() => {
+      loadData(true);
+    }, 5000);
 
     if (typeof window !== 'undefined') {
       window.addEventListener('sparkpos_data_changed', handleUpdate);
@@ -194,6 +199,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       document.addEventListener('visibilitychange', handleUpdate);
     }
     return () => {
+      clearInterval(intervalTimer);
       if (typeof window !== 'undefined') {
         window.removeEventListener('sparkpos_data_changed', handleUpdate);
         window.removeEventListener('focus', handleUpdate);
@@ -422,11 +428,22 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       totalCostHpp += rec.totalCost;
 
-      const isCash = rec.paymentMethod?.toUpperCase().includes('CASH');
-      if (isCash) {
-        cashSalesTotal += rec.grandTotal;
+      // Split payment precision support
+      if (rec.originalPosTx?.payments && rec.originalPosTx.payments.length > 0) {
+        for (const p of rec.originalPosTx.payments) {
+          if (p.method?.toUpperCase().includes('CASH')) {
+            cashSalesTotal += p.amount || 0;
+          } else {
+            transferSalesTotal += p.amount || 0;
+          }
+        }
       } else {
-        transferSalesTotal += rec.grandTotal;
+        const isCash = rec.paymentMethod?.toUpperCase().includes('CASH');
+        if (isCash) {
+          cashSalesTotal += rec.grandTotal;
+        } else {
+          transferSalesTotal += rec.grandTotal;
+        }
       }
     }
 
@@ -687,17 +704,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <span>Sesi Kasir Hari Ini Ditutup</span>
             </div>
           ) : (
-            onOpenShiftModal && (
-              <button
-                type="button"
-                onClick={onOpenShiftModal}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-                title="Tutup Kasir & Sesi Toko Hari Ini (07.00 - 16.30)"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Tutup Kasir (16:30)</span>
-              </button>
-            )
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Real-Time Aktif (Shift Berjalan)</span>
+              </div>
+              {onOpenShiftModal && (
+                <button
+                  type="button"
+                  onClick={onOpenShiftModal}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
+                  title="Tutup Kasir & Sesi Toko Hari Ini (07.00 - 16.30)"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Tutup Kasir (16:30)</span>
+                </button>
+              )}
+            </div>
           )}
 
           {/* Quick Cash In / Out */}
@@ -714,7 +740,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           {/* Segarkan / Refresh */}
           <button
             type="button"
-            onClick={loadData}
+            onClick={() => loadData()}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer shadow-2xs"
             title="Refresh Data Terbaru (Otomatis Realtime)"
           >
@@ -924,8 +950,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     <span>Koreksi</span>
                   </button>
                 </div>
-                <div className="text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight">
-                  {formatRupiah(financialSummary.openingCash)}
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight">
+                    {formatRupiah(financialSummary.openingCash)}
+                  </span>
+                  <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {formatCompactRupiah(financialSummary.openingCash)}
+                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
@@ -944,8 +975,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     POS + Servis
                   </span>
                 </div>
-                <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
-                  {formatRupiah(financialSummary.totalRevenue)}
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+                    {formatRupiah(financialSummary.totalRevenue)}
+                  </span>
+                  <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                    {formatCompactRupiah(financialSummary.totalRevenue)}
+                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block truncate" title={`POS: ${formatRupiah(financialSummary.posRevenue)} • Servis: ${formatRupiah(financialSummary.serviceRevenue)}`}>
@@ -964,8 +1000,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     Barang + Part
                   </span>
                 </div>
-                <div className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight">
-                  {formatRupiah(financialSummary.totalCostHpp)}
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight">
+                    {formatRupiah(financialSummary.totalCostHpp)}
+                  </span>
+                  <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                    {formatCompactRupiah(financialSummary.totalCostHpp)}
+                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
@@ -993,8 +1034,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     <span>Catat Kas</span>
                   </button>
                 </div>
-                <div className="text-lg font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight">
-                  {formatRupiah(financialSummary.operationalExpenses)}
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-lg font-black text-rose-600 dark:text-rose-400 font-mono tracking-tight">
+                    {formatRupiah(financialSummary.operationalExpenses)}
+                  </span>
+                  <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+                    {formatCompactRupiah(financialSummary.operationalExpenses)}
+                  </span>
                 </div>
               </div>
               <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-2 block">
@@ -1002,45 +1048,132 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               </span>
             </div>
 
-            {/* Box 5: Laba Bersih Toko */}
-            <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/40 shadow-2xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                    Laba Bersih Toko
-                  </span>
-                  <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400">
-                    (Omset-HPP-Biaya)
+            {/* Box 5: Laba Bersih Toko / Rugi Toko */}
+            {(() => {
+              const isProfit = financialSummary.netProfit >= 0;
+              return (
+                <div
+                  className={`p-4 rounded-2xl border-2 shadow-2xs flex flex-col justify-between transition-colors ${
+                    isProfit
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500/40'
+                      : 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-500/50'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <span
+                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                          isProfit ? 'text-emerald-800 dark:text-emerald-300' : 'text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {isProfit ? 'Laba Bersih Toko' : 'Rugi / Defisit Toko'}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold ${
+                          isProfit
+                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {isProfit ? 'Untung (Surplus)' : 'Minus (Defisit)'}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span
+                        className={`text-lg font-black font-mono tracking-tight ${
+                          isProfit ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
+                        }`}
+                      >
+                        {formatRupiah(financialSummary.netProfit)}
+                      </span>
+                      <span
+                        className={`text-[11px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                          isProfit
+                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {formatCompactRupiah(financialSummary.netProfit)}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[10px] font-semibold mt-2 block ${
+                      isProfit ? 'text-emerald-800/80 dark:text-emerald-400/80' : 'text-rose-800/80 dark:text-rose-400/80'
+                    }`}
+                  >
+                    {isProfit
+                      ? `Margin: ${
+                          financialSummary.totalRevenue > 0
+                            ? Math.round((financialSummary.netProfit / financialSummary.totalRevenue) * 100)
+                            : 0
+                        }% dari omset`
+                      : 'Beban operasional & HPP melebihi omset'}
                   </span>
                 </div>
-                <div className="text-lg font-black text-emerald-700 dark:text-emerald-300 font-mono tracking-tight">
-                  {formatRupiah(financialSummary.netProfit)}
-                </div>
-              </div>
-              <span className="text-[10px] text-emerald-800/80 dark:text-emerald-400/80 mt-2 block">
-                Margin: {financialSummary.totalRevenue > 0 ? Math.round((financialSummary.netProfit / financialSummary.totalRevenue) * 100) : 0}% dari omset
-              </span>
-            </div>
+              );
+            })()}
 
             {/* Box 6: Saldo Kas di Laci Kasir */}
-            <div className="p-4 rounded-2xl bg-sky-50/70 dark:bg-sky-950/40 border-2 border-sky-500/40 shadow-2xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 dark:text-sky-300">
-                    Saldo Kas di Laci
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
-                    Uang Fisik
+            {(() => {
+              const isCashHealthy = financialSummary.finalCashInDrawer >= 0;
+              return (
+                <div
+                  className={`p-4 rounded-2xl border-2 shadow-2xs flex flex-col justify-between transition-colors ${
+                    isCashHealthy
+                      ? 'bg-sky-50/70 dark:bg-sky-950/40 border-sky-500/40'
+                      : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-500/50'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <span
+                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                          isCashHealthy ? 'text-sky-800 dark:text-sky-300' : 'text-amber-800 dark:text-amber-300'
+                        }`}
+                      >
+                        Saldo Kas di Laci
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold ${
+                          isCashHealthy
+                            ? 'bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300'
+                            : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                        }`}
+                      >
+                        {isCashHealthy ? 'Uang Fisik' : 'Kas Minus'}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span
+                        className={`text-lg font-black font-mono tracking-tight ${
+                          isCashHealthy ? 'text-sky-700 dark:text-sky-300' : 'text-amber-700 dark:text-amber-300'
+                        }`}
+                      >
+                        {formatRupiah(financialSummary.finalCashInDrawer)}
+                      </span>
+                      <span
+                        className={`text-[11px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                          isCashHealthy
+                            ? 'bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-300'
+                            : 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-300'
+                        }`}
+                      >
+                        {formatCompactRupiah(financialSummary.finalCashInDrawer)}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[10px] font-medium mt-2 block truncate ${
+                      isCashHealthy ? 'text-sky-800/80 dark:text-sky-400/80' : 'text-amber-800/80 dark:text-amber-400/80'
+                    }`}
+                    title={`Tunai: ${formatRupiah(financialSummary.cashSalesTotal)} | Bank: ${formatRupiah(financialSummary.transferSalesTotal)}`}
+                  >
+                    Tunai: {formatRupiah(financialSummary.cashSalesTotal)} | Bank: {formatRupiah(financialSummary.transferSalesTotal)}
                   </span>
                 </div>
-                <div className="text-lg font-black text-sky-700 dark:text-sky-300 font-mono tracking-tight">
-                  {formatRupiah(financialSummary.finalCashInDrawer)}
-                </div>
-              </div>
-              <span className="text-[10px] text-sky-800/80 dark:text-sky-400/80 mt-2 block truncate" title={`Tunai: ${formatRupiah(financialSummary.cashSalesTotal)} | Bank: ${formatRupiah(financialSummary.transferSalesTotal)}`}>
-                Tunai: {formatRupiah(financialSummary.cashSalesTotal)} | Bank: {formatRupiah(financialSummary.transferSalesTotal)}
-              </span>
-            </div>
+              );
+            })()}
           </div>
         </div>
 

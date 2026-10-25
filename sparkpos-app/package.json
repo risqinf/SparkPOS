@@ -1,6 +1,6 @@
 {
   "name": "sparkpos-app",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "type": "module",
   "description": "SparkPOS - Modern Offline-First Retail POS Desktop",
   "scripts": {
@@ -20,7 +20,8 @@
     "lucide-react": "^1.59.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

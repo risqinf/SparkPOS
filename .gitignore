@@ -17,3 +17,6 @@ SIAP_COPY_KE_FLASHDISK/
 **/obj/
 project/**/bin/
 project/**/obj/
+
+# Test exports
+*.xlsx
