@@ -12,6 +12,7 @@ import confetti from 'canvas-confetti';
 import { CartSummary, PaymentMethod, PaymentEntry } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
 import { playSuccessBeep } from '../../services/scanner';
+import { useDialog } from '../../hooks/useDialog';
 
 interface PaymentModalProps {
   summary: CartSummary;
@@ -35,6 +36,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   defaultAutoPrint,
   defaultPaperFormat,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [selectedMethod, setSelectedMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
 
   // Cash payment: default 0, manual edit only, auto-formats with dots (e.g. 100.000)
@@ -135,8 +137,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        return; // ditangani useDialog
       } else if (e.key === 'Enter' && !isUnderpaid && !isSubmitting) {
+        // Enter pada tombol lain (mis. tutup) memakai aksi tombol itu sendiri
+        if (e.target instanceof HTMLButtonElement) return;
+        e.preventDefault();
         handleComplete();
       } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
         e.preventDefault();
@@ -160,7 +165,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   }, [cashAmount, isUnderpaid, isSubmitting, selectedMethod, transferRefNote, selectedPrint]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 select-none">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 select-none">
       <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150 max-h-[95vh]">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">

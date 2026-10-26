@@ -2,6 +2,7 @@ import React from 'react';
 import { X, PauseCircle, Play, Trash2, Clock, ShoppingCart } from 'lucide-react';
 import { HeldCart } from '../../types/pos';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface HoldCartModalProps {
   heldCarts: HeldCart[];
@@ -16,8 +17,9 @@ export const HoldCartModal: React.FC<HoldCartModalProps> = ({
   onDelete,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">

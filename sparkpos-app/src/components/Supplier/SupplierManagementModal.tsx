@@ -19,6 +19,7 @@ import {
   updateSupplier,
   deleteSupplier,
 } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface SupplierManagementModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
   onClose,
   onSupplierSelected,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
@@ -128,7 +130,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">

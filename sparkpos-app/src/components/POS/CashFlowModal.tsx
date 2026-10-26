@@ -3,6 +3,7 @@ import { X, ArrowDownRight, ArrowUpRight, DollarSign, Tag, FileText, CheckCircle
 import { formatRupiah } from '../../services/cartCalculator';
 import { addCashFlow } from '../../services/storage';
 import { CashFlowType, Shift, Employee } from '../../types/pos';
+import { useDialog } from '../../hooks/useDialog';
 
 interface CashFlowModalProps {
   activeShift: Shift | null;
@@ -37,6 +38,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [flowType, setFlowType] = useState<CashFlowType>('OUT'); // Default: Uang Keluar
   const [amountStr, setAmountStr] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>(DEFAULT_EXPENSE_CATEGORIES[0]);
@@ -96,7 +98,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">

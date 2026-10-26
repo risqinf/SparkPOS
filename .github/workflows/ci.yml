@@ -46,4 +46,12 @@ jobs:
           npm run build
       - name: cargo check
         working-directory: sparkpos-app/src-tauri
-        run: cargo check --locked
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $out = cargo check --locked --message-format=short 2>&1 | ForEach-Object { "$_" }
+          $code = $LASTEXITCODE
+          $out | Select-Object -Last 60 | ForEach-Object { Write-Host $_ }
+          # tampilkan error rustc sebagai annotation agar terbaca di halaman run
+          $out | Where-Object { $_ -match 'error' } | Select-Object -First 8 | ForEach-Object { Write-Host "::error::$_" }
+          exit $code

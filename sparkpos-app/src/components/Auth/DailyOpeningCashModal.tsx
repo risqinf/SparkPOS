@@ -3,6 +3,7 @@ import { Banknote, CheckCircle2, AlertCircle, Clock, ShieldAlert } from 'lucide-
 import { formatRupiah } from '../../services/cartCalculator';
 import { playSuccessBeep } from '../../services/scanner';
 import { formatLocalDateOnly } from '../../services/dateUtils';
+import { useDialog } from '../../hooks/useDialog';
 
 interface DailyOpeningCashModalProps {
   cashierName: string;
@@ -13,6 +14,7 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
   cashierName,
   onSaveOpeningCash,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, () => {});
   const [amountStr, setAmountStr] = useState<string>('200000');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export const DailyOpeningCashModal: React.FC<DailyOpeningCashModalProps> = ({
   }, [amountStr, isSubmitting]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 select-none">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 select-none">
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 border-2 border-emerald-500/40 dark:border-emerald-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-6 bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900/50 flex items-start gap-3.5">

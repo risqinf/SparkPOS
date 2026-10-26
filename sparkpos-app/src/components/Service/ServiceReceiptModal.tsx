@@ -3,6 +3,7 @@ import { X, Printer, Copy, Check, FileText } from 'lucide-react';
 import { ServiceOrder, StoreProfile } from '../../types/pos';
 import { generateServiceReceiptText } from '../../services/printer';
 import { printThermalText, isTauriRuntime, describeOutcome } from '../../services/printService';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ServiceReceiptModalProps {
   order: ServiceOrder;
@@ -15,6 +16,7 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
   storeProfile,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(
     storeProfile.paperWidth === '58mm' ? '58mm' : '80mm'
   );
@@ -46,7 +48,7 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between shrink-0">

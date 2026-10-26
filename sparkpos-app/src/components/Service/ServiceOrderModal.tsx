@@ -27,6 +27,7 @@ import {
 } from '../../types/pos';
 import { db, addServiceOrder, updateServiceOrder, generateServiceTicketNumber } from '../../services/storage';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ServiceOrderModalProps {
   orderToEdit?: ServiceOrder | null;
@@ -41,6 +42,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   onClose,
   onSaved,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const isEditing = !!orderToEdit?.id;
 
   // Form Fields
@@ -281,7 +283,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-hidden">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-hidden">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">

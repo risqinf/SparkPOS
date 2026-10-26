@@ -3,6 +3,7 @@ import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck,
 import { Product, Category, Unit, Supplier, ProductCondition } from '../../types/pos';
 import { db, getSuppliers } from '../../services/storage';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ProductFormModalProps {
   product: Product | null; // null if adding new
@@ -23,6 +24,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const isEditing = !!product;
 
   const [sku, setSku] = useState(product?.sku || `PRD-${Date.now().toString().slice(-4)}`);
@@ -181,7 +183,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">

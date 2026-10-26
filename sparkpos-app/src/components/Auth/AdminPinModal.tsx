@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Lock, AlertCircle, X } from 'lucide-react';
 import { verifyAdminSupervisorPin } from '../../services/storage';
 import { playSuccessBeep, playErrorBeep } from '../../services/scanner';
+import { useDialog } from '../../hooks/useDialog';
 
 interface AdminPinModalProps {
   title?: string;
@@ -16,6 +17,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onCancel);
   const [pin, setPin] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +62,7 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-slate-100 animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">

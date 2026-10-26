@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Percent, Tag, Check } from 'lucide-react';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface DiscountModalProps {
   currentPercent: number;
@@ -17,6 +18,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
   onApply,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [mode, setMode] = useState<'percent' | 'nominal'>(
     currentPercent > 0 ? 'percent' : 'nominal'
   );
@@ -39,7 +41,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">

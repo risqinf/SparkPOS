@@ -4,6 +4,7 @@ import { Transaction, StoreProfile } from '../../types/pos';
 import { generateReceiptText, detectOptimalPaperFormat } from '../../services/printer';
 import { printSaleReceipt, describeOutcome } from '../../services/printService';
 import { PrintableReceipt } from './PrintableReceipt';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ReceiptModalProps {
   transaction: Transaction;
@@ -16,6 +17,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   storeProfile,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [paperFormat, setPaperFormat] = useState<'58mm' | 'A4'>(() => {
     return detectOptimalPaperFormat(transaction, storeProfile.paperWidth);
   });
@@ -57,7 +59,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-5 py-3.5 bg-slate-850 border-b border-slate-800 flex items-center justify-between shrink-0">

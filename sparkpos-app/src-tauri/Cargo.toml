@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "2.4.3"
+version = "2.5.0"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -25,7 +25,7 @@ tauri = { version = "2.12.4", features = [] }
 tauri-plugin-log = "2"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Printing", "Win32_Security"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Printing", "Win32_Security"] }
 
 [profile.release]
 opt-level = 3

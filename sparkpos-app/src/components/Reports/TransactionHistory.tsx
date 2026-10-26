@@ -57,6 +57,7 @@ import {
   formatLocalDateTime,
   formatLocalDateOnly,
 } from '../../services/dateUtils';
+import { useDialog } from '../../hooks/useDialog';
 
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
@@ -137,14 +138,17 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   // Correction Modals State
   const [isEditOpeningCashOpen, setIsEditOpeningCashOpen] = useState(false);
+  const dlgOpeningRef = useDialog<HTMLDivElement>(isEditOpeningCashOpen, () => setIsEditOpeningCashOpen(false));
   const [editOpeningCashValue, setEditOpeningCashValue] = useState<string>('0');
 
   const [transactionToEdit, setTransactionToEdit] = useState<UnifiedTransactionRecord | null>(null);
+  const dlgEditTxRef = useDialog<HTMLDivElement>(!!transactionToEdit, () => setTransactionToEdit(null));
   const [editCustomerName, setEditCustomerName] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('CASH');
   const [editNotes, setEditNotes] = useState<string>('');
 
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const dlgCashRef = useDialog<HTMLDivElement>(isAddExpenseOpen, () => setIsAddExpenseOpen(false));
   const [expenseType, setExpenseType] = useState<'OUT' | 'IN'>('OUT');
   const [expenseAmount, setExpenseAmount] = useState<string>('');
   const [expenseCategory, setExpenseCategory] = useState<string>('Operasional');
@@ -1376,7 +1380,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 1: KOREKSI MODAL AWAL KASIR ================= */}
       {isEditOpeningCashOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgOpeningRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1445,7 +1449,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 2: KOREKSI TRANSAKSI ================= */}
       {transactionToEdit && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgEditTxRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-lg shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1559,7 +1563,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 3: CATAT / KOREKSI ARUS KAS PENGELUARAN ================= */}
       {isAddExpenseOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgCashRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, History, ArrowDownRight, ArrowUpRight, RefreshCw } from 'lucide-react';
 import { StockMovement, Product } from '../../types/pos';
 import { db } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface StockHistoryModalProps {
   product?: Product | null;
@@ -9,6 +10,7 @@ interface StockHistoryModalProps {
 }
 
 export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, onClose }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [movements, setMovements] = useState<StockMovement[]>([]);
 
   const loadMovements = async () => {
@@ -30,7 +32,7 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
   }, [product]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">

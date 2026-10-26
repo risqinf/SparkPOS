@@ -26,6 +26,7 @@ import {
   saveWorkShiftTemplates,
   DEFAULT_WORK_SHIFTS,
 } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface CashierManagementModalProps {
   currentUser: Employee;
@@ -40,6 +41,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   onClose,
   onLogoutAndSwitch,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [activeTab, setActiveTab] = useState<'cashiers' | 'shifts'>('cashiers');
 
   // Cashiers state
@@ -317,7 +319,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-3">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-3">
       <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
         {/* Header with Title and Mode Switcher */}
         <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900 shrink-0">

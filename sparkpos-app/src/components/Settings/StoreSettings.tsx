@@ -47,6 +47,7 @@ import {
   openFolderPicker,
 } from '../../services/databasePathService';
 import { DatabasePathInfo } from '../../types/pos';
+import { useDialog } from '../../hooks/useDialog';
 
 interface StoreSettingsProps {
   storeProfile: StoreProfile;
@@ -72,6 +73,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
   // State untuk Pemindahan Lokasi Database (Drive D: / HDD Kustom)
   const [dbPathInfo, setDbPathInfo] = useState<DatabasePathInfo | null>(null);
   const [isMoveDbModalOpen, setIsMoveDbModalOpen] = useState(false);
+  const dlgMoveDbRef = useDialog<HTMLDivElement>(isMoveDbModalOpen, () => setIsMoveDbModalOpen(false));
   const [targetFolderPath, setTargetFolderPath] = useState('D:\\SparkPOS_Database');
   const [selectedDirHandle, setSelectedDirHandle] = useState<any>(null);
   const [autoCopyData, setAutoCopyData] = useState(true);
@@ -79,6 +81,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
   // State untuk Modal Uninstall & Hapus Total
   const [isUninstallModalOpen, setIsUninstallModalOpen] = useState(false);
+  const dlgUninstallRef = useDialog<HTMLDivElement>(isUninstallModalOpen, () => setIsUninstallModalOpen(false));
   const [uninstallWipeMode, setUninstallWipeMode] = useState<'backup_first' | 'wipe_only'>('backup_first');
   const [uninstallReason, setUninstallReason] = useState('Pindah ke komputer / kasir baru');
   const [customReason, setCustomReason] = useState('');
@@ -1102,7 +1105,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
       {/* MODAL UNINSTALL & HAPUS BERSIH DATABASE */}
       {isUninstallModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div ref={dlgUninstallRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
@@ -1261,7 +1264,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
       {/* MODAL PEMINDAHAN LOKASI DATABASE (DRIVE D: / HDD) */}
       {isMoveDbModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div ref={dlgMoveDbRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">

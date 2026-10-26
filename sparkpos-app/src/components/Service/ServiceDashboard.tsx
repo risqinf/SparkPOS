@@ -40,6 +40,7 @@ import { formatRupiah } from '../../services/cartCalculator';
 import { ServiceOrderModal } from './ServiceOrderModal';
 import { ServiceReceiptModal } from './ServiceReceiptModal';
 import { exportServicesToExcel } from '../../services/excelExport';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ServiceDashboardProps {
   currentUser?: Employee | null;
@@ -64,6 +65,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
   const [selectedOrderToEdit, setSelectedOrderToEdit] = useState<ServiceOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<ServiceOrder | null>(null);
   const [noteModalOrder, setNoteModalOrder] = useState<ServiceOrder | null>(null);
+  const dlgNoteRef = useDialog<HTMLDivElement>(!!noteModalOrder, () => setNoteModalOrder(null));
   const [quickNoteText, setQuickNoteText] = useState('');
 
   const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin';
@@ -700,7 +702,7 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
 
       {/* Quick Note Modal: Teknisi Update Info ke Admin & Kasir */}
       {noteModalOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div ref={dlgNoteRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-850">
               <div className="flex items-center gap-2">
