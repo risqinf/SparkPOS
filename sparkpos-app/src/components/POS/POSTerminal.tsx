@@ -38,6 +38,7 @@ import { PaymentModal } from './PaymentModal';
 import { HoldCartModal } from './HoldCartModal';
 import { DiscountModal } from './DiscountModal';
 import { PrintableReceipt } from './PrintableReceipt';
+import { isDialogOpen } from '../../hooks/useDialog';
 import { printSaleReceipt, kickCashDrawer, isTauriRuntime } from '../../services/printService';
 
 interface POSTerminalProps {
@@ -89,6 +90,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
   // Keyboard navigation & element references
   const [selectedCatalogIndex, setSelectedCatalogIndex] = useState<number>(-1);
+  const [selectedCartId, setSelectedCartId] = useState<number | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const payButtonRef = useRef<HTMLButtonElement>(null);
   const customerNameInputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +186,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     });
 
     playSuccessBeep();
+    setSelectedCartId(product.id);
     showToast(`+${quantity} ${product.name}`);
   };
 
@@ -270,34 +273,86 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     return () => unsubscribe();
   }, []);
 
-  // Keyboard Shortcuts: F1, F4, F6, F8, F9, F10, F12, Alt+1..9
+  // Keyboard shortcuts (standar aplikasi kasir). Semua dinonaktifkan saat dialog/modal terbuka.
+  //  F2 / Ctrl+K / Ctrl+F / "/"  : fokus ke Scan/Cari       F3 : nama pelanggan
+  //  F4 parkir   F6 antrean   F8 diskon   F9 kosongkan   F10 kas   F12 / Ctrl+Enter : bayar
+  //  Ctrl+↑/↓ pilih baris keranjang   +/- (atau Numpad) ubah jumlah   Delete hapus baris
+  //  Esc : hapus pencarian / lepas fokus     Alt+1..9 : kategori
   useEffect(() => {
+    const focusSearch = () => {
+      barcodeInputRef.current?.focus();
+      barcodeInputRef.current?.select();
+    };
+    const moveCartSelection = (dir: 1 | -1) => {
+      if (cartItems.length === 0) return;
+      const idx = cartItems.findIndex((i) => i.productId === selectedCartId);
+      const next = idx < 0 ? (dir === 1 ? 0 : cartItems.length - 1) : Math.min(cartItems.length - 1, Math.max(0, idx + dir));
+      setSelectedCartId(cartItems[next].productId);
+      document.getElementById(`cart-row-${cartItems[next].productId}`)?.scrollIntoView({ block: 'nearest' });
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F1') {
-        e.preventDefault();
-        barcodeInputRef.current?.focus();
-        barcodeInputRef.current?.select();
-      } else if (e.key === 'F4') {
-        e.preventDefault();
-        handleHoldCart();
-      } else if (e.key === 'F6') {
-        e.preventDefault();
-        openHeldModal();
-      } else if (e.key === 'F8') {
-        e.preventDefault();
-        if (cartItems.length > 0) setIsDiscountOpen(true);
-      } else if (e.key === 'F9') {
-        e.preventDefault();
-        clearCart();
-      } else if (e.key === 'F10') {
-        e.preventDefault();
-        if (onOpenCashFlow) {
-          onOpenCashFlow();
-        }
-      } else if (e.key === 'F12') {
+      if (isDialogOpen() || isPaymentOpen || isDiscountOpen || isHeldModalOpen) return;
+      const t = e.target as HTMLElement | null;
+      const inField =
+        !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+      const mod = e.ctrlKey || e.metaKey;
+
+      // Tombol fungsi
+      if (/^F\d+$/.test(e.key) && e.repeat) return;
+      switch (e.key) {
+        case 'F2':
+          e.preventDefault();
+          focusSearch();
+          return;
+        case 'F3':
+          e.preventDefault();
+          customerNameInputRef.current?.focus();
+          return;
+        case 'F4':
+          e.preventDefault();
+          handleHoldCart();
+          return;
+        case 'F6':
+          e.preventDefault();
+          openHeldModal();
+          return;
+        case 'F8':
+          e.preventDefault();
+          if (cartItems.length > 0) setIsDiscountOpen(true);
+          return;
+        case 'F9':
+          e.preventDefault();
+          clearCart();
+          return;
+        case 'F10':
+          e.preventDefault();
+          onOpenCashFlow?.();
+          return;
+        case 'F12':
+          e.preventDefault();
+          if (cartItems.length > 0) setIsPaymentOpen(true);
+          return;
+      }
+
+      if (mod && e.key === 'Enter') {
         e.preventDefault();
         if (cartItems.length > 0) setIsPaymentOpen(true);
-      } else if (e.altKey && e.key >= '1' && e.key <= '9') {
+        return;
+      }
+      if (mod && (e.key === 'k' || e.key === 'K' || e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        focusSearch();
+        return;
+      }
+      if (!inField && !mod && !e.altKey && e.key === '/') {
+        e.preventDefault();
+        focusSearch();
+        return;
+      }
+
+      // Kategori Alt+1..9
+      if (e.altKey && e.key >= '1' && e.key <= '9') {
         e.preventDefault();
         const num = parseInt(e.key, 10);
         if (num === 1) {
@@ -307,12 +362,64 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           setSelectedCategory(categories[num - 2].id);
           showToast(`Kategori: ${categories[num - 2].name}`);
         }
+        return;
+      }
+
+      // Navigasi baris keranjang
+      if (mod && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault();
+        moveCartSelection(e.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+      if (mod && e.key === 'Delete' && selectedCartId !== null) {
+        e.preventDefault();
+        removeItem(selectedCartId);
+        setSelectedCartId(null);
+        return;
+      }
+      const fieldEmpty = !inField || (t as HTMLInputElement)?.value === '';
+      if (selectedCartId !== null && fieldEmpty && !mod && !e.altKey) {
+        if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
+          e.preventDefault();
+          updateItemQuantity(selectedCartId, 1);
+          return;
+        }
+        if (e.key === '-' || e.code === 'NumpadSubtract') {
+          e.preventDefault();
+          updateItemQuantity(selectedCartId, -1);
+          return;
+        }
+        if (e.key === 'Delete' && !inField) {
+          e.preventDefault();
+          removeItem(selectedCartId);
+          setSelectedCartId(null);
+          return;
+        }
+      }
+
+      if (e.key === 'Escape') {
+        if (searchQuery) {
+          e.preventDefault();
+          setSearchQuery('');
+          setSelectedCatalogIndex(-1);
+        } else if (selectedCartId !== null) {
+          setSelectedCartId(null);
+        } else if (inField) {
+          (t as HTMLElement).blur();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cartItems, categories, onOpenCashFlow]);
+  }, [cartItems, categories, onOpenCashFlow, selectedCartId, searchQuery, isPaymentOpen, isDiscountOpen, isHeldModalOpen]);
+
+  // Baris terakhir yang ditambahkan otomatis terpilih; pilihan yang sudah dihapus dilepas
+  useEffect(() => {
+    if (selectedCartId !== null && !cartItems.some((i) => i.productId === selectedCartId)) {
+      setSelectedCartId(cartItems.length > 0 ? cartItems[cartItems.length - 1].productId : null);
+    }
+  }, [cartItems, selectedCartId]);
 
   // Hold / Park Cart
   const handleHoldCart = async () => {
@@ -569,11 +676,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Tab' && !e.shiftKey) {
-                  e.preventDefault();
-                  payButtonRef.current?.focus();
-                  return;
-                }
                 if (e.key === 'ArrowDown') {
                   e.preventDefault();
                   setSelectedCatalogIndex((prev) =>
@@ -603,7 +705,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   }
                 }
               }}
-              placeholder="Scan barcode / ketik nama/SKU... (Cth: 5*Kabel, Enter pilih, Tab ke Bayar)"
+              placeholder="Scan barcode / ketik nama/SKU... (Cth: 5*Kabel | F2 fokus, Enter tambah, Esc hapus)"
               className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner font-medium"
             />
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-2.5" />
@@ -673,7 +775,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               </p>
               {products.length === 0 && (
                 <p className="text-xs text-slate-500 max-w-sm text-center">
-                  Buka tab <strong>Manajemen Stok (F3)</strong> untuk mulai mendaftarkan produk baru atau import katalog toko Anda.
+                  Buka tab <strong>Manajemen Stok (Ctrl+3)</strong> untuk mulai mendaftarkan produk baru atau import katalog toko Anda.
                 </p>
               )}
             </div>
@@ -864,7 +966,13 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             cartItems.map((item) => (
               <div
                 key={item.productId}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 hover:border-slate-300 dark:hover:border-slate-700 transition shadow-2xs"
+                id={`cart-row-${item.productId}`}
+                onClick={() => setSelectedCartId(item.productId)}
+                className={`p-2.5 rounded-xl bg-white dark:bg-slate-950/60 border flex items-center justify-between gap-2.5 transition shadow-2xs cursor-pointer ${
+                  selectedCartId === item.productId
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/40'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
               >
                 {/* Product Info */}
                 <div className="flex-1 min-w-0">
@@ -944,10 +1052,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Tab' && !e.shiftKey) {
-                  e.preventDefault();
-                  payButtonRef.current?.focus();
-                } else if (e.key === 'Tab' && e.shiftKey) {
+                if (e.key === 'Enter') {
                   e.preventDefault();
                   barcodeInputRef.current?.focus();
                 }
@@ -1030,18 +1135,6 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             ref={payButtonRef}
             onClick={() => cartItems.length > 0 && setIsPaymentOpen(true)}
             disabled={cartItems.length === 0}
-            onKeyDown={(e) => {
-              if (e.key === 'Tab') {
-                e.preventDefault();
-                barcodeInputRef.current?.focus();
-                barcodeInputRef.current?.select();
-              } else if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                if (cartItems.length > 0) {
-                  setIsPaymentOpen(true);
-                }
-              }
-            }}
             className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:scale-[1.01] ${
               cartItems.length === 0
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-300 dark:border-slate-700/60 cursor-not-allowed'
@@ -1049,7 +1142,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             }`}
           >
             <CreditCard className="w-4 h-4" />
-            <span>BAYAR SEKARANG [F12 / Tab] — {formatRupiah(cartSummary.grandTotal)}</span>
+            <span>BAYAR SEKARANG [F12] — {formatRupiah(cartSummary.grandTotal)}</span>
           </button>
         </div>
       </div>
@@ -1120,19 +1213,23 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             Shortcut Keyboard:
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F1</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F2</kbd>
             <span>Scan/Cari</span>
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">↑ / ↓</kbd>
-            <span>Pilih Item</span>
+            <span>Pilih Produk</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Ctrl+↑↓ · + − · Del</kbd>
+            <span>Baris Keranjang</span>
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Enter / DblClick</kbd>
             <span>+Keranjang</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 font-mono text-[10px] font-bold">Tab / F12</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 font-mono text-[10px] font-bold">F12 / Ctrl+Enter</kbd>
             <span className="text-emerald-400 font-semibold">Bayar</span>
           </span>
           <span className="flex items-center gap-1">
@@ -1149,11 +1246,15 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F9</kbd>
-            <span>Batal</span>
+            <span>Kosongkan</span>
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F10</kbd>
             <span>Arus Kas</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F1</kbd>
+            <span>Bantuan</span>
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Alt+1..9</kbd>

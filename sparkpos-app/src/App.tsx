@@ -22,6 +22,8 @@ import { DailyOpeningCashModal } from './components/Auth/DailyOpeningCashModal';
 import { CashFlowModal } from './components/POS/CashFlowModal';
 import { ServiceDashboard } from './components/Service/ServiceDashboard';
 import { applyTheme, initThemeListener } from './services/theme';
+import { ShortcutHelp } from './components/ShortcutHelp';
+import { isDialogOpen } from './hooks/useDialog';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -36,6 +38,7 @@ export default function App() {
   const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
   const [isCashFlowOpen, setIsCashFlowOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isCashierManagementOpen, setIsCashierManagementOpen] = useState(false);
   const [isOpeningCashModalOpen, setIsOpeningCashModalOpen] = useState(false);
 
@@ -194,9 +197,16 @@ export default function App() {
     setActiveShift(myOpenShift || null);
   };
 
-  // Global Keyboard Navigation (F1: POS, F3: Stock, F7: Reports, F11: Fullscreen)
+  // Global keyboard: F1 bantuan, Ctrl+1..5 pindah menu, F11 layar penuh.
+  // F5 / Ctrl+R (muat ulang) dan Ctrl+P diblokir agar keranjang tidak hilang & tidak muncul dialog cetak.
   useEffect(() => {
+    const tabs = ['pos', 'service', 'stock', 'reports', 'settings'] as const;
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (e.key === 'F5' || (mod && (e.key === 'r' || e.key === 'R')) || (mod && (e.key === 'p' || e.key === 'P'))) {
+        e.preventDefault();
+        return;
+      }
       if (e.key === 'F11') {
         e.preventDefault();
         if (!document.fullscreenElement) {
@@ -204,26 +214,21 @@ export default function App() {
         } else {
           document.exitFullscreen().catch(() => {});
         }
-      } else if (currentUser) {
-        if (e.key === 'F1') {
-          e.preventDefault();
-          setCurrentTab('pos');
-        } else if (e.key === 'F2') {
-          e.preventDefault();
-          setCurrentTab('service');
-        } else if (e.key === 'F3') {
-          e.preventDefault();
-          setCurrentTab('stock');
-        } else if (e.key === 'F7') {
-          e.preventDefault();
-          setCurrentTab('reports');
-        }
+        return;
+      }
+      if (!currentUser || (isDialogOpen() && !isHelpOpen)) return;
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setIsHelpOpen((v) => !v);
+      } else if (mod && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '5') {
+        e.preventDefault();
+        setCurrentTab(tabs[parseInt(e.key, 10) - 1]);
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [currentUser]);
+  }, [currentUser, isHelpOpen]);
 
   if (!isReady) {
     return (
@@ -330,6 +335,8 @@ export default function App() {
       )}
 
       {/* Arus Kas: Uang Masuk / Keluar Modal */}
+      {isHelpOpen && <ShortcutHelp onClose={() => setIsHelpOpen(false)} />}
+
       {isCashFlowOpen && activeShift && currentUser && (
         <CashFlowModal
           activeShift={activeShift}

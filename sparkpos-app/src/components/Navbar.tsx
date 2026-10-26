@@ -134,12 +134,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Terminal Kasir Penjualan (F1)"
+            title="Terminal Kasir Penjualan (Ctrl+1)"
           >
             <ShoppingCart className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Kasir</span>
             <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
-              F1
+              Ctrl+1
             </kbd>
           </button>
 
@@ -151,12 +151,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Kelola Servis Komputer, Laptop & Printer (F2)"
+            title="Kelola Servis Komputer, Laptop & Printer (Ctrl+2)"
           >
             <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>Service</span>
             <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
-              F2
+              Ctrl+2
             </kbd>
           </button>
 
@@ -168,12 +168,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Katalog Produk, Stok & Sparepart (F3)"
+            title="Katalog Produk, Stok & Sparepart (Ctrl+3)"
           >
             <Boxes className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
             <span>Stok</span>
             <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
-              F3
+              Ctrl+3
             </kbd>
           </button>
 
@@ -185,12 +185,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-xs border border-slate-200 dark:border-zinc-700'
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-900'
             }`}
-            title="Laporan Keuangan, Omset, Laba Bersih & Riwayat Transaksi Lengkap (F7)"
+            title="Laporan Keuangan, Omset, Laba Bersih & Riwayat Transaksi Lengkap (Ctrl+4)"
           >
             <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
             <span>Laporan Keuangan</span>
             <kbd className="hidden xl:inline-block px-1 py-0.2 text-[8px] bg-slate-200 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-400 font-mono">
-              F7
+              Ctrl+4
             </kbd>
           </button>
 
