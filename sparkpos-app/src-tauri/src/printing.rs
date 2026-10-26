@@ -51,11 +51,11 @@ mod platform {
   use super::PrinterInfo;
   use std::ffi::c_void;
   use std::ptr;
-  use windows_sys::Win32::Foundation::{GetLastError, HANDLE};
+  use windows_sys::Win32::Foundation::GetLastError;
   use windows_sys::Win32::Graphics::Printing::{
     ClosePrinter, EndDocPrinter, EndPagePrinter, EnumPrintersW, GetDefaultPrinterW, OpenPrinterW,
     SetDefaultPrinterW, StartDocPrinterW, StartPagePrinter, WritePrinter, DOC_INFO_1W,
-    PRINTER_ENUM_CONNECTIONS, PRINTER_ENUM_LOCAL, PRINTER_INFO_4W,
+    PRINTER_ENUM_CONNECTIONS, PRINTER_ENUM_LOCAL, PRINTER_HANDLE, PRINTER_INFO_4W,
   };
 
   fn wide(s: &str) -> Vec<u16> {
@@ -146,7 +146,7 @@ mod platform {
   pub fn print_raw(printer: &str, data: &[u8]) -> Result<(), String> {
     unsafe {
       let name = wide(printer);
-      let mut handle: HANDLE = ptr::null_mut();
+      let mut handle: PRINTER_HANDLE = std::mem::zeroed();
       if OpenPrinterW(name.as_ptr(), &mut handle, ptr::null()) == 0 {
         return Err(format!(
           "Printer \"{}\" tidak bisa dibuka (kode {}). Pastikan printer menyala & terpasang.",
