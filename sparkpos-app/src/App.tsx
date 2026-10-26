@@ -281,6 +281,7 @@ export default function App() {
             currentUser={currentUser}
             onLogout={handleLogout}
             onOpenCashierManagement={() => setIsCashierManagementOpen(true)}
+            onOpenCashFlow={() => setIsCashFlowOpen(true)}
           />
         )}
 

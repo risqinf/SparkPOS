@@ -50,6 +50,7 @@ interface POSTerminalProps {
   currentUser?: Employee | null;
   onLogout?: () => void;
   onOpenCashierManagement?: () => void;
+  onOpenCashFlow?: () => void;
 }
 
 export const POSTerminal: React.FC<POSTerminalProps> = ({
@@ -63,6 +64,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   currentUser,
   onLogout,
   onOpenCashierManagement,
+  onOpenCashFlow,
 }) => {
   // Catalog State
   const [products, setProducts] = useState<Product[]>([]);
@@ -216,27 +218,46 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     }
   };
 
-  // Handle Barcode Scanned (both from hardware scanner & manual submit)
+  // Handle Barcode Scanned (supports multiplier quantity e.g. "5*barcode", "3*kabel", "10*SKU")
   const handleBarcodeLookup = async (code: string) => {
     const trimmed = code.trim();
     if (!trimmed) return;
 
-    let found = await db.products.where('barcode').equals(trimmed).first();
+    let targetQty = 1;
+    let targetCode = trimmed;
+
+    // Check for multiplier format like 5*89999 or 3*laptop
+    const multMatch = trimmed.match(/^(\d+)[*xX](.*)$/);
+    if (multMatch) {
+      const parsedQty = parseInt(multMatch[1], 10);
+      if (parsedQty > 0) {
+        targetQty = parsedQty;
+        targetCode = multMatch[2].trim();
+      }
+    }
+
+    if (!targetCode) {
+      showToast('Ketik kode atau nama produk setelah tanda * (contoh: 5*Kabel)', 'error');
+      return;
+    }
+
+    let found = await db.products.where('barcode').equals(targetCode).first();
     if (!found) {
-      found = await db.products.where('sku').equalsIgnoreCase(trimmed).first();
+      found = await db.products.where('sku').equalsIgnoreCase(targetCode).first();
     }
     if (!found) {
       found = await db.products
-        .filter((p) => p.name.toLowerCase().includes(trimmed.toLowerCase()))
+        .filter((p) => p.name.toLowerCase().includes(targetCode.toLowerCase()))
         .first();
     }
 
     if (found) {
-      addToCart(found, 1);
+      addToCart(found, targetQty);
       setSearchQuery('');
+      setSelectedCatalogIndex(-1);
     } else {
       playErrorBeep();
-      showToast(`Produk dengan kode "${trimmed}" tidak ditemukan!`, 'error');
+      showToast(`Produk "${targetCode}" tidak ditemukan!`, 'error');
     }
   };
 
@@ -248,7 +269,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     return () => unsubscribe();
   }, []);
 
-  // Keyboard Shortcuts: F1, F4, F6, F8, F12
+  // Keyboard Shortcuts: F1, F4, F6, F8, F9, F10, F12, Alt+1..9
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F1') {
@@ -264,15 +285,33 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       } else if (e.key === 'F8') {
         e.preventDefault();
         if (cartItems.length > 0) setIsDiscountOpen(true);
+      } else if (e.key === 'F9') {
+        e.preventDefault();
+        clearCart();
+      } else if (e.key === 'F10') {
+        e.preventDefault();
+        if (onOpenCashFlow) {
+          onOpenCashFlow();
+        }
       } else if (e.key === 'F12') {
         e.preventDefault();
         if (cartItems.length > 0) setIsPaymentOpen(true);
+      } else if (e.altKey && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        const num = parseInt(e.key, 10);
+        if (num === 1) {
+          setSelectedCategory(null);
+          showToast('Kategori: Semua Produk');
+        } else if (categories[num - 2]) {
+          setSelectedCategory(categories[num - 2].id);
+          showToast(`Kategori: ${categories[num - 2].name}`);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cartItems]);
+  }, [cartItems, categories, onOpenCashFlow]);
 
   // Hold / Park Cart
   const handleHoldCart = async () => {
@@ -539,13 +578,20 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   e.preventDefault();
                   if (selectedCatalogIndex >= 0 && selectedCatalogIndex < filteredProducts.length) {
                     const selectedProd = filteredProducts[selectedCatalogIndex];
-                    addToCart(selectedProd, 1);
+                    let qty = 1;
+                    const match = searchQuery.match(/^(\d+)[*xX]/);
+                    if (match) {
+                      const q = parseInt(match[1], 10);
+                      if (q > 0) qty = q;
+                    }
+                    addToCart(selectedProd, qty);
+                    setSearchQuery('');
                   } else {
                     handleBarcodeLookup(searchQuery);
                   }
                 }
               }}
-              placeholder="Scan barcode atau ketik nama/SKU... (↓/↑ navigasi, Enter pilih, Tab ke Bayar)"
+              placeholder="Scan barcode / ketik nama/SKU... (Cth: 5*Kabel, Enter pilih, Tab ke Bayar)"
               className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner font-medium"
             />
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-2.5" />
@@ -562,33 +608,42 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           )}
         </div>
 
-        {/* Category Filter Pills (Horizontal Scroll) */}
+        {/* Category Filter Pills (Horizontal Scroll with Alt+1..9 Shortcuts) */}
         <div className="flex items-center gap-1.5 pb-2 mb-2 overflow-x-auto no-scrollbar shrink-0">
           <button
             tabIndex={-1}
             onClick={() => setSelectedCategory(null)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
               selectedCategory === null
                 ? 'bg-slate-900 dark:bg-slate-800 border border-slate-900 dark:border-slate-700 text-white shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200'
             }`}
           >
-            Semua Produk ({products.length})
+            <span>Semua Produk ({products.length})</span>
+            <span className="text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-black/30 font-mono opacity-70">
+              Alt+1
+            </span>
           </button>
-          {categories.map((cat) => {
+          {categories.map((cat, cIdx) => {
             const count = products.filter((p) => p.categoryId === cat.id).length;
+            const shortcutNum = cIdx + 2;
             return (
               <button
                 tabIndex={-1}
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
                   selectedCategory === cat.id
                     ? 'bg-slate-900 dark:bg-slate-800 border border-slate-900 dark:border-slate-700 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200'
                 }`}
               >
-                {cat.name} ({count})
+                <span>{cat.name} ({count})</span>
+                {shortcutNum <= 9 && (
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-black/10 dark:bg-black/30 font-mono opacity-70">
+                    Alt+{shortcutNum}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -634,13 +689,27 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                       <tr
                         key={p.id}
                         id={`catalog-row-${idx}`}
-                        onClick={() => !isOutOfStock && addToCart(p, 1)}
+                        onClick={() => {
+                          // Klik biasa HANYA menyorot / memilih baris, TIDAK langsung menambahkan ke keranjang
+                          setSelectedCatalogIndex(idx);
+                        }}
+                        onDoubleClick={() => {
+                          // Double click untuk menambahkan ke keranjang secara aman
+                          if (!isOutOfStock) {
+                            addToCart(p, 1);
+                          }
+                        }}
+                        title={
+                          isOutOfStock
+                            ? 'Stok Habis'
+                            : 'Klik untuk memilih baris. Double-click atau tekan Enter untuk masukkan ke keranjang'
+                        }
                         className={`transition group cursor-pointer ${
                           isHighlighted
                             ? 'ring-2 ring-emerald-500 bg-emerald-100 dark:bg-emerald-950/80 font-bold'
                             : isOutOfStock
                             ? 'opacity-40 bg-slate-50/50 dark:bg-slate-950/40 cursor-not-allowed'
-                            : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/60'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800/60'
                         }`}
                       >
                         <td className="py-2.5 px-3 font-mono font-bold text-xs text-slate-800 dark:text-slate-200 whitespace-nowrap">
@@ -1031,6 +1100,59 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           />
         </div>
       )}
+
+      {/* Keyboard Shortcut Ribbon for Cashier & Admin Fast Productivity */}
+      <div className="bg-slate-900 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0 select-none overflow-x-auto no-scrollbar gap-2">
+        <div className="flex items-center gap-2.5 whitespace-nowrap">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mr-1">
+            Shortcut Keyboard:
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F1</kbd>
+            <span>Scan/Cari</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">↑ / ↓</kbd>
+            <span>Pilih Item</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Enter / DblClick</kbd>
+            <span>+Keranjang</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 font-mono text-[10px] font-bold">Tab / F12</kbd>
+            <span className="text-emerald-400 font-semibold">Bayar</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F4</kbd>
+            <span>Parkir</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F6</kbd>
+            <span>Antrean</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F8</kbd>
+            <span>Diskon</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F9</kbd>
+            <span>Batal</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F10</kbd>
+            <span>Arus Kas</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Alt+1..9</kbd>
+            <span>Kategori</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Qty*</kbd>
+            <span>Jumlah Banyak (Cth: 5*Kabel)</span>
+          </span>
+        </div>
+      </div>
     </div>
   );
 };

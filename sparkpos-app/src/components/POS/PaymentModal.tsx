@@ -138,6 +138,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onClose();
       } else if (e.key === 'Enter' && !isUnderpaid && !isSubmitting) {
         handleComplete();
+      } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        handleSelectMethod('CASH');
+      } else if (e.altKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        handleSelectMethod('TRANSFER');
+      } else if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        handleTogglePrint('58mm');
+      } else if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        handleTogglePrint('A4');
+      } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        setSelectedPrint(null);
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -199,27 +214,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleSelectMethod('CASH')}
-                className={`flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
+                className={`flex items-center justify-between p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
                   selectedMethod === 'CASH'
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-md shadow-emerald-600/10'
                     : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
                 }`}
               >
-                <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span>💵 Tunai (Cash)</span>
+                <div className="flex items-center gap-2">
+                  <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <span>💵 Tunai (Cash)</span>
+                </div>
+                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-mono">
+                  Alt+C
+                </kbd>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectMethod('TRANSFER')}
-                className={`flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
+                className={`flex items-center justify-between p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
                   selectedMethod === 'TRANSFER'
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-md shadow-emerald-600/10'
                     : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
                 }`}
               >
-                <Building2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span>🏦 Transfer Bank</span>
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <span>🏦 Transfer Bank</span>
+                </div>
+                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 font-mono">
+                  Alt+T
+                </kbd>
               </button>
             </div>
           </div>
@@ -328,27 +353,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleTogglePrint('58mm')}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer ${
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-1.5 border cursor-pointer ${
                   selectedPrint === '58mm'
                     ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30'
                     : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                <span>⚡ Print 58mm (Thermal)</span>
-                {selectedPrint === '58mm' && <CheckCircle2 className="w-4 h-4 text-white" />}
+                <div className="flex items-center gap-1.5">
+                  <span>⚡ Print 58mm</span>
+                  {selectedPrint === '58mm' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <kbd className="text-[9px] px-1 py-0.2 rounded bg-black/15 font-mono">
+                  Alt+1
+                </kbd>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleTogglePrint('A4')}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer ${
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-1.5 border cursor-pointer ${
                   selectedPrint === 'A4'
                     ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30'
                     : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                <span>📄 Print A4 / F4 (Faktur)</span>
-                {selectedPrint === 'A4' && <CheckCircle2 className="w-4 h-4 text-white" />}
+                <div className="flex items-center gap-1.5">
+                  <span>📄 Print A4 / F4</span>
+                  {selectedPrint === 'A4' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <kbd className="text-[9px] px-1 py-0.2 rounded bg-black/15 font-mono">
+                  Alt+2
+                </kbd>
               </button>
             </div>
 
