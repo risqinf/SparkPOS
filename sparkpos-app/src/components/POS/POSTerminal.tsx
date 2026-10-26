@@ -38,6 +38,7 @@ import { PaymentModal } from './PaymentModal';
 import { HoldCartModal } from './HoldCartModal';
 import { DiscountModal } from './DiscountModal';
 import { PrintableReceipt } from './PrintableReceipt';
+import { printSaleReceipt, kickCashDrawer, isTauriRuntime } from '../../services/printService';
 
 interface POSTerminalProps {
   storeProfile: StoreProfile;
@@ -447,21 +448,32 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       setOrderDiscountNominal(0);
       setIsPaymentOpen(false);
 
-      // Direct Silent Print without Preview Modal
+      // Cetak langsung tanpa dialog sesuai format yang dipilih di jendela pembayaran
+      const paidCash = payments.some((p) => p.method === 'CASH');
+      const kick = !!storeProfile.autoKickDrawer && paidCash;
+
       if (printFormat) {
-        if (storeProfile.autoKickDrawer) {
-          playCashDrawerKickSound();
+        if (kick) playCashDrawerKickSound();
+        const needsDom = printFormat === 'A4' || !isTauriRuntime();
+        if (needsDom) setDirectPrintJob({ tx: newTx, format: printFormat });
+        showToast(
+          `Transaksi ${invoiceNumber} berhasil! Mencetak ${printFormat === 'A4' ? 'faktur A4' : 'struk 58mm'}...`,
+          'success'
+        );
+        // beri waktu elemen cetak tampil sebelum dikirim ke printer
+        if (needsDom) await new Promise((r) => setTimeout(r, 150));
+        const outcome = await printSaleReceipt(newTx, storeProfile, printFormat, kick);
+        if (!outcome.ok) {
+          playErrorBeep();
+          showToast(`Transaksi tersimpan, tetapi cetak gagal: ${outcome.error}`, 'error');
         }
-        setDirectPrintJob({ tx: newTx, format: printFormat });
-        showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak nota (${printFormat})...`, 'success');
-        setTimeout(() => {
-          window.print();
-          setTimeout(() => {
-            setDirectPrintJob(null);
-            barcodeInputRef.current?.focus();
-          }, 500);
-        }, 150);
+        if (needsDom) setTimeout(() => setDirectPrintJob(null), 2500);
+        barcodeInputRef.current?.focus();
       } else {
+        if (kick) {
+          playCashDrawerKickSound();
+          kickCashDrawer(storeProfile);
+        }
         showToast(`Transaksi ${invoiceNumber} Berhasil Disimpan (Mode Nota Manual / Tanpa Struk)`, 'success');
         barcodeInputRef.current?.focus();
       }

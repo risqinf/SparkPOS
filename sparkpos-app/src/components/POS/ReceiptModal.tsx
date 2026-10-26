@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { X, Printer, Copy, Check, FileText, ShieldCheck } from 'lucide-react';
 import { Transaction, StoreProfile } from '../../types/pos';
-import {
-  generateReceiptText,
-  printReceiptSilent,
-  detectOptimalPaperFormat,
-} from '../../services/printer';
+import { generateReceiptText, detectOptimalPaperFormat } from '../../services/printer';
+import { printSaleReceipt, describeOutcome } from '../../services/printService';
 import { PrintableReceipt } from './PrintableReceipt';
 
 interface ReceiptModalProps {
@@ -32,8 +29,19 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   const receiptText = generateReceiptText(transaction, activeProfile);
 
-  const handlePrint = () => {
-    printReceiptSilent(transaction, { ...storeProfile, paperWidth: paperFormat === 'A4' ? 'A4' : '58mm' });
+  const [printStatus, setPrintStatus] = useState<{ text: string; ok: boolean } | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = async () => {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    setPrintStatus(null);
+    const outcome = await printSaleReceipt(transaction, storeProfile, paperFormat, false);
+    setPrintStatus({
+      text: describeOutcome(outcome, paperFormat === 'A4' ? 'faktur A4' : 'struk 58mm'),
+      ok: outcome.ok,
+    });
+    setIsPrinting(false);
   };
 
   const handleCopy = () => {
@@ -138,6 +146,11 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           </button>
 
           <div className="flex items-center gap-2">
+            {printStatus && (
+              <span className={`text-[11px] font-semibold max-w-[260px] truncate ${printStatus.ok ? 'text-emerald-400' : 'text-rose-400'}`} title={printStatus.text}>
+                {printStatus.text}
+              </span>
+            )}
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-750 font-bold text-xs transition cursor-pointer"
@@ -147,6 +160,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
             <button
               onClick={handlePrint}
+              disabled={isPrinting}
               className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition shadow-lg shadow-emerald-950/40 cursor-pointer"
             >
               <Printer className="w-4 h-4" />

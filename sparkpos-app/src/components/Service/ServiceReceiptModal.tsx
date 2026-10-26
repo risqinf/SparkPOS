@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer, Copy, Check, FileText } from 'lucide-react';
 import { ServiceOrder, StoreProfile } from '../../types/pos';
 import { generateServiceReceiptText } from '../../services/printer';
+import { printThermalText, isTauriRuntime, describeOutcome } from '../../services/printService';
 
 interface ServiceReceiptModalProps {
   order: ServiceOrder;
@@ -26,8 +27,16 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
 
   const receiptText = generateServiceReceiptText(order, activeProfile);
 
-  const handlePrint = () => {
-    window.print();
+  const [printStatus, setPrintStatus] = useState<{ text: string; ok: boolean } | null>(null);
+
+  const handlePrint = async () => {
+    setPrintStatus(null);
+    if (!isTauriRuntime()) {
+      window.print();
+      return;
+    }
+    const outcome = await printThermalText(receiptText, storeProfile);
+    setPrintStatus({ text: describeOutcome(outcome, 'nota servis'), ok: outcome.ok });
   };
 
   const handleCopy = () => {
@@ -106,6 +115,11 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
           </button>
 
           <div className="flex items-center gap-2">
+            {printStatus && (
+              <span className={`text-[11px] font-semibold max-w-[200px] truncate ${printStatus.ok ? 'text-emerald-400' : 'text-rose-400'}`} title={printStatus.text}>
+                {printStatus.text}
+              </span>
+            )}
             <button
               onClick={onClose}
               className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-semibold transition"

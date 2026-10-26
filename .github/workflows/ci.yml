@@ -1,0 +1,49 @@
+name: CI
+
+# Memeriksa setiap branch/PR: typecheck + build frontend, lalu cargo check di Windows
+# (kode cetak langsung memakai API Windows sehingga harus dikompilasi di Windows).
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: sparkpos-app/package-lock.json
+      - name: Install
+        working-directory: sparkpos-app
+        run: npm ci
+      - name: Typecheck
+        working-directory: sparkpos-app
+        run: npx tsc --noEmit
+      - name: Build
+        working-directory: sparkpos-app
+        run: npm run build
+
+  rust-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: sparkpos-app/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build frontend (dibutuhkan tauri::generate_context!)
+        working-directory: sparkpos-app
+        run: |
+          npm ci
+          npm run build
+      - name: cargo check
+        working-directory: sparkpos-app/src-tauri
+        run: cargo check --locked

@@ -1,6 +1,5 @@
 import { Transaction, StoreProfile } from '../types/pos';
 import { formatRupiah } from './cartCalculator';
-import { playCashDrawerKickSound } from './scanner';
 
 /**
  * Menghitung tanggal berakhirnya masa garansi unit secara presisi
@@ -208,16 +207,6 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
   lines.push('');
 
   return lines.join('\n');
-}
-
-export function printReceiptSilent(tx: Transaction, profile: StoreProfile) {
-  // If kick drawer enabled, play simulated drawer sound and command
-  if (profile.autoKickDrawer) {
-    playCashDrawerKickSound();
-  }
-
-  // Trigger browser print dialog styled specifically for thermal printer
-  window.print();
 }
 
 /**

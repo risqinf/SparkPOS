@@ -24,7 +24,17 @@ import {
 } from 'lucide-react';
 import { StoreProfile, Employee } from '../../types/pos';
 import { updateStoreProfile, db } from '../../services/storage';
-import { printReceiptSilent } from '../../services/printer';
+import {
+  printSaleReceipt,
+  listPrinters,
+  suggestPrinters,
+  isVirtualPrinter,
+  isTauriRuntime,
+  describeOutcome,
+  PrinterInfo,
+} from '../../services/printService';
+import { PrintableReceipt } from '../POS/PrintableReceipt';
+import { Transaction } from '../../types/pos';
 import {
   saveDatabaseToFile,
   importDatabaseFromJson,
@@ -77,6 +87,23 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
   const isAdmin = currentUser?.role === 'owner' || currentUser?.role === 'admin';
 
+  // Deteksi printer terpasang (hanya di aplikasi desktop)
+  const [printers, setPrinters] = useState<PrinterInfo[]>([]);
+  const [isScanningPrinters, setIsScanningPrinters] = useState(false);
+  const [printMessage, setPrintMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [testPrintJob, setTestPrintJob] = useState<{ tx: Transaction; format: '58mm' | 'A4' } | null>(null);
+  const suggestedPrinters = suggestPrinters(printers);
+
+  const refreshPrinters = async () => {
+    setIsScanningPrinters(true);
+    setPrinters(await listPrinters());
+    setIsScanningPrinters(false);
+  };
+
+  React.useEffect(() => {
+    refreshPrinters();
+  }, []);
+
   // Load database path info saat mount
   React.useEffect(() => {
     getCurrentDatabasePathInfo().then((info) => {
@@ -128,19 +155,19 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
     setTimeout(() => setIsSaved(false), 2500);
   };
 
-  const handleTestPrint = () => {
+  const handleTestPrint = async (format: '58mm' | 'A4') => {
     const dummyTx = {
       id: 9999,
       invoiceNumber: 'TEST-PRINTER-001',
       shiftId: 1,
       cashierId: 1,
-      cashierName: 'Teknisi Kasir',
+      cashierName: 'Uji Coba',
       subtotal: 15000,
       discountOrderAmount: 0,
-      taxAmount: 1650,
-      grandTotal: 16650,
+      taxAmount: 0,
+      grandTotal: 15000,
       paidAmount: 20000,
-      changeAmount: 3350,
+      changeAmount: 5000,
       paymentMethod: 'CASH',
       payments: [{ method: 'CASH' as any, amount: 20000 }],
       items: [
@@ -148,7 +175,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           productId: 1,
           sku: 'TEST-01',
           barcode: '899999900101',
-          name: 'Item Uji Coba Printer Kasir',
+          name: 'Item Uji Coba Printer',
           unitName: 'PCS',
           buyPrice: 10000,
           unitPrice: 15000,
@@ -159,8 +186,20 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
       ],
       status: 'COMPLETED' as any,
       createdAt: new Date().toISOString(),
-    };
-    printReceiptSilent(dummyTx, profile);
+    } as Transaction;
+
+    setPrintMessage(null);
+    const needsDom = format === 'A4' || !isTauriRuntime();
+    if (needsDom) {
+      setTestPrintJob({ tx: dummyTx, format });
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    const outcome = await printSaleReceipt(dummyTx, profile, format, false);
+    setPrintMessage({
+      text: describeOutcome(outcome, format === 'A4' ? 'faktur uji A4' : 'struk uji 58mm'),
+      ok: outcome.ok,
+    });
+    if (needsDom) setTimeout(() => setTestPrintJob(null), 2500);
   };
 
   const handleSaveDatabaseToFolder = async () => {
@@ -590,13 +629,113 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   3. Hardware Printer Kasir & Laci Uang (Thermal ESC/POS)
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={handleTestPrint}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
-              >
-                Uji Cetak Struk (Test Print)
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleTestPrint('58mm')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
+                >
+                  Uji Struk 58mm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTestPrint('A4')}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
+                >
+                  Uji Faktur A4
+                </button>
+              </div>
+            </div>
+
+            {/* Pemilihan printer: dicetak langsung tanpa dialog */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-200">Printer untuk cetak otomatis</p>
+                  <p className="text-[11px] text-slate-500">
+                    {isTauriRuntime()
+                      ? `${printers.length} printer terdeteksi. Struk dan faktur akan langsung tercetak ke printer pilihan tanpa menampilkan menu print.`
+                      : 'Mode browser: deteksi printer hanya tersedia di aplikasi desktop SparkPOS. Cetak memakai dialog bawaan browser.'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={refreshPrinters}
+                  disabled={isScanningPrinters}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition disabled:opacity-50 shrink-0"
+                >
+                  {isScanningPrinters ? 'Mendeteksi...' : 'Deteksi Ulang'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Printer Struk Thermal 58mm
+                  </label>
+                  <select
+                    disabled={!isAdmin}
+                    value={profile.thermalPrinterName || ''}
+                    onChange={(e) => setProfile({ ...profile, thermalPrinterName: e.target.value || undefined })}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  >
+                    <option value="">
+                      {suggestedPrinters.thermal
+                        ? `Otomatis (terdeteksi: ${suggestedPrinters.thermal})`
+                        : 'Otomatis (belum ada printer thermal terdeteksi)'}
+                    </option>
+                    {printers.map((p) => (
+                      <option key={p.name} value={p.name} disabled={isVirtualPrinter(p.name)}>
+                        {p.name}
+                        {p.isDefault ? ' (default Windows)' : ''}
+                        {isVirtualPrinter(p.name) ? ' - printer virtual' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Printer Faktur A4 / F4
+                  </label>
+                  <select
+                    disabled={!isAdmin}
+                    value={profile.a4PrinterName || ''}
+                    onChange={(e) => setProfile({ ...profile, a4PrinterName: e.target.value || undefined })}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  >
+                    <option value="">
+                      {suggestedPrinters.a4
+                        ? `Otomatis (terdeteksi: ${suggestedPrinters.a4})`
+                        : 'Otomatis (belum ada printer A4 terdeteksi)'}
+                    </option>
+                    {printers.map((p) => (
+                      <option key={p.name} value={p.name} disabled={isVirtualPrinter(p.name)}>
+                        {p.name}
+                        {p.isDefault ? ' (default Windows)' : ''}
+                        {isVirtualPrinter(p.name) ? ' - printer virtual' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">
+                <input
+                  type="checkbox"
+                  disabled={!isAdmin}
+                  checked={!!profile.thermalAutoCut}
+                  onChange={(e) => setProfile({ ...profile, thermalAutoCut: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
+                />
+                <span>Printer thermal punya pemotong kertas otomatis (auto-cutter)</span>
+              </label>
+
+              {printMessage && (
+                <p className={`text-xs font-semibold ${printMessage.ok ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {printMessage.text}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-5">
@@ -1263,6 +1402,13 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Elemen cetak tersembunyi untuk uji faktur A4 */}
+      {testPrintJob && (
+        <div className="hidden print:block">
+          <PrintableReceipt transaction={testPrintJob.tx} storeProfile={profile} paperFormat={testPrintJob.format} />
         </div>
       )}
     </div>
