@@ -3,6 +3,7 @@ import { X, ArrowDownRight, ArrowUpRight, DollarSign, Tag, FileText, CheckCircle
 import { formatRupiah } from '../../services/cartCalculator';
 import { addCashFlow } from '../../services/storage';
 import { CashFlowType, Shift, Employee } from '../../types/pos';
+import { CASH_OUT_CATEGORIES, CASH_IN_CATEGORIES, noteExample } from '../../services/cashCategories';
 import { useDialog } from '../../hooks/useDialog';
 
 interface CashFlowModalProps {
@@ -13,23 +14,8 @@ interface CashFlowModalProps {
   onSuccess?: (message: string) => void;
 }
 
-const DEFAULT_EXPENSE_CATEGORIES = [
-  'Beli Unit Laptop / Hardware dari Pelanggan (Kas Keluar)',
-  'Pembelian Stok Laptop / Sparepart dari Distributor',
-  'Beli Makan / Minum Kasir',
-  'Pengamen / Keamanan / Sampah',
-  'Operasional & ATK Kasir',
-  'Bensin / Transportasi Toko',
-  'Kebersihan & Perlengkapan',
-  'Lain-lain',
-];
-
-const DEFAULT_INCOME_CATEGORIES = [
-  'Tambah Modal Kas Laci',
-  'Pemasukan Non-Penjualan',
-  'Setoran Titipan',
-  'Lain-lain',
-];
+const DEFAULT_EXPENSE_CATEGORIES = CASH_OUT_CATEGORIES;
+const DEFAULT_INCOME_CATEGORIES = CASH_IN_CATEGORIES;
 
 export const CashFlowModal: React.FC<CashFlowModalProps> = ({
   activeShift,
@@ -130,7 +116,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
               }`}
             >
               <ArrowDownRight className="w-4 h-4" />
-              <span>Uang Keluar (Beli Makan, Pengamen, dll)</span>
+              <span>Uang Keluar (Biaya / Beli Barang)</span>
             </button>
 
             <button
@@ -223,7 +209,7 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
                 type="text"
                 value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
-                placeholder="Contoh: Titip Fotokopi Struk / Beli Air Galon"
+                placeholder="Contoh: Biaya cetak banner / Beli air galon"
                 className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
@@ -232,13 +218,13 @@ export const CashFlowModal: React.FC<CashFlowModalProps> = ({
           {/* Note / Remarks */}
           <div>
             <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
-              Catatan / Keterangan Tambahan
+              Keterangan
             </label>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Contoh: Beli nasi padang kasir siang / Uang keamanan bulanan"
+              placeholder={noteExample(flowType)}
               className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
             />
           </div>

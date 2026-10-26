@@ -230,7 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenCashFlow}
               className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 hover:bg-slate-200 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 text-xs font-medium transition shrink-0"
-              title="Catat Uang Masuk / Keluar (Operasional, Beli Makan, dll)"
+              title="Catat Uang Kas Masuk / Keluar (F10)"
             >
               <ArrowDownUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden md:inline">Uang Kas</span>
