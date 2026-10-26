@@ -70,3 +70,25 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 ### 5. Manajemen Shift & Rekonsiliasi Kas
 * **Buka / Tutup Shift:** Catat modal awal laci kasir.
 * **Rekonsiliasi Kasir:** Perhitungan otomatis uang tunai yang seharusnya ada di laci vs uang fisik riil, menampilkan selisih kas (Pas, Kas Lebih, atau Kas Minus).
+
+
+## Catatan Rilis v2.5.0
+
+**Cetak otomatis tanpa dialog**
+- Pengaturan > Printer Kasir: pilih printer thermal 58mm dan printer A4/F4 (terdeteksi otomatis dari Windows).
+- Struk 58mm dikirim langsung sebagai ESC/POS ke printer pilihan (juga membuka laci uang untuk pembayaran tunai).
+- Faktur A4/F4 dicetak senyap ke printer A4 pilihan (WebView2 `--kiosk-printing`; printer default Windows diganti sementara lalu dikembalikan).
+- Tersedia tombol Uji Struk 58mm dan Uji Faktur A4.
+
+**Keyboard** (tekan `F1` di aplikasi untuk daftar lengkap)
+- `Ctrl+1..5` pindah menu, `F2`/`Ctrl+K`/`/` fokus ke Scan/Cari, `F12`/`Ctrl+Enter` bayar, `Esc` tutup/hapus pencarian.
+- `Tab` kembali berpindah kolom seperti biasa; semua modal punya Esc, focus trap, dan mengembalikan fokus.
+- Keranjang: `Ctrl+Up/Down` pilih baris, `+`/`-` ubah jumlah, `Delete` hapus.
+- Shortcut kasir tidak aktif saat jendela/modal terbuka; `F5`/`Ctrl+R`/`Ctrl+P` diblokir agar keranjang tidak hilang.
+
+**Laporan**
+- Uang kas masuk/keluar kini tampil di Riwayat Transaksi (dapat dikoreksi/dihapus) dan tidak dihitung sebagai omset.
+- Unduh Laporan: Kas Harian, Keuntungan, dan Pembelian dalam format buku toko (sheet per bulan, total/profit/rata-rata berupa rumus Excel).
+
+**Tampilan**
+- Semua modal dan halaman memakai pasangan warna terang/gelap yang konsisten.
