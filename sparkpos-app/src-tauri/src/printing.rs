@@ -163,7 +163,7 @@ mod platform {
         pDatatype: datatype.as_mut_ptr(),
       };
 
-      let job = StartDocPrinterW(handle, 1, &doc as *const DOC_INFO_1W as *const u8);
+      let job = StartDocPrinterW(handle, 1, &doc as *const DOC_INFO_1W);
       if job == 0 {
         let code = GetLastError();
         ClosePrinter(handle);
