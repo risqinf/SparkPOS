@@ -58,20 +58,13 @@ jobs:
           tagName: v__VERSION__
           releaseName: 'SparkPOS Desktop v__VERSION__'
           releaseBody: |
-            ### 🚀 SparkPOS Desktop v__VERSION__ — High Performance & Unified Retail Release
+            ### SparkPOS Desktop v__VERSION__
 
-            Pembaruan komprehensif untuk stabilitas, kecepatan, efisiensi memori, dan penyederhanaan operasional toko:
-
-            - 🔐 **UI Login Sederhana & Keyboard-Only**: Form minimalis di tengah layar, fokus langsung pada pengetikan keyboard (Username & PIN), shortcut Enter, tanpa on-screen keypad yang memenuhi layar.
-            - 💳 **Metode Pembayaran Kasir 2 Pilihan**: Hanya Tunai (Cash) dengan perhitungan kembalian instan dan Transfer Bank uang pas dengan catatan bank/referensi.
-            - 🛠️ **Perbaikan Riwayat Transaksi Terpadu**: Mengatasi selisih tanggal timezone lokal WIB vs UTC, serta menyatukan transaksi belanja POS dan order servis yang dibayar ke dalam riwayat harian.
-            - 📊 **Laporan Keuangan Terpadu & Lengkap**: 1 dashboard finansial lengkap menggantikan tab-tab lama, menyajikan Modal Awal Kasir, Total Omset Toko (POS + Servis), Total Modal HPP, Pengeluaran Toko, Laba Bersih, Saldo Kas di Laci Kasir, serta rincian item per transaksi.
-            - 💵 **Modal Awal Kasir Wajib Awal Hari**: Dialog wajib input uang kas laci saat login pertama kali setiap hari kerja (07.00 - 16.30).
-            - 🧹 **Pembersihan Fitur**: Menghapus form Cabang, menyederhanakan multi-shift menjadi Laporan Kas Hari Ini (07.00 - 16.30), dan menghapus kurir/ongkir dari terminal kasir untuk transaksi langsung di tempat yang lebih cepat.
-            - 📑 **List Katalog Kasir Mode Detail**: Mengubah katalog produk dari kartu kotak menjadi tabel detail row (Barcode, Nama Lengkap tanpa terpotong, Kategori, Badge Stok Jelas, Harga Jual, dan Tombol Cepat +Keranjang).
-            - 🎨 **Peningkatan Kontras & Tema Terang/Gelap**: Warna teks tajam dan kontras pekat (High-Contrast), border tegas, serta bebas dari teks abu-abu pudar di mode terang.
-            - 📥 **Ekspor Excel Terpadu (.csv UTF-8 BOM)**: Ekspor laporan keuangan lengkap beserta rincian item yang langsung rapi di Microsoft Excel & LibreOffice.
-            - ⚡ **Optimasi Performa & Minim RAM**: Bundle diperkecil, query database IndexedDB efisien, dan siap digunakan cepat & stabil.
+            - **Cetak otomatis tanpa dialog**: pilih printer thermal 58mm & A4 di Pengaturan > Printer Kasir (terdeteksi otomatis). Struk 58mm dikirim langsung via ESC/POS dan laci uang terbuka untuk pembayaran tunai; faktur A4 dicetak senyap. Tersedia tombol uji cetak.
+            - **Keyboard standar**: Tab normal, Esc & focus trap di semua modal, F2/Ctrl+K cari, F12/Ctrl+Enter bayar, navigasi baris keranjang, F1 bantuan, Ctrl+1..5 pindah menu. F5/Ctrl+R/Ctrl+P diblokir.
+            - **Laporan format buku toko**: Kas Harian, Keuntungan, dan Pembelian (sheet per bulan, rumus Excel hidup).
+            - **Uang kas masuk/keluar** tampil di Riwayat Transaksi (bisa dikoreksi/dihapus), dengan kategori & contoh keterangan baru.
+            - **Tema terang/gelap** konsisten di semua modal dan halaman.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

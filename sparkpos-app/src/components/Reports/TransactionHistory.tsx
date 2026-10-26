@@ -36,6 +36,8 @@ import {
   Transaction,
   StoreProfile,
   ServiceOrder,
+  StockMovement,
+  Product,
   CashFlow,
   DailyCashRegister,
   Employee,
@@ -57,6 +59,10 @@ import {
   formatLocalDateTime,
   formatLocalDateOnly,
 } from '../../services/dateUtils';
+import { exportKasHarian, exportKeuntungan, exportPembelian, LedgerSource } from '../../services/ledgerExport';
+import { CASH_OUT_CATEGORIES, CASH_IN_CATEGORIES, noteExample } from '../../services/cashCategories';
+import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react';
+import { useDialog } from '../../hooks/useDialog';
 
 interface TransactionHistoryProps {
   storeProfile: StoreProfile;
@@ -67,7 +73,7 @@ interface TransactionHistoryProps {
 export interface UnifiedTransactionRecord {
   id: string; // e.g. "pos-12" or "srv-34"
   rawId: number;
-  type: 'POS' | 'SERVICE';
+  type: 'POS' | 'SERVICE' | 'CASH_IN' | 'CASH_OUT';
   invoiceNumber: string;
   createdAt: string;
   localDate: string;
@@ -89,6 +95,7 @@ export interface UnifiedTransactionRecord {
   }>;
   originalPosTx?: Transaction;
   originalServiceOrder?: ServiceOrder;
+  originalCashFlow?: CashFlow;
 }
 
 type PeriodFilter =
@@ -112,6 +119,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [dailyRegisters, setDailyRegisters] = useState<DailyCashRegister[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Filter States: Default to 'all' so kasir & owner see all transactions by default
@@ -120,7 +130,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [customEndDate, setCustomEndDate] = useState<string>(getLocalDateString());
   const [selectedCashierId, setSelectedCashierId] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'POS' | 'SERVICE'>('all');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'POS' | 'SERVICE' | 'CASH'>('all');
 
   // Expanded row IDs for item breakdown
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>({});
@@ -137,17 +147,21 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   // Correction Modals State
   const [isEditOpeningCashOpen, setIsEditOpeningCashOpen] = useState(false);
+  const dlgOpeningRef = useDialog<HTMLDivElement>(isEditOpeningCashOpen, () => setIsEditOpeningCashOpen(false));
   const [editOpeningCashValue, setEditOpeningCashValue] = useState<string>('0');
 
   const [transactionToEdit, setTransactionToEdit] = useState<UnifiedTransactionRecord | null>(null);
+  const dlgEditTxRef = useDialog<HTMLDivElement>(!!transactionToEdit, () => setTransactionToEdit(null));
   const [editCustomerName, setEditCustomerName] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('CASH');
   const [editNotes, setEditNotes] = useState<string>('');
 
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const dlgCashRef = useDialog<HTMLDivElement>(isAddExpenseOpen, () => closeCashFlowModal());
   const [expenseType, setExpenseType] = useState<'OUT' | 'IN'>('OUT');
   const [expenseAmount, setExpenseAmount] = useState<string>('');
-  const [expenseCategory, setExpenseCategory] = useState<string>('Operasional');
+  const [expenseCategory, setExpenseCategory] = useState<string>(CASH_OUT_CATEGORIES[0]);
+  const [editingFlowId, setEditingFlowId] = useState<number | null>(null);
   const [expenseNotes, setExpenseNotes] = useState<string>('');
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -159,13 +173,17 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const loadData = async (isBackground = false) => {
     if (!isBackground) setIsLoading(true);
     try {
-      const [txs, services, flows, registers, emps] = await Promise.all([
+      const [txs, services, flows, registers, emps, moves, prods] = await Promise.all([
         db.transactions.reverse().sortBy('createdAt'),
         db.serviceOrders.toArray(),
         db.cashFlows.toArray(),
         db.dailyCashRegister.toArray(),
         db.employees.toArray(),
+        db.stockMovements.toArray(),
+        db.products.toArray(),
       ]);
+      setStockMovements(moves);
+      setAllProducts(prods);
       setTransactions(txs);
       setServiceOrders(services);
       setCashFlows(flows);
@@ -355,9 +373,32 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       }
     }
 
+    // 3. Uang Kas Masuk / Keluar (tercatat di riwayat, tidak dihitung sebagai omset)
+    for (const f of cashFlows) {
+      const isIn = f.type === 'IN';
+      list.push({
+        id: `cash-${f.id}`,
+        rawId: f.id || 0,
+        type: isIn ? 'CASH_IN' : 'CASH_OUT',
+        invoiceNumber: `KAS-${String(f.id || 0).padStart(4, '0')}`,
+        createdAt: f.createdAt,
+        localDate: toLocalDateString(f.createdAt),
+        cashierName: f.cashierName || 'Kasir',
+        cashierId: f.cashierId || 1,
+        customerName: f.category || (isIn ? 'Kas Masuk' : 'Kas Keluar'),
+        paymentMethod: /transfer bank/i.test(f.note || '') ? 'TRANSFER' : 'CASH',
+        notes: f.note,
+        grandTotal: f.amount,
+        totalCost: 0,
+        grossProfit: 0,
+        items: [],
+        originalCashFlow: f,
+      });
+    }
+
     // Sort newest first
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [transactions, serviceOrders]);
+  }, [transactions, serviceOrders, cashFlows]);
 
   // Filtered Unified Records by Date Range, Cashier, Type & Search Query
   const filteredRecords = useMemo(() => {
@@ -377,7 +418,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       }
 
       // 3. Type filter (POS vs Service)
-      if (selectedTypeFilter !== 'all' && rec.type !== selectedTypeFilter) {
+      if (selectedTypeFilter === 'CASH') {
+        if (rec.type !== 'CASH_IN' && rec.type !== 'CASH_OUT') return false;
+      } else if (selectedTypeFilter !== 'all' && rec.type !== selectedTypeFilter) {
         return false;
       }
 
@@ -388,7 +431,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         const matchCashier = rec.cashierName.toLowerCase().includes(q);
         const matchMethod = rec.paymentMethod.toLowerCase().includes(q);
         const matchItem = rec.items.some((i) => i.name.toLowerCase().includes(q));
-        if (!matchInvoice && !matchCustomer && !matchCashier && !matchMethod && !matchItem) {
+        const matchNotes = (rec.notes || '').toLowerCase().includes(q);
+        if (!matchInvoice && !matchCustomer && !matchCashier && !matchMethod && !matchItem && !matchNotes) {
           return false;
         }
       }
@@ -417,7 +461,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     let cashSalesTotal = 0;
     let transferSalesTotal = 0;
 
-    for (const rec of filteredRecords) {
+    const salesRecords = filteredRecords.filter((r) => r.type === 'POS' || r.type === 'SERVICE');
+    for (const rec of salesRecords) {
       if (rec.type === 'POS') {
         posRevenue += rec.grandTotal;
       } else {
@@ -481,7 +526,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       cashSalesTotal,
       transferSalesTotal,
       finalCashInDrawer,
-      count: filteredRecords.length,
+      count: salesRecords.length,
     };
   }, [filteredRecords, dateRange, dailyRegisters, cashFlows]);
 
@@ -498,10 +543,12 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   };
 
   const getExportData = (): UnifiedFinancialExportData => {
-    const exportTransactions: UnifiedExportTransaction[] = filteredRecords.map((r) => ({
+    const exportTransactions: UnifiedExportTransaction[] = filteredRecords
+      .filter((r) => r.type === 'POS' || r.type === 'SERVICE')
+      .map((r) => ({
       invoiceNumber: r.invoiceNumber,
       createdAt: r.createdAt,
-      type: r.type,
+      type: r.type as 'POS' | 'SERVICE',
       cashierName: r.cashierName,
       customerName: r.customerName,
       paymentMethod: r.paymentMethod,
@@ -527,6 +574,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       finalCashInDrawer: financialSummary.finalCashInDrawer,
       transactions: exportTransactions,
     };
+  };
+
+  const getLedgerSource = (): LedgerSource => ({
+    storeName: storeProfile.storeName || 'SparkPOS',
+    transactions,
+    serviceOrders,
+    cashFlows,
+    stockMovements,
+    products: allProducts,
+  });
+
+  const handleExportLedger = (kind: 'kas' | 'untung' | 'beli') => {
+    setIsExportMenuOpen(false);
+    const range = { start: dateRange.start, end: dateRange.end };
+    const src = getLedgerSource();
+    if (kind === 'kas') exportKasHarian(src, range);
+    else if (kind === 'untung') exportKeuntungan(src, range);
+    else exportPembelian(src, range);
+    const label = { kas: 'Laporan Kas Harian', untung: 'Laporan Keuntungan', beli: 'Laporan Pembelian' }[kind];
+    showToast(`${label} (${dateRange.start} s/d ${dateRange.end}) berhasil diunduh!`);
   };
 
   // 1. Ekspor dalam bentuk File (.xlsx Excel Asli)
@@ -625,7 +692,32 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     }
   };
 
-  // Cash Flow / Expense Quick Add Handler
+  // Cash Flow: catat baru / koreksi / hapus
+  const openNewCashFlow = (type: 'OUT' | 'IN' = 'OUT') => {
+    setEditingFlowId(null);
+    setExpenseType(type);
+    setExpenseCategory(type === 'OUT' ? CASH_OUT_CATEGORIES[0] : CASH_IN_CATEGORIES[0]);
+    setExpenseAmount('');
+    setExpenseNotes('');
+    setIsAddExpenseOpen(true);
+  };
+
+  const openEditCashFlow = (f: CashFlow) => {
+    setEditingFlowId(f.id ?? null);
+    setExpenseType(f.type);
+    setExpenseCategory(f.category);
+    setExpenseAmount(String(f.amount));
+    setExpenseNotes(f.note || '');
+    setIsAddExpenseOpen(true);
+  };
+
+  const closeCashFlowModal = () => {
+    setIsAddExpenseOpen(false);
+    setEditingFlowId(null);
+    setExpenseAmount('');
+    setExpenseNotes('');
+  };
+
   const handleSaveExpense = async () => {
     const nominal = parseFloat(expenseAmount.replace(/[^0-9]/g, '')) || 0;
     if (nominal <= 0) {
@@ -634,28 +726,51 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     }
 
     try {
-      await db.cashFlows.add({
-        shiftId: 1,
-        cashierId: currentUser?.id || 1,
-        cashierName: currentUser?.fullName || 'Kasir',
-        type: expenseType,
-        category: expenseCategory,
-        amount: nominal,
-        note: expenseNotes.trim() || (expenseType === 'OUT' ? 'Koreksi Kas Keluar' : 'Koreksi Kas Masuk'),
-        createdAt: new Date().toISOString(),
-      } as any);
+      const note =
+        expenseNotes.trim() || (expenseType === 'OUT' ? 'Kas keluar' : 'Kas masuk');
+      if (editingFlowId !== null) {
+        await db.cashFlows.update(editingFlowId, {
+          type: expenseType,
+          category: expenseCategory,
+          amount: nominal,
+          note,
+        });
+      } else {
+        await db.cashFlows.add({
+          shiftId: 1,
+          cashierId: currentUser?.id || 1,
+          cashierName: currentUser?.fullName || 'Kasir',
+          type: expenseType,
+          category: expenseCategory,
+          amount: nominal,
+          note,
+          createdAt: new Date().toISOString(),
+        } as any);
+      }
 
       await loadData();
-      setIsAddExpenseOpen(false);
-      setExpenseAmount('');
-      setExpenseNotes('');
+      window.dispatchEvent(new CustomEvent('sparkpos_data_changed', { detail: { type: 'cash_flow' } }));
+      const wasEditing = editingFlowId !== null;
+      closeCashFlowModal();
       showToast(
-        `Berhasil mencatat ${expenseType === 'OUT' ? 'pengeluaran' : 'pemasukan'} sebesar ${formatRupiah(nominal)}!`
+        wasEditing
+          ? `Catatan kas berhasil dikoreksi (${formatRupiah(nominal)})`
+          : `Berhasil mencatat ${expenseType === 'OUT' ? 'uang keluar' : 'uang masuk'} sebesar ${formatRupiah(nominal)}!`
       );
     } catch (err) {
-      console.error('Error saving expense', err);
+      console.error('Error saving cash flow', err);
       showToast('Gagal mencatat arus kas', 'error');
     }
+  };
+
+  const handleDeleteCashFlow = async () => {
+    if (editingFlowId === null) return;
+    if (!confirm('Hapus catatan kas ini? Saldo kas akan dihitung ulang.')) return;
+    await db.cashFlows.delete(editingFlowId);
+    await loadData();
+    window.dispatchEvent(new CustomEvent('sparkpos_data_changed', { detail: { type: 'cash_flow' } }));
+    closeCashFlowModal();
+    showToast('Catatan kas dihapus');
   };
 
   return (
@@ -665,14 +780,14 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         <div
           className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-2 border animate-in fade-in slide-in-from-top-3 duration-200 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-950/90 border-rose-700 text-rose-200'
-              : 'bg-emerald-950/90 border-emerald-700 text-emerald-200'
+              ? 'bg-rose-50/90 dark:bg-rose-950/90 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-200'
+              : 'bg-emerald-50/90 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-200'
           }`}
         >
           {toastMessage.type === 'error' ? (
-            <AlertCircle className="w-4 h-4 text-rose-400" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           )}
           <span>{toastMessage.text}</span>
         </div>
@@ -689,7 +804,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               Laporan Keuangan Terpadu & Riwayat Transaksi
             </h1>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {dateRange.label} • {filteredRecords.length} Transaksi Terdata
+              {dateRange.label} • {financialSummary.count} Transaksi • {filteredRecords.length - financialSummary.count} Catatan Kas
             </p>
           </div>
         </div>
@@ -707,7 +822,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           {/* Quick Cash In / Out */}
           <button
             type="button"
-            onClick={onOpenCashFlow || (() => setIsAddExpenseOpen(true))}
+            onClick={onOpenCashFlow || (() => openNewCashFlow('OUT'))}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition cursor-pointer shadow-2xs"
             title="Catat Uang Kas Masuk / Keluar Operasional Toko"
           >
@@ -742,17 +857,62 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <span>{isCopied ? 'Tersalin!' : 'Salin Clipboard (Excel)'}</span>
           </button>
 
-          {/* DUAL EXPORT 2: Unduh File Excel (.xlsx Native) */}
-          <button
-            type="button"
-            onClick={handleExportExcelFile}
-            disabled={filteredRecords.length === 0}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-            title="Unduh laporan keuangan lengkap beserta rincian produk dalam bentuk file Excel (.xlsx) resmi yang langsung rapih di Excel & LibreOffice"
-          >
-            <FileDown className="w-4 h-4" />
-            <span>Unduh File (.xlsx)</span>
-          </button>
+          {/* Unduh laporan (format buku toko) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsExportMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isExportMenuOpen}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
+              title="Unduh laporan Excel sesuai periode yang dipilih"
+            >
+              <FileDown className="w-4 h-4" />
+              <span>Unduh Laporan (.xlsx)</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            {isExportMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setIsExportMenuOpen(false)} />
+                <div
+                  role="menu"
+                  onKeyDown={(e) => e.key === 'Escape' && setIsExportMenuOpen(false)}
+                  className="absolute right-0 mt-1.5 z-40 w-72 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden"
+                >
+                  {[
+                    { k: 'kas', t: 'Laporan Kas Harian', d: 'TGL · NAMA · DEBIT · CREDIT, per bulan' },
+                    { k: 'untung', t: 'Laporan Keuntungan', d: 'Modal, harga jual, profit, rata-rata/hari + pengeluaran' },
+                    { k: 'beli', t: 'Laporan Pembelian', d: 'Pembelian unit/barang + kolom tambahan modal' },
+                  ].map((m, i) => (
+                    <button
+                      key={m.k}
+                      role="menuitem"
+                      type="button"
+                      autoFocus={i === 0}
+                      onClick={() => handleExportLedger(m.k as 'kas' | 'untung' | 'beli')}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800 focus:bg-emerald-50 dark:focus:bg-slate-800 focus:outline-none border-b last:border-b-0 border-slate-100 dark:border-slate-800"
+                    >
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">{m.t}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">{m.d}</div>
+                    </button>
+                  ))}
+                  <button
+                    role="menuitem"
+                    type="button"
+                    onClick={() => {
+                      setIsExportMenuOpen(false);
+                      handleExportExcelFile();
+                    }}
+                    disabled={filteredRecords.length === 0}
+                    className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:outline-none bg-slate-50/60 dark:bg-slate-950/40 disabled:opacity-40"
+                  >
+                    <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Rekap Lengkap (format lama)</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Ringkasan + rincian per transaksi</div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -841,19 +1001,19 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           {/* Search Box & Type Filter Tabs */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
             <div className="relative flex-1 min-w-[240px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nomor invoice, nama produk, pelanggan, atau kasir..."
+                placeholder="Cari invoice, produk, pelanggan, kasir, atau keterangan kas..."
                 className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute right-2.5 top-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -893,6 +1053,17 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 }`}
               >
                 Servis Lunas
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTypeFilter('CASH')}
+                className={`px-3 py-1 rounded-lg transition cursor-pointer ${
+                  selectedTypeFilter === 'CASH'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Kas Masuk/Keluar ({cashFlows.length})
               </button>
             </div>
           </div>
@@ -1001,10 +1172,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      setExpenseType('OUT');
-                      setIsAddExpenseOpen(true);
-                    }}
+                    onClick={() => openNewCashFlow('OUT')}
                     className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-rose-600 dark:text-rose-400 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer"
                     title="Catat atau koreksi pengeluaran operasional toko"
                   >
@@ -1160,7 +1328,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <Package className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Daftar Transaksi ({filteredRecords.length} Transaksi)</span>
+              <span>Riwayat Transaksi & Kas ({filteredRecords.length} catatan)</span>
             </h3>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
               Klik baris mana saja untuk melihat rincian item atau klik Koreksi untuk mengubah data transaksi
@@ -1198,6 +1366,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   {filteredRecords.map((rec) => {
                     const isExpanded = !!expandedRowIds[rec.id];
                     const isCash = rec.paymentMethod?.toUpperCase().includes('CASH');
+                    const isFlow = rec.type === 'CASH_IN' || rec.type === 'CASH_OUT';
+                    const flowIn = rec.type === 'CASH_IN';
 
                     return (
                       <React.Fragment key={rec.id}>
@@ -1209,7 +1379,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                               : 'hover:bg-emerald-50/40 dark:hover:bg-slate-800/50'
                           }`}
                         >
-                          <td className="py-3 px-3 text-center text-slate-400">
+                          <td className="py-3 px-3 text-center text-slate-500 dark:text-slate-400">
                             {isExpanded ? (
                               <ChevronDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400 inline" />
                             ) : (
@@ -1223,6 +1393,18 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                             {formatLocalDateTime(rec.createdAt)}
                           </td>
                           <td className="py-3 px-3">
+                            {isFlow ? (
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                  flowIn
+                                    ? 'bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800'
+                                    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+                                }`}
+                              >
+                                {flowIn ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+                                <span>{flowIn ? 'Kas Masuk' : 'Kas Keluar'}</span>
+                              </span>
+                            ) : (
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                                 rec.type === 'POS'
@@ -1242,12 +1424,18 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                 </>
                               )}
                             </span>
+                            )}
                           </td>
                           <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
                             {rec.cashierName}
                           </td>
                           <td className="py-3 px-3 text-slate-700 dark:text-slate-300 max-w-[160px] truncate">
                             {rec.customerName}
+                            {isFlow && rec.notes && (
+                              <span className="block text-[10px] text-slate-500 dark:text-slate-400 truncate" title={rec.notes}>
+                                {rec.notes}
+                              </span>
+                            )}
                           </td>
                           <td className="py-3 px-3">
                             <span
@@ -1265,17 +1453,37 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                               <span>{isCash ? '💵 Tunai' : '🏦 Transfer'}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                            {formatRupiah(rec.grandTotal)}
+                          <td
+                            className={`py-3 px-3 text-right font-mono font-bold ${
+                              isFlow
+                                ? flowIn
+                                  ? 'text-sky-700 dark:text-sky-300'
+                                  : 'text-rose-600 dark:text-rose-400'
+                                : 'text-slate-900 dark:text-white'
+                            }`}
+                          >
+                            {isFlow ? `${flowIn ? '+' : '-'}${formatRupiah(rec.grandTotal)}` : formatRupiah(rec.grandTotal)}
                           </td>
                           <td className="py-3 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
-                            +{formatRupiah(rec.grossProfit)}
+                            {isFlow ? <span className="text-slate-500 dark:text-slate-400">—</span> : `+${formatRupiah(rec.grossProfit)}`}
                           </td>
                           <td
                             className="py-3 px-3 text-center"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex items-center justify-center gap-1.5">
+                              {isFlow && rec.originalCashFlow ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditCashFlow(rec.originalCashFlow!)}
+                                  className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-300 dark:border-slate-700 text-[11px] font-bold transition inline-flex items-center gap-1 cursor-pointer"
+                                  title="Koreksi atau hapus catatan kas ini"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Koreksi</span>
+                                </button>
+                              ) : (
+                              <>
                               {/* Action 1: Print / View Struk */}
                               <button
                                 type="button"
@@ -1303,6 +1511,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                 <Edit3 className="w-3.5 h-3.5" />
                                 <span>Koreksi</span>
                               </button>
+                              </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1314,7 +1524,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                   <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                                    Rincian Item Produk & Jasa ({rec.items.length} item):
+                                    {isFlow ? 'Rincian Catatan Kas:' : `Rincian Item Produk & Jasa (${rec.items.length} item):`}
                                   </span>
                                   {rec.notes && (
                                     <span className="text-xs italic text-slate-500 dark:text-slate-400">
@@ -1322,6 +1532,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                     </span>
                                   )}
                                 </div>
+                                {isFlow ? (
+                                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                                    <div><span className="font-bold">Kategori:</span> {rec.customerName}</div>
+                                    <div><span className="font-bold">Keterangan:</span> {rec.notes || '-'}</div>
+                                    <div><span className="font-bold">Dicatat oleh:</span> {rec.cashierName}</div>
+                                  </div>
+                                ) : (
                                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
@@ -1360,6 +1577,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                                     </tbody>
                                   </table>
                                 </div>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1376,7 +1594,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 1: KOREKSI MODAL AWAL KASIR ================= */}
       {isEditOpeningCashOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgOpeningRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1390,7 +1608,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEditOpeningCashOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1405,7 +1623,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 Nominal Modal Awal (Rp):
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500 dark:text-slate-400">Rp</span>
                 <input
                   type="number"
                   min="0"
@@ -1445,7 +1663,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 2: KOREKSI TRANSAKSI ================= */}
       {transactionToEdit && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgEditTxRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-lg shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1464,7 +1682,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => setTransactionToEdit(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1559,7 +1777,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* ================= MODAL 3: CATAT / KOREKSI ARUS KAS PENGELUARAN ================= */}
       {isAddExpenseOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div ref={dlgCashRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1567,13 +1785,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   <ArrowDownUp className="w-4 h-4" />
                 </div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  Catat Arus Kas Operasional
+                  {editingFlowId !== null ? 'Koreksi Catatan Kas' : 'Catat Uang Kas Masuk / Keluar'}
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setIsAddExpenseOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                onClick={closeCashFlowModal}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1588,25 +1806,25 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setExpenseType('OUT')}
+                    onClick={() => { setExpenseType('OUT'); setExpenseCategory(CASH_OUT_CATEGORIES[0]); }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                       expenseType === 'OUT'
                         ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
                         : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span>💸 Pengeluaran (Biaya)</span>
+                    <span>💸 Uang Keluar</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setExpenseType('IN')}
+                    onClick={() => { setExpenseType('IN'); setExpenseCategory(CASH_IN_CATEGORIES[0]); }}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                       expenseType === 'IN'
                         ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
                         : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <span>💰 Pemasukan Lain</span>
+                    <span>💰 Uang Masuk</span>
                   </button>
                 </div>
               </div>
@@ -1617,7 +1835,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   Nominal (Rp):
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500 dark:text-slate-400">Rp</span>
                   <input
                     type="number"
                     min="0"
@@ -1637,19 +1855,18 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               {/* Kategori */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Kategori Pengeluaran:
+                  Kategori:
                 </label>
                 <select
                   value={expenseCategory}
                   onChange={(e) => setExpenseCategory(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="Operasional">Operasional Toko</option>
-                  <option value="Listrik/Air/Internet">Listrik / Air / Internet</option>
-                  <option value="Konsumsi/Makan">Konsumsi / Makan Staf</option>
-                  <option value="ATK/Peralatan">ATK & Peralatan Toko</option>
-                  <option value="Transport/Bensin">Transport / Bensin</option>
-                  <option value="Lain-lain">Lain-lain</option>
+                  {(expenseType === 'OUT' ? CASH_OUT_CATEGORIES : CASH_IN_CATEGORIES).concat(
+                    (expenseType === 'OUT' ? CASH_OUT_CATEGORIES : CASH_IN_CATEGORIES).includes(expenseCategory) ? [] : [expenseCategory]
+                  ).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
 
@@ -1662,16 +1879,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   type="text"
                   value={expenseNotes}
                   onChange={(e) => setExpenseNotes(e.target.value)}
-                  placeholder="e.g. Beli lakban & bubble wrap"
+                  placeholder={noteExample(expenseType)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              {editingFlowId !== null && (
+                <button
+                  type="button"
+                  onClick={handleDeleteCashFlow}
+                  className="mr-auto px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Hapus</span>
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setIsAddExpenseOpen(false)}
+                onClick={closeCashFlowModal}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 Batal

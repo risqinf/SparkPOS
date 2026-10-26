@@ -103,3 +103,10 @@
     max-width: 210mm !important;
   }
 }
+
+/* Warna slate tambahan yang dipakai komponen tetapi tidak ada di palet bawaan Tailwind */
+@theme {
+  --color-slate-150: #e8edf4;
+  --color-slate-750: #283548;
+  --color-slate-850: #172033;
+}

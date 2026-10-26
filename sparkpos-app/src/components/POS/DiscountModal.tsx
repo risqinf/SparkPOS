@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Percent, Tag, Check } from 'lucide-react';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface DiscountModalProps {
   currentPercent: number;
@@ -17,6 +18,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
   onApply,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [mode, setMode] = useState<'percent' | 'nominal'>(
     currentPercent > 0 ? 'percent' : 'nominal'
   );
@@ -39,17 +41,17 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-amber-400" />
-            <h2 className="text-base font-bold text-white">Diskon Total Nota (Order Discount)</h2>
+            <Tag className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Diskon Total Nota (Order Discount)</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -58,7 +60,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Mode Switcher */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-800 p-1 rounded-xl border border-slate-700">
+          <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-300 dark:border-slate-700">
             <button
               type="button"
               onClick={() => {
@@ -68,7 +70,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
               className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition ${
                 mode === 'percent'
                   ? 'bg-emerald-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Percent className="w-3.5 h-3.5" />
@@ -84,7 +86,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
               className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition ${
                 mode === 'nominal'
                   ? 'bg-emerald-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Tag className="w-3.5 h-3.5" />
@@ -94,7 +96,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
 
           {/* Quick presets */}
           <div>
-            <span className="text-xs text-slate-200 font-bold mb-1.5 block">Preset Cepat:</span>
+            <span className="text-xs text-slate-800 dark:text-slate-200 font-bold mb-1.5 block">Preset Cepat:</span>
             <div className="flex flex-wrap gap-2">
               {mode === 'percent'
                 ? [5, 10, 15, 20, 50].map((p) => (
@@ -102,7 +104,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                       key={p}
                       type="button"
                       onClick={() => setValue(p.toString())}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-emerald-600/20 hover:border-emerald-500 hover:text-emerald-300 transition"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-emerald-600/20 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 transition"
                     >
                       {p}%
                     </button>
@@ -112,7 +114,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                       key={n}
                       type="button"
                       onClick={() => setValue(n.toString())}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-emerald-600/20 hover:border-emerald-500 hover:text-emerald-300 transition"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-emerald-600/20 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 transition"
                     >
                       {formatRupiah(n)}
                     </button>
@@ -122,7 +124,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
 
           {/* Input field */}
           <div>
-            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1.5">
               {mode === 'percent' ? 'Besar Diskon (%)' : 'Jumlah Potongan Harga (Rp)'}
             </label>
             <input
@@ -132,14 +134,14 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
               max={mode === 'percent' ? 100 : subtotal}
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xl font-bold text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xl font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Summary preview */}
-          <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
-            <span className="text-xs text-slate-200 font-semibold">Total Potongan Diskon:</span>
-            <span className="text-lg font-bold text-amber-400">
+          <div className="p-3.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 flex items-center justify-between">
+            <span className="text-xs text-slate-800 dark:text-slate-200 font-semibold">Total Potongan Diskon:</span>
+            <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
               -{formatRupiah(calculatedDiscount)}
             </span>
           </div>
@@ -152,7 +154,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                 onApply(0, 0);
                 onClose();
               }}
-              className="text-xs text-rose-400 hover:underline"
+              className="text-xs text-rose-600 dark:text-rose-400 hover:underline"
             >
               Hapus Diskon
             </button>
@@ -161,7 +163,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-750 text-xs font-semibold"
+                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750 text-xs font-semibold"
               >
                 Batal
               </button>

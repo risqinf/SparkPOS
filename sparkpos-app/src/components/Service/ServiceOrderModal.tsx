@@ -27,6 +27,7 @@ import {
 } from '../../types/pos';
 import { db, addServiceOrder, updateServiceOrder, generateServiceTicketNumber } from '../../services/storage';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ServiceOrderModalProps {
   orderToEdit?: ServiceOrder | null;
@@ -41,6 +42,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   onClose,
   onSaved,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const isEditing = !!orderToEdit?.id;
 
   // Form Fields
@@ -281,24 +283,24 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-hidden">
-      <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-hidden">
+      <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Wrench className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {isEditing ? `Update Tiket Servis (${ticketNumber})` : 'Penerimaan Servis Baru'}
                 </h3>
-                <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700">
+                <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-300 dark:border-slate-700">
                   {status}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Pencatatan perbaikan komputer/laptop, sparepart, jasa, dan status pengerjaan
               </p>
             </div>
@@ -307,7 +309,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -315,8 +317,8 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2 shrink-0">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2 shrink-0">
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -326,16 +328,16 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           {/* Section 1: Data Pelanggan & Perangkat */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Box 1: Identitas Pelanggan */}
-            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-800">
-                <User className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="p-3.5 rounded-xl bg-slate-50/60 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>1. Identitas Pelanggan</span>
               </h4>
 
               <div className="space-y-2">
                 <div>
-                  <label className="text-slate-400 block mb-1">
-                    Nama Pelanggan <span className="text-rose-400">*</span>
+                  <label className="text-slate-500 dark:text-slate-400 block mb-1">
+                    Nama Pelanggan <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -343,35 +345,35 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     placeholder="Contoh: Pak Herman / Siti"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-400 block mb-1">No. WhatsApp / HP</label>
+                  <label className="text-slate-500 dark:text-slate-400 block mb-1">No. WhatsApp / HP</label>
                   <input
                     type="text"
                     placeholder="Contoh: 081234567890"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Box 2: Perangkat & Status Servis */}
-            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-800">
-                <Laptop className="w-3.5 h-3.5 text-amber-400" />
+            <div className="p-3.5 rounded-xl bg-slate-50/60 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                <Laptop className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>2. Perangkat & Status Pengerjaan</span>
               </h4>
 
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-slate-400 block mb-1">
-                      Tipe Perangkat <span className="text-rose-400">*</span>
+                    <label className="text-slate-500 dark:text-slate-400 block mb-1">
+                      Tipe Perangkat <span className="text-rose-600 dark:text-rose-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -379,7 +381,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       placeholder="e.g. Epson L3110 / ThinkPad X201 / PC Rakitan"
                       value={deviceType}
                       onChange={(e) => setDeviceType(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                     />
                     {/* Quick Device Category Chips */}
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -398,7 +400,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                           className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                             deviceType.includes(dev)
                               ? 'bg-amber-600 text-white font-bold'
-                              : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                         >
                           {dev}
@@ -407,24 +409,24 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     </div>
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">No. Seri / SN</label>
+                    <label className="text-slate-500 dark:text-slate-400 block mb-1">No. Seri / SN</label>
                     <input
                       type="text"
                       placeholder="e.g. SN-892301"
                       value={deviceSerial}
                       onChange={(e) => setDeviceSerial(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-slate-400 block mb-1">Status Servis:</label>
+                    <label className="text-slate-500 dark:text-slate-400 block mb-1">Status Servis:</label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value as ServiceStatus)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-bold focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500"
                     >
                       <option value="DITERIMA">DITERIMA</option>
                       <option value="DIKERJAKAN">DIKERJAKAN</option>
@@ -435,7 +437,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1">Teknisi Penanggung Jawab:</label>
+                    <label className="text-slate-500 dark:text-slate-400 block mb-1">Teknisi Penanggung Jawab:</label>
                     <select
                       value={assignedTechId || ''}
                       onChange={(e) => {
@@ -444,7 +446,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                         const tech = technicians.find((t) => t.id === id);
                         setAssignedTechName(tech ? tech.fullName : '');
                       }}
-                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                     >
                       <option value="">Pilih Teknisi...</option>
                       {technicians.map((t) => (
@@ -460,10 +462,10 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           </div>
 
           {/* Section 2: Kelengkapan Masuk, Kondisi Fisik, Password Perangkat & Garansi */}
-          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>2. Kelengkapan Unit, Kondisi Fisik & Garansi</span>
               </h4>
               <span className="text-[10px] text-slate-500">Standar Bengkel Komputer & Laptop</span>
@@ -472,7 +474,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Kelengkapan Unit */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Kelengkapan Unit Saat Diterima:
                 </label>
                 <input
@@ -480,7 +482,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   placeholder="e.g. Unit + Charger Original + Tas..."
                   value={completeness}
                   onChange={(e) => setCompleteness(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-emerald-500"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {[
@@ -510,7 +512,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       className={`text-[9px] px-2 py-0.5 rounded transition ${
                         completeness.includes(tag)
                           ? 'bg-emerald-600 text-white font-bold'
-                          : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {completeness.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
@@ -521,7 +523,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
               {/* Kondisi Fisik Awal */}
               <div>
-                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Kondisi Fisik Saat Masuk:
                 </label>
                 <input
@@ -529,7 +531,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   placeholder="e.g. Casing mulus, lecet pemakaian, baut kurang..."
                   value={physicalCondition}
                   onChange={(e) => setPhysicalCondition(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white text-xs focus:outline-none focus:border-amber-500"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {[
@@ -554,7 +556,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       className={`text-[9px] px-2 py-0.5 rounded transition ${
                         physicalCondition.includes(tag)
                           ? 'bg-amber-600 text-white font-bold'
-                          : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {physicalCondition.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
@@ -565,9 +567,9 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             </div>
 
             {/* Password Windows & Garansi Servis */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-800/60">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
               <div>
-                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Password Windows / PIN / Pola Layar:
                 </label>
                 <div className="relative">
@@ -576,7 +578,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     placeholder="Contoh: 123456 / Tanpa Password"
                     value={devicePassword}
                     onChange={(e) => setDevicePassword(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
                   />
                   <Lock className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2" />
                 </div>
@@ -584,10 +586,10 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-slate-300 block">
+                  <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">
                     Garansi Servis Selesai:
                   </label>
-                  <span className="text-[10px] text-emerald-400 font-bold">{warrantyDays} Hari Garansi</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{warrantyDays} Hari Garansi</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <input
@@ -595,7 +597,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     min="0"
                     value={warrantyDays}
                     onChange={(e) => setWarrantyDays(e.target.value)}
-                    className="w-20 px-2 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono text-xs text-center focus:outline-none focus:border-emerald-500"
+                    className="w-20 px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white font-mono text-xs text-center focus:outline-none focus:border-emerald-500"
                   />
                   <div className="flex gap-1 flex-1">
                     {['7', '14', '30', '60'].map((d) => (
@@ -606,7 +608,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                         className={`flex-1 py-1 rounded text-[10px] font-semibold transition ${
                           warrantyDays === d
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                         }`}
                       >
                         {d} Hari
@@ -622,8 +624,8 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-slate-400 font-semibold text-xs">
-                  Keluhan Pelanggan <span className="text-rose-400">*</span>
+                <label className="text-slate-500 dark:text-slate-400 font-semibold text-xs">
+                  Keluhan Pelanggan <span className="text-rose-600 dark:text-rose-400">*</span>
                 </label>
               </div>
               <textarea
@@ -632,7 +634,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 placeholder="Contoh: Tinta putus-putus, lampu kedip, mati total..."
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500 resize-none text-xs"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 resize-none text-xs"
               />
               {/* Quick Complaint Chips for Laptop, PC & Printer */}
               <div className="flex flex-wrap gap-1 mt-1">
@@ -661,7 +663,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                       complaint.includes(cChip)
                         ? 'bg-amber-600 text-white font-bold'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     {complaint.includes(cChip) ? `✓ ${cChip}` : `+ ${cChip}`}
@@ -671,7 +673,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             </div>
 
             <div>
-              <label className="text-slate-400 block mb-1 font-semibold">
+              <label className="text-slate-500 dark:text-slate-400 block mb-1 font-semibold">
                 Diagnosa Kerusakan Teknisi
               </label>
               <textarea
@@ -679,12 +681,12 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 placeholder="Contoh: Jalur VCore short 19V, perlu ganti mosfet & repasta..."
                 value={diagnosis}
                 onChange={(e) => setDiagnosis(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500 resize-none"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500 resize-none"
               />
             </div>
 
             <div>
-              <label className="text-slate-400 block mb-1 font-semibold flex items-center gap-1">
+              <label className="text-slate-500 dark:text-slate-400 block mb-1 font-semibold flex items-center gap-1">
                 <span>Info Proses ke Kasir/Admin</span>
               </label>
               <textarea
@@ -692,31 +694,31 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 placeholder="Contoh: Sedang running test, menunggu sparepart, dll..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 focus:outline-none focus:border-amber-500 resize-none"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-amber-700 dark:text-amber-300 focus:outline-none focus:border-amber-500 resize-none"
               />
             </div>
           </div>
 
           {/* Section 3: Rincian Sparepart & Jasa Servis */}
-          <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Cpu className="w-3.5 h-3.5 text-blue-400" />
+          <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Cpu className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>3. Suku Cadang (Sparepart) & Biaya Jasa</span>
               </h4>
-              <span className="text-slate-400 font-mono text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                 {items.length} item dimasukkan
               </span>
             </div>
 
             {/* Input Row Tambah Item */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 bg-white/80 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
               <div className="md:col-span-2">
-                <label className="text-[10px] text-slate-400 block mb-1">Tipe Item:</label>
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Tipe Item:</label>
                 <select
                   value={newItemType}
                   onChange={(e) => setNewItemType(e.target.value as 'PART' | 'SERVICE')}
-                  className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-semibold text-xs"
+                  className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-semibold text-xs"
                 >
                   <option value="SERVICE">JASA</option>
                   <option value="PART">SPAREPART</option>
@@ -725,10 +727,10 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
 
               {newItemType === 'PART' && (
                 <div className="md:col-span-3">
-                  <label className="text-[10px] text-slate-400 block mb-1">Ambil Dari Stok:</label>
+                  <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Ambil Dari Stok:</label>
                   <select
                     onChange={(e) => handleSelectFromStock(e.target.value)}
-                    className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
+                    className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs"
                   >
                     <option value="">Pilih Produk...</option>
                     {stockProducts.map((p) => (
@@ -741,34 +743,34 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
               )}
 
               <div className={newItemType === 'PART' ? 'md:col-span-3' : 'md:col-span-4'}>
-                <label className="text-[10px] text-slate-400 block mb-1">Nama Jasa / Sparepart:</label>
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Nama Jasa / Sparepart:</label>
                 <input
                   type="text"
                   placeholder="e.g. Install OS Windows 11"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
+                  className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white text-xs"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-[10px] text-slate-400 block mb-1">Harga Jual (Rp):</label>
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Harga Jual (Rp):</label>
                 <input
                   type="number"
                   value={newItemPrice}
                   onChange={(e) => setNewItemPrice(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono text-xs"
+                  className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs"
                 />
               </div>
 
               <div className="md:col-span-1">
-                <label className="text-[10px] text-slate-400 block mb-1">Qty:</label>
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Qty:</label>
                 <input
                   type="number"
                   min="1"
                   value={newItemQty}
                   onChange={(e) => setNewItemQty(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono text-xs text-center"
+                  className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono text-xs text-center"
                 />
               </div>
 
@@ -794,7 +796,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                       <th className="py-2 px-2.5">Tipe</th>
                       <th className="py-2 px-2.5">Nama Komponen / Jasa</th>
                       <th className="py-2 px-2.5 text-center">Qty</th>
@@ -803,21 +805,21 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                       <th className="py-2 px-2.5 text-center w-10">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
+                  <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800/60 font-mono text-xs">
                     {items.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-900/60">
+                      <tr key={item.id} className="hover:bg-white/60 dark:hover:bg-slate-900/60">
                         <td className="py-2 px-2.5">
                           <span
                             className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                               item.type === 'PART'
-                                ? 'bg-amber-500/20 text-amber-400'
-                                : 'bg-blue-500/20 text-blue-400'
+                                ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                             }`}
                           >
                             {item.type}
                           </span>
                         </td>
-                        <td className="py-2 px-2.5 font-sans text-white font-medium">
+                        <td className="py-2 px-2.5 font-sans text-slate-900 dark:text-white font-medium">
                           {item.name}
                           {item.supplierName && (
                             <span className="text-[10px] text-slate-500 block">
@@ -825,18 +827,18 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="py-2 px-2.5 text-center text-slate-300">{item.quantity}</td>
-                        <td className="py-2 px-2.5 text-right text-slate-300">
+                        <td className="py-2 px-2.5 text-center text-slate-700 dark:text-slate-300">{item.quantity}</td>
+                        <td className="py-2 px-2.5 text-right text-slate-700 dark:text-slate-300">
                           {formatRupiah(item.sellPrice)}
                         </td>
-                        <td className="py-2 px-2.5 text-right font-bold text-emerald-400">
+                        <td className="py-2 px-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
                           {formatRupiah(item.subtotal)}
                         </td>
                         <td className="py-2 px-2.5 text-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(item.id)}
-                            className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition"
+                            className="p-1 rounded text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -850,13 +852,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           </div>
 
           {/* Section 4: Ringkasan Biaya, Diskon & Status Pembayaran */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <span className="font-bold text-white block text-xs uppercase tracking-wider">
+              <span className="font-bold text-slate-900 dark:text-white block text-xs uppercase tracking-wider">
                 Pembayaran Pelanggan
               </span>
 
-              <label className="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+              <label className="flex items-center gap-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isPaid}
@@ -866,14 +868,14 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   }}
                   className="rounded text-emerald-500 focus:ring-0"
                 />
-                <span className="font-bold text-emerald-400">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
                   Tagihan Servis Sudah Lunas Dibayar
                 </span>
               </label>
 
               {!isPaid && (
                 <div>
-                  <label className="text-[11px] text-slate-400 block mb-1 font-semibold">
+                  <label className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1 font-semibold">
                     Uang Muka / DP yang Diterima Saat Masuk (Rp):
                   </label>
                   <div className="relative">
@@ -887,13 +889,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                         setPaidAmount(e.target.value);
                       }}
                       placeholder="0"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-amber-500"
+                      className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-amber-500"
                     />
                   </div>
                   {parseFloat(downPayment) > 0 && (
-                    <div className="mt-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] flex justify-between items-center">
+                    <div className="mt-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] flex justify-between items-center">
                       <span>Sisa Pelunasan Nanti:</span>
-                      <strong className="font-mono text-xs text-amber-400">{formatRupiah(Math.max(0, grandTotal - (parseFloat(downPayment) || 0)))}</strong>
+                      <strong className="font-mono text-xs text-amber-600 dark:text-amber-400">{formatRupiah(Math.max(0, grandTotal - (parseFloat(downPayment) || 0)))}</strong>
                     </div>
                   )}
                 </div>
@@ -901,26 +903,26 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             </div>
 
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Total Modal Sparepart (HPP):</span>
-                <span className="font-mono text-slate-300">{formatRupiah(totalPartsCost)}</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300">{formatRupiah(totalPartsCost)}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Total Biaya Jasa Kerja:</span>
-                <span className="font-mono text-blue-400">{formatRupiah(totalServiceFee)}</span>
+                <span className="font-mono text-blue-600 dark:text-blue-400">{formatRupiah(totalServiceFee)}</span>
               </div>
-              <div className="flex justify-between items-center text-slate-400">
+              <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
                 <span>Potongan / Diskon:</span>
                 <input
                   type="number"
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(e.target.value)}
-                  className="w-24 px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg text-right font-mono text-amber-400"
+                  className="w-24 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-right font-mono text-amber-600 dark:text-amber-400"
                 />
               </div>
-              <div className="pt-2 border-t border-slate-800 flex justify-between items-baseline font-bold">
-                <span className="text-white text-sm">Total Tagihan:</span>
-                <span className="text-emerald-400 font-mono text-xl font-extrabold">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-baseline font-bold">
+                <span className="text-slate-900 dark:text-white text-sm">Total Tagihan:</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xl font-extrabold">
                   {formatRupiah(grandTotal)}
                 </span>
               </div>
@@ -929,12 +931,12 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <button
             type="button"
             disabled={isSaving}
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition disabled:opacity-50"
           >
             Batal
           </button>
@@ -944,10 +946,10 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
               type="button"
               disabled={isSaving}
               onClick={() => handleSave(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition"
               title="Simpan data dan langsung cetak nota tanda terima servis"
             >
-              <Printer className="w-4 h-4 text-emerald-400" />
+              <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Simpan & Cetak Nota</span>
             </button>
 

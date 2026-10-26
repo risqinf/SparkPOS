@@ -225,7 +225,7 @@ export interface CashFlow {
   cashierId: number;
   cashierName: string;
   type: CashFlowType; // IN = Uang Masuk, OUT = Uang Keluar
-  category: string;   // e.g. 'Beli Makan / Konsumsi', 'Pengamen / Keamanan', 'Operasional & ATK'
+  category: string;   // e.g. 'Listrik, Air & Internet', 'Ongkos Kirim', 'Perlengkapan & Kemasan'
   amount: number;
   note?: string;
   createdAt: string;
@@ -268,6 +268,9 @@ export interface StoreProfile {
   isTaxInclusive: boolean;
   autoKickDrawer: boolean;
   autoPrintReceipt: boolean;
+  thermalPrinterName?: string; // Printer struk 58mm (dicetak langsung via ESC/POS)
+  a4PrinterName?: string;      // Printer faktur A4/F4 (dicetak senyap)
+  thermalAutoCut?: boolean;    // Printer thermal punya auto-cutter
   enablePrintReceipt?: boolean;
   currencySymbol: string;
   backupFolderPath?: string; // Path folder cadangan yang dipilih user (Drive D: dll)

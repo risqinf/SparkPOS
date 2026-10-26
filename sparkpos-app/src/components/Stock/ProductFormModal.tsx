@@ -3,6 +3,7 @@ import { X, Save, AlertCircle, Barcode, Tag, Boxes, DollarSign, Sparkles, Truck,
 import { Product, Category, Unit, Supplier, ProductCondition } from '../../types/pos';
 import { db, getSuppliers } from '../../services/storage';
 import { formatRupiah } from '../../services/cartCalculator';
+import { useDialog } from '../../hooks/useDialog';
 
 interface ProductFormModalProps {
   product: Product | null; // null if adding new
@@ -23,6 +24,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const isEditing = !!product;
 
   const [sku, setSku] = useState(product?.sku || `PRD-${Date.now().toString().slice(-4)}`);
@@ -181,19 +183,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Boxes className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white">
+            <Boxes className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               {isEditing ? 'Ubah Data Produk' : 'Tambah Produk / Jasa Baru'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -202,7 +204,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         {/* Content Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -211,7 +213,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Barcode & SKU Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                 SKU / Kode Barang
               </label>
               <input
@@ -219,13 +221,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-mono"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                   Barcode (Opsional)
                 </label>
                 <div className="flex items-center gap-2">
@@ -233,7 +235,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <button
                       type="button"
                       onClick={handleClearBarcode}
-                      className="text-[10px] text-slate-400 hover:text-rose-400"
+                      className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
                     >
                       Kosongkan
                     </button>
@@ -241,7 +243,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <button
                     type="button"
                     onClick={generateRandomBarcode}
-                    className="text-[10px] text-emerald-400 hover:underline"
+                    className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
                   >
                     Generate Acak
                   </button>
@@ -253,7 +255,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value)}
                   placeholder="Boleh dikosongkan..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-mono placeholder:text-slate-600"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-mono placeholder:text-slate-600"
                 />
                 <Barcode className="w-4 h-4 text-slate-500 absolute right-3 top-2.5" />
               </div>
@@ -262,7 +264,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Product Name */}
           <div>
-            <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
               Nama Produk / Layanan Jasa
             </label>
             <input
@@ -271,20 +273,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Instal Ulang Windows / SSD 512GB / Mouse Wireless"
               required
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Category & Unit */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                 Kategori
               </label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(parseInt(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -295,13 +297,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                 Satuan Jual
               </label>
               <select
                 value={unitId}
                 onChange={(e) => setUnitId(parseInt(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
               >
                 {units.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -314,7 +316,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Supplier / Distributor */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               Supplier / Pemasok (Opsional)
             </label>
             <div className="relative">
@@ -323,7 +325,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 onChange={(e) =>
                   setSupplierId(e.target.value === '' ? undefined : parseInt(e.target.value))
                 }
-                className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
               >
                 <option value="">-- Tanpa Supplier / Pemasok Umum --</option>
                 {suppliers.map((s) => (
@@ -344,7 +346,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Price (Buy vs Sell) */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                 Harga Modal (HPP)
               </label>
               <div className="relative">
@@ -356,13 +358,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   min="0"
                   value={buyPrice}
                   onChange={(e) => setBuyPrice(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                 Harga Jual Kasir
               </label>
               <div className="relative">
@@ -374,7 +376,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   min="0"
                   value={sellPrice}
                   onChange={(e) => setSellPrice(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-emerald-400 focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
             </div>
@@ -382,10 +384,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Spesifikasi Khusus Komputer & Laptop: Kondisi, Kelengkapan, Garansi, SN */}
           {!isServiceCategory && (
-            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+            <div className="p-3.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <Cpu className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   Kondisi & Kelengkapan Laptop / Komponen
                 </span>
                 <span className="text-[10px] text-slate-500">Khusus Toko Komputer</span>
@@ -393,16 +395,16 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               {/* Pilihan Kondisi Unit */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-200 mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   Kondisi Barang:
                 </label>
                 <div className="grid grid-cols-4 gap-1.5">
                   {(
                     [
-                      { key: 'BARU', label: 'Baru', desc: 'Segel / BNIB', color: 'border-emerald-600 bg-emerald-950/40 text-emerald-300' },
-                      { key: 'BEKAS', label: 'Bekas (Normal)', desc: 'Mulus 100% normal', color: 'border-blue-600 bg-blue-950/40 text-blue-300' },
-                      { key: 'MINUS', label: 'Bekas (Minus)', desc: 'Ada cacat / minus', color: 'border-amber-600 bg-amber-950/40 text-amber-300' },
-                      { key: 'MATOT', label: 'Matot / Kanibal', desc: 'Mati total / bahan sparepart', color: 'border-rose-600 bg-rose-950/40 text-rose-300' },
+                      { key: 'BARU', label: 'Baru', desc: 'Segel / BNIB', color: 'border-emerald-600 bg-emerald-50/40 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
+                      { key: 'BEKAS', label: 'Bekas (Normal)', desc: 'Mulus 100% normal', color: 'border-blue-600 bg-blue-50/40 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300' },
+                      { key: 'MINUS', label: 'Bekas (Minus)', desc: 'Ada cacat / minus', color: 'border-amber-600 bg-amber-50/40 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300' },
+                      { key: 'MATOT', label: 'Matot / Kanibal', desc: 'Mati total / bahan sparepart', color: 'border-rose-600 bg-rose-50/40 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300' },
                     ] as const
                   ).map((c) => (
                     <button
@@ -412,7 +414,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       className={`p-2 rounded-lg border text-left transition flex flex-col justify-between ${
                         condition === c.key
                           ? `${c.color} ring-1 ring-emerald-500 font-bold`
-                          : 'border-slate-800 bg-slate-950/50 text-slate-300 hover:border-slate-700 font-medium'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 font-medium'
                       }`}
                     >
                       <span className="text-xs">{c.label}</span>
@@ -425,7 +427,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* Detail Kerusakan / Minus jika bukan BARU */}
               {condition !== 'BARU' && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-amber-400 mb-1">
+                  <label className="block text-[11px] font-semibold text-amber-600 dark:text-amber-400 mb-1">
                     Detail Kerusakan / Catatan Minus Fisik:
                   </label>
                   <input
@@ -433,7 +435,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     value={conditionNotes}
                     onChange={(e) => setConditionNotes(e.target.value)}
                     placeholder="Contoh: Baterai drop, engsel kanan longgar, lecet casing wajar..."
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-amber-900/60 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-amber-300/60 dark:border-amber-900/60 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               )}
@@ -441,7 +443,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* Kelengkapan Unit & Serial Number */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-200 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                     Kelengkapan Unit (Laptop / Printer / PC):
                   </label>
                   <input
@@ -449,7 +451,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     value={completeness}
                     onChange={(e) => setCompleteness(e.target.value)}
                     placeholder="Unit + Charger + Dus, Kabel USB Printer..."
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                   />
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {[
@@ -476,7 +478,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           completeness.includes(tag)
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {completeness.includes(tag) ? `✓ ${tag}` : `+ ${tag}`}
@@ -486,7 +488,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-200 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                     Masa Garansi Toko / Pabrik:
                   </label>
                   <div className="relative">
@@ -495,9 +497,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       value={warrantyPeriod}
                       onChange={(e) => setWarrantyPeriod(e.target.value)}
                       placeholder="1 Bulan Toko / 1 Tahun Resmi..."
-                      className="w-full pl-7 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-7 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                     />
-                    <ShieldCheck className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute left-2 top-2" />
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {['3 Hari Tes', '7 Hari Toko', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Non Garansi'].map((w) => (
@@ -508,7 +510,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           warrantyPeriod === w
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {w}
@@ -520,8 +522,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               {/* Quick Chips Minus untuk Printer / Komputer jika bukan BARU */}
               {condition !== 'BARU' && (
-                <div className="pt-2 border-t border-slate-800/60">
-                  <span className="text-[10px] font-bold text-slate-200 block mb-1">Pilih Cepat Minus Printer / PC / Laptop:</span>
+                <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                  <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 block mb-1">Pilih Cepat Minus Printer / PC / Laptop:</span>
                   <div className="flex flex-wrap gap-1">
                     {[
                       'Head Buntu / Bergaris',
@@ -547,7 +549,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         className={`text-[9px] px-1.5 py-0.5 rounded transition ${
                           conditionNotes.includes(m)
                             ? 'bg-amber-600 text-white font-bold'
-                            : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-medium'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'
                         }`}
                       >
                         {conditionNotes.includes(m) ? `✓ ${m}` : `+ ${m}`}
@@ -559,7 +561,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
               {/* Serial Number (SN / IMEI) */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-200 mb-1">
+                <label className="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Serial Number / No. Seri Mesin (Opsional):
                 </label>
                 <input
@@ -567,18 +569,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
                   placeholder="SN: LNV-PF123456 / Cek di stiker belakang laptop"
-                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
           )}
 
           {isServiceCategory ? (
-            <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs flex items-center gap-2.5">
-              <Sparkles className="w-5 h-5 text-blue-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2.5">
+              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
               <div>
                 <p className="font-bold">Layanan Jasa — Stok Tak Terbatas (∞)</p>
-                <p className="text-[11px] text-blue-300/80 mt-0.5">
+                <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-0.5">
                   Produk dengan kategori Jasa tidak memerlukan stok fisik dan dapat ditransaksikan kapan saja di kasir tanpa batas stok.
                 </p>
               </div>
@@ -586,7 +588,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                   Stok Awal Fisik
                 </label>
                 <input
@@ -594,12 +596,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   min="0"
                   value={stock}
                   onChange={(e) => setStock(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">
                   Batas Minimum Stok (Peringatan)
                 </label>
                 <input
@@ -607,7 +609,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   min="0"
                   value={minStock}
                   onChange={(e) => setMinStock(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-amber-400 focus:outline-none focus:border-emerald-500 font-bold"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-amber-600 dark:text-amber-400 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
             </div>
@@ -615,42 +617,42 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
           {/* Pencatatan Keuangan Pembelian Unit (Kas Keluar Toko - Beli Laptop = Uang Keluar) */}
           {!isEditing && !isServiceCategory && (
-            <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-800/60 space-y-3">
+            <div className="p-3.5 rounded-xl bg-rose-50/30 dark:bg-rose-950/30 border border-rose-300/60 dark:border-rose-800/60 space-y-3">
               <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-xs font-bold text-rose-300 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-bold text-rose-700 dark:text-rose-300 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={recordCashOut}
                     onChange={(e) => setRecordCashOut(e.target.checked)}
-                    className="w-4 h-4 rounded text-rose-600 bg-slate-950 border-slate-700 cursor-pointer"
+                    className="w-4 h-4 rounded text-rose-600 bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 cursor-pointer"
                   />
                   <span>Catat Pembelian Unit Ini Sebagai Kas Keluar Toko</span>
                 </label>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-rose-900/60 text-rose-200 border border-rose-700/60 uppercase">
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-rose-100/60 dark:bg-rose-900/60 text-rose-700 dark:text-rose-200 border border-rose-300/60 dark:border-rose-700/60 uppercase">
                   Uang Keluar
                 </span>
               </div>
 
               {recordCashOut && (
-                <div className="space-y-2 pt-2 border-t border-rose-900/40 text-xs">
-                  <div className="p-2.5 rounded-lg bg-rose-900/30 border border-rose-800/40 flex items-center justify-between">
-                    <span className="text-slate-300 text-[11px]">
+                <div className="space-y-2 pt-2 border-t border-rose-300/40 dark:border-rose-900/40 text-xs">
+                  <div className="p-2.5 rounded-lg bg-rose-100/30 dark:bg-rose-900/30 border border-rose-300/40 dark:border-rose-800/40 flex items-center justify-between">
+                    <span className="text-slate-700 dark:text-slate-300 text-[11px]">
                       Total Uang Modal Keluar ({stock} unit x {formatRupiah(parseFloat(buyPrice) || 0)}):
                     </span>
-                    <span className="text-base font-black text-rose-400 font-mono">
+                    <span className="text-base font-black text-rose-600 dark:text-rose-400 font-mono">
                       -{formatRupiah((parseFloat(buyPrice) || 0) * (parseFloat(stock) || 0))}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                         Sumber Kas Toko:
                       </label>
                       <select
                         value={cashOutSource}
                         onChange={(e) => setCashOutSource(e.target.value as 'CASH' | 'TRANSFER')}
-                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
                       >
                         <option value="CASH">💵 Kas Tunai di Laci Kasir (Saldo Laci Berkurang)</option>
                         <option value="TRANSFER">🏦 Transfer Bank Rekening Toko</option>
@@ -658,7 +660,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
                         Dibeli Dari (Customer / Supplier):
                       </label>
                       <input
@@ -666,11 +668,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         value={sellerName}
                         onChange={(e) => setSellerName(e.target.value)}
                         placeholder="Contoh: Bpk. Hendra (Beli Laptop Second)"
-                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder:text-slate-600"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white placeholder:text-slate-600"
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-400 italic">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
                     * Membeli laptop/hardware berarti kas toko berkurang (uang keluar) untuk menambah persediaan unit barang.
                   </p>
                 </div>
@@ -679,11 +681,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           )}
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-750 font-semibold text-xs"
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750 font-semibold text-xs"
             >
               Batal
             </button>

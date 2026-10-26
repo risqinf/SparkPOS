@@ -26,6 +26,7 @@ import {
   saveWorkShiftTemplates,
   DEFAULT_WORK_SHIFTS,
 } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface CashierManagementModalProps {
   currentUser: Employee;
@@ -40,6 +41,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   onClose,
   onLogoutAndSwitch,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [activeTab, setActiveTab] = useState<'cashiers' | 'shifts'>('cashiers');
 
   // Cashiers state
@@ -317,22 +319,22 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-3">
-      <div className="w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
         {/* Header with Title and Mode Switcher */}
-        <div className="px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900 shrink-0">
+        <div className="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span>Panel Staf & Management Shift</span>
-                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   Owner
                 </span>
               </h2>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Kelola akun kasir, jadwal kerja custom, atau template shift toko
               </p>
             </div>
@@ -340,7 +342,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
           <div className="flex items-center gap-2">
             {/* Tab Buttons */}
-            <div className="flex items-center gap-1 p-0.5 bg-zinc-950 rounded-lg border border-zinc-800 text-xs font-semibold">
+            <div className="flex items-center gap-1 p-0.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => {
@@ -350,8 +352,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
                   activeTab === 'cashiers'
-                    ? 'bg-zinc-800 text-zinc-100 shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -367,8 +369,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                 }}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
                   activeTab === 'shifts'
-                    ? 'bg-zinc-800 text-zinc-100 shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -383,10 +385,10 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                   onClose();
                   onLogoutAndSwitch();
                 }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold transition"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-semibold transition"
                 title="Keluar dari akun Owner & buka layar login kasir"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 <span className="hidden sm:inline">Logout Kasir</span>
               </button>
             )}
@@ -394,7 +396,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition"
+              className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               <X className="w-4 h-4" />
             </button>
@@ -405,14 +407,14 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
         {(errorMessage || successMessage) && (
           <div className="px-4 pt-2.5 pb-0">
             {errorMessage && (
-              <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+              <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
                 <span>{errorMessage}</span>
               </div>
             )}
             {successMessage && (
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <span>{successMessage}</span>
               </div>
             )}
@@ -423,18 +425,18 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
         {activeTab === 'cashiers' && (
           <div className="p-3.5 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-12 gap-3.5 text-xs">
             {/* Form Side (5 cols) */}
-            <div className="md:col-span-5 bg-slate-950/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div className="md:col-span-5 bg-slate-50/60 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
               <form onSubmit={handleSubmitCashier} className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <span className="text-xs font-bold text-white flex items-center gap-2">
-                    <UserPlus className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>{editingId ? 'Edit Data Kasir' : 'Tambah Kasir Baru'}</span>
                   </span>
                   {editingId && (
                     <button
                       type="button"
                       onClick={resetCashierForm}
-                      className="text-[11px] text-slate-400 hover:text-white"
+                      className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     >
                       Batal Edit
                     </button>
@@ -442,8 +444,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Nama Lengkap Kasir <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    Nama Lengkap Kasir <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -451,13 +453,13 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                     placeholder="Contoh: Kasir 1 (Rian) atau Siti"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Username Login <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    Username Login <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -465,13 +467,13 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                     placeholder="Contoh: kasir1 atau siti"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
-                    PIN Akses POS (4 - 6 Angka) <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    PIN Akses POS (4 - 6 Angka) <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="password"
@@ -480,23 +482,23 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                     placeholder="Contoh: 1234"
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono font-bold tracking-widest focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono font-bold tracking-widest focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 {/* Pilihan Peran / Role Staf (Owner, Kasir, Teknisi) */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Peran / Hak Akses Staf <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    Peran / Hak Akses Staf <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800 text-[10px] font-bold text-center">
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-center">
                     <button
                       type="button"
                       onClick={() => setStaffRole('kasir')}
                       className={`py-1.5 rounded-lg transition ${
                         staffRole === 'kasir'
                           ? 'bg-blue-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Kasir
@@ -507,7 +509,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       className={`py-1.5 rounded-lg transition ${
                         staffRole === 'teknisi'
                           ? 'bg-amber-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Teknisi
@@ -518,7 +520,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       className={`py-1.5 rounded-lg transition ${
                         staffRole === 'owner'
                           ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Owner
@@ -532,24 +534,24 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                 </div>
 
                 {/* Pengaturan Jam Kerja Shift Kasir */}
-                <div className="pt-2 border-t border-slate-800 space-y-2">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                    <label className="block text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>Jadwal & Jam Kerja Shift</span>
                     </label>
                     <span className="text-[10px] text-slate-500">Pilih skema waktu</span>
                   </div>
 
                   {/* 3 Selector Mode: Template, Custom Jam, Flexible */}
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800 text-[10px] font-bold text-center">
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-center">
                     <button
                       type="button"
                       onClick={() => setShiftMode('template')}
                       className={`py-1.5 rounded-lg transition ${
                         shiftMode === 'template'
-                          ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-700'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Template
@@ -559,8 +561,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       onClick={() => setShiftMode('custom')}
                       className={`py-1.5 rounded-lg transition ${
                         shiftMode === 'custom'
-                          ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-700'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Atur Jam
@@ -570,8 +572,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       onClick={() => setShiftMode('flexible')}
                       className={`py-1.5 rounded-lg transition ${
                         shiftMode === 'flexible'
-                          ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-700'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Fleksibel
@@ -584,7 +586,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       <select
                         value={selectedTemplateId}
                         onChange={(e) => setSelectedTemplateId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                       >
                         {shiftTemplates.map((t) => (
                           <option key={t.id} value={t.id}>
@@ -595,7 +597,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveTab('shifts')}
-                        className="text-[11px] text-emerald-400 hover:underline mt-1 block"
+                        className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline mt-1 block"
                       >
                         + Tambah template shift baru di tab Management Shift
                       </button>
@@ -604,33 +606,33 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
                   {/* Mode 2: Atur Jam Kerja Sendiri (Jam Masuk + Jam Selesai) */}
                   {shiftMode === 'custom' && (
-                    <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2.5">
-                      <span className="text-[11px] text-slate-400 block font-medium">
+                    <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">
                         Tentukan jam masuk dan jam selesai untuk kasir ini:
                       </span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Jam Masuk:</label>
+                          <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Jam Masuk:</label>
                           <input
                             type="time"
                             required
                             value={customStart}
                             onChange={(e) => setCustomStart(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Jam Selesai:</label>
+                          <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Jam Selesai:</label>
                           <input
                             type="time"
                             required
                             value={customEnd}
                             onChange={(e) => setCustomEnd(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
                           />
                         </div>
                       </div>
-                      <div className="text-[10px] text-emerald-400 font-mono flex items-center justify-between pt-1 border-t border-slate-800">
+                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800">
                         <span>Jadwal Aktif:</span>
                         <span>{customStart} s/d {customEnd}</span>
                       </div>
@@ -639,12 +641,12 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
                   {/* Mode 3: Shift Fleksibel */}
                   {shiftMode === 'flexible' && (
-                    <div className="p-3 bg-slate-900 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 space-y-1">
+                    <div className="p-3 bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-xl text-xs text-emerald-700 dark:text-emerald-300 space-y-1">
                       <p className="font-bold flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Shift Fleksibel Tanpa Batasan Jam</span>
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Kasir ini dapat membuka kasir shift kapan saja tanpa terikat jam masuk atau jam selesai kerja.
                       </p>
                     </div>
@@ -663,8 +665,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
             {/* List Side (7 cols) */}
             <div className="md:col-span-7 flex flex-col space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span className="font-bold text-white uppercase tracking-wider text-[11px]">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+                <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
                   Daftar Kasir & Jadwal Kerja ({cashiers.length})
                 </span>
                 <span>Klik edit untuk ubah jadwal / PIN</span>
@@ -681,22 +683,22 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                       key={emp.id}
                       className={`p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${
                         isOwner
-                          ? 'bg-slate-850/80 border-emerald-500/30'
+                          ? 'bg-slate-50/80 dark:bg-slate-850/80 border-emerald-500/30'
                           : isTeknisi
-                          ? 'bg-slate-850/60 border-amber-500/30'
+                          ? 'bg-slate-50/60 dark:bg-slate-850/60 border-amber-500/30'
                           : isActive
-                          ? 'bg-slate-900 border-slate-800 hover:border-slate-700'
-                          : 'bg-slate-950 border-slate-850 opacity-60'
+                          ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                          : 'bg-slate-50 dark:bg-slate-950 border-slate-850 opacity-60'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
                             isOwner
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                               : isTeknisi
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                              : 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30'
                           }`}
                         >
                           {isOwner ? <Shield className="w-5 h-5" /> : emp.fullName.slice(0, 2).toUpperCase()}
@@ -704,30 +706,30 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-white truncate">{emp.fullName}</span>
+                            <span className="font-bold text-xs text-slate-900 dark:text-white truncate">{emp.fullName}</span>
                             <span
                               className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                                 isOwner
-                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                                   : isTeknisi
-                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                                  : 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30'
                               }`}
                             >
                               {isOwner ? 'Owner' : isTeknisi ? 'Teknisi' : 'Kasir'}
                             </span>
                             {!isActive && (
-                              <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">
+                              <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300">
                                 Non-Aktif
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1">
+                          <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                             <span className="font-mono">User: @{emp.username}</span>
                             <span>•</span>
-                            <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                              <Clock className="w-3 h-3 text-emerald-400" />
+                            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                              <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                               <span>{emp.shiftSchedule || 'Shift Fleksibel'}</span>
                             </span>
                           </div>
@@ -740,7 +742,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           type="button"
                           onClick={() => handleEditCashier(emp)}
                           title="Edit Data / Jam Kerja"
-                          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -753,8 +755,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                               title={isActive ? 'Nonaktifkan Kasir' : 'Aktifkan Kembali'}
                               className={`p-2 rounded-lg transition ${
                                 isActive
-                                  ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-500'
+                                  ? 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400'
+                                  : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500'
                               }`}
                             >
                               {isActive ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
@@ -764,7 +766,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                               type="button"
                               onClick={() => handleDeleteCashier(emp)}
                               title="Hapus Kasir"
-                              className="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -783,21 +785,21 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
         {activeTab === 'shifts' && (
           <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-12 gap-6">
             {/* Form Buat Template Shift Baru (5 cols) */}
-            <div className="md:col-span-5 bg-slate-950/60 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div className="md:col-span-5 bg-slate-50/60 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
               <form onSubmit={handleAddShiftTemplate} className="space-y-4">
-                <div className="pb-2 border-b border-slate-800">
-                  <span className="text-xs font-bold text-white flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-emerald-400" />
+                <div className="pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>Tambah Template Shift Toko Baru</span>
                   </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     Buat jam kerja standar toko untuk ditetapkan ke kasir
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
-                    Nama Template Shift <span className="text-rose-400">*</span>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    Nama Template Shift <span className="text-rose-600 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -805,54 +807,54 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                     placeholder="Contoh: Shift Pagi, Shift Weekend, Lembur"
                     value={newShiftName}
                     onChange={(e) => setNewShiftName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                   />
                 </div>
 
                 {/* Pilihan: Jam Tertentu vs Fleksibel */}
-                <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2.5">
-                  <label className="flex items-center gap-2 text-xs text-slate-200 cursor-pointer font-semibold">
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <label className="flex items-center gap-2 text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-semibold">
                     <input
                       type="checkbox"
                       checked={newShiftIsFlexible}
                       onChange={(e) => setNewShiftIsFlexible(e.target.checked)}
-                      className="rounded text-emerald-500 focus:ring-0 bg-slate-950 border-slate-700"
+                      className="rounded text-emerald-500 focus:ring-0 bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700"
                     />
                     <span>Ini adalah Shift Fleksibel (Tanpa jam tetap)</span>
                   </label>
 
                   {!newShiftIsFlexible ? (
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-1">Jam Masuk Kerja:</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Jam Masuk Kerja:</label>
                         <input
                           type="time"
                           required
                           value={newShiftStart}
                           onChange={(e) => setNewShiftStart(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                          className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-1">Jam Selesai Kerja:</label>
+                        <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Jam Selesai Kerja:</label>
                         <input
                           type="time"
                           required
                           value={newShiftEnd}
                           onChange={(e) => setNewShiftEnd(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                          className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
                         />
                       </div>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       Shift fleksibel mengizinkan kasir masuk kapan saja tanpa jadwal tetap.
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                     Keterangan / Catatan Shift
                   </label>
                   <input
@@ -860,7 +862,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                     placeholder="Contoh: Khusus hari libur / jam sibuk"
                     value={newShiftDesc}
                     onChange={(e) => setNewShiftDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -876,8 +878,8 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
 
             {/* List Template Shift (7 cols) */}
             <div className="md:col-span-7 flex flex-col space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span className="font-bold text-white uppercase tracking-wider text-[11px]">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+                <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
                   Master Template Jam Kerja Toko ({shiftTemplates.length})
                 </span>
                 <span>Template yang aktif dapat dipilih di form kasir</span>
@@ -890,31 +892,31 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                   return (
                     <div
                       key={t.id}
-                      className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between gap-3"
+                      className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-slate-800 text-emerald-400 border border-slate-700 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center shrink-0">
                           <Clock className="w-5 h-5" />
                         </div>
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-white">{t.name}</span>
+                            <span className="font-bold text-xs text-slate-900 dark:text-white">{t.name}</span>
                             <span
                               className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                                 t.isFlexible
-                                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30'
+                                  : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                               }`}
                             >
                               {t.isFlexible ? 'Fleksibel' : `${t.startTime} - ${t.endTime}`}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1">
+                          <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                             <span>{t.description || (t.isFlexible ? 'Shift bebas' : 'Jam kerja operasional')}</span>
                             <span>•</span>
-                            <span className="text-slate-400">Dipakai oleh {usedCount} kasir</span>
+                            <span className="text-slate-500 dark:text-slate-400">Dipakai oleh {usedCount} kasir</span>
                           </div>
                         </div>
                       </div>
@@ -924,7 +926,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                           type="button"
                           onClick={() => handleDeleteShiftTemplate(t.id)}
                           title="Hapus Template Shift"
-                          className="p-2 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -938,7 +940,7 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>
             Jadwal shift memudahkan Owner memonitor kehadiran dan jam operasional kasir.
           </span>
@@ -950,17 +952,17 @@ export const CashierManagementModal: React.FC<CashierManagementModalProps> = ({
                   onClose();
                   onLogoutAndSwitch();
                 }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold transition shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-bold transition shadow-sm"
                 title="Selesai kelola kasir, keluar dari akun Owner dan langsung buka layar login kasir"
               >
-                <LogOut className="w-4 h-4 text-rose-400" />
+                <LogOut className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                 <span>Selesai & Logout ke Layar Kasir</span>
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium transition"
+              className="px-5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-medium transition"
             >
               Tutup Panel
             </button>

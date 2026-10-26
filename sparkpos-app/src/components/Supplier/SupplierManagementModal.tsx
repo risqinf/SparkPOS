@@ -19,6 +19,7 @@ import {
   updateSupplier,
   deleteSupplier,
 } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface SupplierManagementModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
   onClose,
   onSupplierSelected,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
@@ -128,17 +130,17 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] animate-in fade-in zoom-in-95 duration-150">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Kelola Data Pemasok (Supplier)</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Kelola Data Pemasok (Supplier)</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Pencatatan distributor & supplier barang (Hardisk, RAM, Laptop, Sparepart)
               </p>
             </div>
@@ -147,7 +149,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -157,14 +159,14 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
         {(errorMessage || successMessage) && (
           <div className="px-6 pt-4 pb-0 shrink-0">
             {errorMessage && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
             {successMessage && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{successMessage}</span>
               </div>
             )}
@@ -174,18 +176,18 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 text-xs">
           {/* Form Side (5 cols) */}
-          <div className="md:col-span-5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+          <div className="md:col-span-5 bg-slate-50/60 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <span className="font-bold text-white flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 text-blue-400" />
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>{editingId ? 'Edit Data Supplier' : 'Tambah Supplier Baru'}</span>
                 </span>
                 {editingId && (
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="text-[11px] text-slate-400 hover:text-white"
+                    className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   >
                     Batal
                   </button>
@@ -193,8 +195,8 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">
-                  Nama Supplier / Distributor <span className="text-rose-400">*</span>
+                <label className="text-slate-500 dark:text-slate-400 block mb-1">
+                  Nama Supplier / Distributor <span className="text-rose-600 dark:text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -202,40 +204,40 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
                   placeholder="e.g. PT Hardisk Jaya / Mangga Dua"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">No. Telepon / Sales WA</label>
+                <label className="text-slate-500 dark:text-slate-400 block mb-1">No. Telepon / Sales WA</label>
                 <input
                   type="text"
                   placeholder="e.g. 0812-9988-7766"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Alamat Kantor / Toko</label>
+                <label className="text-slate-500 dark:text-slate-400 block mb-1">Alamat Kantor / Toko</label>
                 <input
                   type="text"
                   placeholder="e.g. Harco Mangga Dua Lt. 2 Blok B"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Catatan / Kontak PIC</label>
+                <label className="text-slate-500 dark:text-slate-400 block mb-1">Catatan / Kontak PIC</label>
                 <textarea
                   rows={2}
                   placeholder="e.g. Sales: Mas Deni, Minimal order 5 pcs"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500 resize-none"
                 />
               </div>
 
@@ -251,7 +253,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
 
           {/* List Side (7 cols) */}
           <div className="md:col-span-7 flex flex-col space-y-3">
-            <span className="font-bold text-white uppercase tracking-wider text-[11px] px-1">
+            <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] px-1">
               Daftar Supplier ({suppliers.length})
             </span>
 
@@ -265,18 +267,18 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
                 suppliers.map((sup) => (
                   <div
                     key={sup.id}
-                    className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-start justify-between gap-3 hover:border-slate-700 transition"
+                    className="p-3.5 rounded-2xl bg-slate-50/60 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition"
                   >
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-white text-xs truncate">{sup.name}</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{sup.name}</h4>
                       {sup.phone && (
-                        <p className="text-[11px] text-emerald-400 font-mono flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1 mt-0.5">
                           <Phone className="w-3 h-3" />
                           <span>{sup.phone}</span>
                         </p>
                       )}
                       {sup.address && (
-                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 flex items-center gap-1">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
                           <span>{sup.address}</span>
                         </p>
@@ -305,7 +307,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
                       <button
                         type="button"
                         onClick={() => handleEdit(sup)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                        className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
                         title="Edit Supplier"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -314,7 +316,7 @@ export const SupplierManagementModal: React.FC<SupplierManagementModalProps> = (
                       <button
                         type="button"
                         onClick={() => handleDelete(sup)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition"
+                        className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
                         title="Hapus Supplier"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

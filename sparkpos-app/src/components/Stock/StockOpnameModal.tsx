@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, ClipboardCheck, ArrowRight, Save, AlertTriangle } from 'lucide-react';
 import { Product } from '../../types/pos';
 import { db } from '../../services/storage';
+import { useDialog } from '../../hooks/useDialog';
 
 interface StockOpnameModalProps {
   products: Product[];
@@ -16,6 +17,7 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
   onSuccess,
   onClose,
 }) => {
+  const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [selectedProductId, setSelectedProductId] = useState<number>(
     initialProduct?.id || products[0]?.id || 1
   );
@@ -64,17 +66,17 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-white">Stock Opname / Penyesuaian Stok Fisik</h2>
+            <ClipboardCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Stock Opname / Penyesuaian Stok Fisik</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -84,7 +86,7 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Select Product */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               Pilih Produk
             </label>
             <select
@@ -95,7 +97,7 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
                 const p = products.find((prod) => prod.id === id);
                 if (p) setPhysicalCountStr(p.stock.toString());
               }}
-              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
             >
               {products.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -107,16 +109,16 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
 
           {/* Comparison Cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-              <span className="text-[11px] text-slate-400 font-medium block">Stok di Sistem:</span>
-              <div className="text-2xl font-black text-white mt-1">
+            <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">Stok di Sistem:</span>
+              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {systemStock}{' '}
-                <span className="text-xs font-normal text-slate-400">{selectedProduct?.unitName}</span>
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{selectedProduct?.unitName}</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] text-slate-400 font-semibold mb-1">
+              <label className="block text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
                 Jumlah Riil di Toko/Rak:
               </label>
               <input
@@ -126,7 +128,7 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
                 value={physicalCountStr}
                 onChange={(e) => setPhysicalCountStr(e.target.value)}
                 placeholder="Jumlah riil..."
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-2xl font-black text-emerald-400 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-2xl font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500"
               />
             </div>
           </div>
@@ -136,10 +138,10 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
             <div
               className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
                 discrepancy === 0
-                  ? 'bg-slate-800 border-slate-700 text-slate-300'
+                  ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                   : discrepancy > 0
-                  ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
-                  : 'bg-rose-950/40 border-rose-800 text-rose-300'
+                  ? 'bg-emerald-50/40 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-rose-50/40 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300'
               }`}
             >
               <span>Hasil Selisih Fisik:</span>
@@ -156,13 +158,13 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
 
           {/* Reason */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               Alasan Penyesuaian
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
             >
               <option value="Barang Rusak / Pecah">Barang Rusak / Pecah</option>
               <option value="Barang Kadaluarsa (Expired)">Barang Kadaluarsa (Expired)</option>
@@ -175,7 +177,7 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
 
           {/* Optional Notes */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
               Catatan Tambahan (Opsional)
             </label>
             <input
@@ -183,16 +185,16 @@ export const StockOpnameModal: React.FC<StockOpnameModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Contoh: Ditemukan bocor di rak belakang"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-750 font-semibold text-xs"
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750 font-semibold text-xs"
             >
               Batal
             </button>
