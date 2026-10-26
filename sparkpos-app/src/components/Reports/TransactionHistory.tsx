@@ -780,14 +780,14 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         <div
           className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-2 border animate-in fade-in slide-in-from-top-3 duration-200 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-950/90 border-rose-700 text-rose-200'
-              : 'bg-emerald-950/90 border-emerald-700 text-emerald-200'
+              ? 'bg-rose-50/90 dark:bg-rose-950/90 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-200'
+              : 'bg-emerald-50/90 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-200'
           }`}
         >
           {toastMessage.type === 'error' ? (
-            <AlertCircle className="w-4 h-4 text-rose-400" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           )}
           <span>{toastMessage.text}</span>
         </div>
@@ -1001,7 +1001,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           {/* Search Box & Type Filter Tabs */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
             <div className="relative flex-1 min-w-[240px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
@@ -1013,7 +1013,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute right-2.5 top-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1379,7 +1379,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                               : 'hover:bg-emerald-50/40 dark:hover:bg-slate-800/50'
                           }`}
                         >
-                          <td className="py-3 px-3 text-center text-slate-400">
+                          <td className="py-3 px-3 text-center text-slate-500 dark:text-slate-400">
                             {isExpanded ? (
                               <ChevronDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400 inline" />
                             ) : (
@@ -1465,7 +1465,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                             {isFlow ? `${flowIn ? '+' : '-'}${formatRupiah(rec.grandTotal)}` : formatRupiah(rec.grandTotal)}
                           </td>
                           <td className="py-3 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
-                            {isFlow ? <span className="text-slate-400">—</span> : `+${formatRupiah(rec.grossProfit)}`}
+                            {isFlow ? <span className="text-slate-500 dark:text-slate-400">—</span> : `+${formatRupiah(rec.grossProfit)}`}
                           </td>
                           <td
                             className="py-3 px-3 text-center"
@@ -1608,7 +1608,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => setIsEditOpeningCashOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1623,7 +1623,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 Nominal Modal Awal (Rp):
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500 dark:text-slate-400">Rp</span>
                 <input
                   type="number"
                   min="0"
@@ -1682,7 +1682,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <button
                 type="button"
                 onClick={() => setTransactionToEdit(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1791,7 +1791,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               <button
                 type="button"
                 onClick={closeCashFlowModal}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1835,7 +1835,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   Nominal (Rp):
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500 dark:text-slate-400">Rp</span>
                   <input
                     type="number"
                     min="0"

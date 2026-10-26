@@ -614,14 +614,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         <div
           className={`absolute top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-2 border animate-in fade-in slide-in-from-top-3 duration-200 ${
             toastMessage.type === 'error'
-              ? 'bg-rose-950/90 border-rose-700 text-rose-200'
-              : 'bg-emerald-950/90 border-emerald-700 text-emerald-200'
+              ? 'bg-rose-50/90 dark:bg-rose-950/90 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-200'
+              : 'bg-emerald-50/90 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-200'
           }`}
         >
           {toastMessage.type === 'error' ? (
-            <AlertCircle className="w-4 h-4 text-rose-400" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           ) : (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           )}
           <span>{toastMessage.text}</span>
         </div>
@@ -768,7 +768,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           {filteredProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 py-12 space-y-2">
               <ShoppingCart className="w-12 h-12 opacity-20 mb-2" />
-              <p className="text-sm font-semibold text-slate-300">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                 {products.length === 0
                   ? 'Katalog Produk Masih Kosong'
                   : 'Tidak ada produk yang cocok dengan pencarian.'}
@@ -929,7 +929,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             <button
               onClick={clearCart}
               disabled={cartItems.length === 0}
-              className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition"
+              className="p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition"
               title="Kosongkan Keranjang"
             >
               <RotateCcw className="w-4 h-4" />
@@ -1042,10 +1042,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         </div>
 
         {/* Financial Summary & Large Checkout Button (Fixed at Bottom) */}
-        <div className="p-4 bg-slate-900 border-t border-slate-800 shrink-0 space-y-3 shadow-lg">
+        <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-3 shadow-lg">
           {/* Input Nama Pelanggan (Opsional - Dicetak di Struk) */}
-          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition">
-            <User className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5" />
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 focus-within:border-emerald-500/80 transition">
+            <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0 ml-1.5" />
             <input
               ref={customerNameInputRef}
               type="text"
@@ -1058,14 +1058,14 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                 }
               }}
               placeholder="Nama Pelanggan (Opsional - dicetak di nota)..."
-              className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
+              className="w-full bg-transparent text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
             />
             {customerName && (
               <button
                 tabIndex={-1}
                 type="button"
                 onClick={() => setCustomerName('')}
-                className="text-slate-500 hover:text-slate-300 text-xs px-1.5 cursor-pointer"
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs px-1.5 cursor-pointer"
                 title="Hapus nama pelanggan"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1207,61 +1207,61 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       )}
 
       {/* Keyboard Shortcut Ribbon for Cashier & Admin Fast Productivity */}
-      <div className="bg-slate-900 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0 select-none overflow-x-auto no-scrollbar gap-2">
+      <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0 select-none overflow-x-auto no-scrollbar gap-2">
         <div className="flex items-center gap-2.5 whitespace-nowrap">
           <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mr-1">
             Shortcut Keyboard:
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F2</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F2</kbd>
             <span>Scan/Cari</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">↑ / ↓</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">↑ / ↓</kbd>
             <span>Pilih Produk</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Ctrl+↑↓ · + − · Del</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">Ctrl+↑↓ · + − · Del</kbd>
             <span>Baris Keranjang</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Enter / DblClick</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">Enter / DblClick</kbd>
             <span>+Keranjang</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 font-mono text-[10px] font-bold">F12 / Ctrl+Enter</kbd>
-            <span className="text-emerald-400 font-semibold">Bayar</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-bold">F12 / Ctrl+Enter</kbd>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Bayar</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F4</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F4</kbd>
             <span>Parkir</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F6</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F6</kbd>
             <span>Antrean</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F8</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F8</kbd>
             <span>Diskon</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F9</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F9</kbd>
             <span>Kosongkan</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F10</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F10</kbd>
             <span>Arus Kas</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">F1</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">F1</kbd>
             <span>Bantuan</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Alt+1..9</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">Alt+1..9</kbd>
             <span>Kategori</span>
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-white font-mono text-[10px] font-bold">Qty*</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono text-[10px] font-bold">Qty*</kbd>
             <span>Jumlah Banyak (Cth: 5*Kabel)</span>
           </span>
         </div>

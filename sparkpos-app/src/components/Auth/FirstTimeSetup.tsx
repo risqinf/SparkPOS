@@ -227,17 +227,17 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
   // IF SETUP IS COMPLETED: SHOW CLEAR CHOICE SCREEN (Owner vs Cashier)
   if (setupResult) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
-        <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-6 p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
+      <div className="fixed inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+        <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-6 p-6 md:p-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-9 h-9" />
           </div>
 
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Setup Toko Selesai! <CheckCircle2 className="w-4 h-4 inline mr-1 text-emerald-500" />
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Data toko <strong className="text-white">{setupResult.profile.storeName}</strong> berhasil dikonfigurasi.
             </p>
           </div>
@@ -245,44 +245,44 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
           {/* Account Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6">
             {/* Owner Account Card */}
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-left">
+            <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-left">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
                   <span>Akun Owner</span>
                 </span>
-                <span className="text-xs font-mono text-slate-400">PIN: {setupResult.admin.pin}</span>
+                <span className="text-xs font-mono text-slate-500 dark:text-slate-400">PIN: {setupResult.admin.pin}</span>
               </div>
-              <div className="font-bold text-sm text-white">{setupResult.admin.fullName}</div>
-              <div className="text-xs text-slate-400 font-mono mt-0.5">@{setupResult.admin.username}</div>
+              <div className="font-bold text-sm text-slate-900 dark:text-white">{setupResult.admin.fullName}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">@{setupResult.admin.username}</div>
               <p className="text-[11px] text-slate-500 mt-2">
                 Akses penuh: master produk, laporan, kelola kasir, dan backup database.
               </p>
             </div>
 
             {/* Cashier Account Card */}
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-left">
+            <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-left">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1">
                   <User className="w-3 h-3" />
                   <span>Akun Kasir</span>
                 </span>
                 {setupResult.cashier && (
-                  <span className="text-xs font-mono text-slate-400">PIN: {setupResult.cashier.pin}</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">PIN: {setupResult.cashier.pin}</span>
                 )}
               </div>
               {setupResult.cashier ? (
                 <>
-                  <div className="font-bold text-sm text-white">{setupResult.cashier.fullName}</div>
-                  <div className="text-xs text-slate-400 font-mono mt-0.5">@{setupResult.cashier.username}</div>
-                  <p className="text-[11px] text-emerald-400/90 mt-2 flex items-center gap-1 font-medium">
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">{setupResult.cashier.fullName}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">@{setupResult.cashier.username}</div>
+                  <p className="text-[11px] text-emerald-600/90 dark:text-emerald-400/90 mt-2 flex items-center gap-1 font-medium">
                     <Clock className="w-3 h-3" />
                     <span>Jadwal: {setupResult.cashier.shiftSchedule || 'Shift Fleksibel'}</span>
                   </p>
                 </>
               ) : (
                 <div className="py-2">
-                  <div className="text-xs text-slate-400 italic">Belum ada kasir yang ditambahkan.</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 italic">Belum ada kasir yang ditambahkan.</div>
                   <p className="text-[11px] text-slate-500 mt-1">
                     Anda dapat menambahkan kasir kapan saja di menu Kelola Kasir.
                   </p>
@@ -293,7 +293,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
 
           {/* Action Choice Buttons */}
           <div className="space-y-2.5">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block text-center mb-1">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block text-center mb-1">
               Pilih Cara Masuk Sekarang:
             </span>
 
@@ -320,9 +320,9 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                 onClick={() =>
                   onSetupComplete(setupResult.admin, setupResult.profile, false)
                 }
-                className="py-3.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition active:scale-[0.99]"
+                className="py-3.5 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-700 transition active:scale-[0.99]"
               >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Masuk sebagai Owner (Buka POS)</span>
               </button>
             </div>
@@ -333,30 +333,30 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
       {/* Background glow effects */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative w-full max-w-4xl lg:max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-6">
+      <div className="relative w-full max-w-4xl lg:max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-6">
         {/* Header */}
-        <div className="p-6 md:p-8 border-b border-slate-800/80 bg-gradient-to-b from-slate-850 to-slate-900">
+        <div className="p-6 md:p-8 border-b border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-b from-slate-850 to-slate-900">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Selamat Datang di SparkPOS
               </h1>
-              <p className="text-xs md:text-sm text-slate-400">
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
                 Inisialisasi Sistem Kasir Ritel — Mulai Baru atau Pulihkan Database Anda
               </p>
             </div>
           </div>
 
           {/* Mode Selector Tabs */}
-          <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-slate-950/80 border border-slate-800 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl">
             <button
               type="button"
               onClick={() => {
@@ -366,7 +366,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-bold transition ${
                 activeMode === 'fresh'
                   ? 'bg-emerald-500 text-slate-950 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900'
               }`}
             >
               <Store className="w-4 h-4" />
@@ -382,7 +382,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-bold transition ${
                 activeMode === 'restore'
                   ? 'bg-emerald-500 text-slate-950 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900'
               }`}
             >
               <Database className="w-4 h-4" />
@@ -393,8 +393,8 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs">
-            <AlertCircle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+          <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-700 dark:text-rose-300 text-xs">
+            <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -402,8 +402,8 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
         {/* Tab 1: Setup Toko Baru */}
         {activeMode === 'fresh' && (
           <form onSubmit={handleFreshSubmit} className="p-6 md:p-8 space-y-6">
-            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-3 text-xs text-slate-300">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-50/60 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
                 <strong>Database Bersih:</strong> Tidak ada kasir dummy & tidak ada produk sampel. Anda dapat langsung menginput produk toko Anda sendiri.
               </span>
@@ -412,16 +412,16 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
             {/* Bagian 1 & 2 dalam Grid 2 Kolom untuk Layar Desktop */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Kolom Kiri: Identitas Toko & Brand */}
-              <div className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-800/80">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2 pb-2 border-b border-slate-800">
+              <div className="space-y-4 bg-slate-50/40 dark:bg-slate-950/40 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                   <Store className="w-4 h-4" />
                   <span>Identitas Toko & Brand</span>
                 </h2>
 
                 <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Nama Toko <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                      Nama Toko <span className="text-rose-600 dark:text-rose-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -429,12 +429,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                       value={storeName}
                       onChange={(e) => setStoreName(e.target.value)}
                       placeholder="Contoh: Toko Berkah Mandiri"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                       Nama Aplikasi Kasir / Header
                     </label>
                     <input
@@ -442,12 +442,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
                       placeholder="Contoh: SparkPOS"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                       Nomor Telepon / WhatsApp
                     </label>
                     <input
@@ -455,12 +455,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="Contoh: 0812-3456-7890"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                       Alamat Lengkap Toko
                     </label>
                     <input
@@ -468,7 +468,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Contoh: Jl. Merdeka No. 123, Pasar Raya, Kota Anda"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                     />
                   </div>
                 </div>
@@ -477,15 +477,15 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
               {/* Kolom Kanan: Akun Owner & Akun Kasir Pertama */}
               <div className="space-y-4">
                 {/* Akun Owner */}
-                <div className="bg-slate-950/40 p-5 rounded-2xl border border-slate-800/80 space-y-3.5">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2 pb-2 border-b border-slate-800">
+                <div className="bg-slate-50/40 dark:bg-slate-950/40 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3.5">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                     <ShieldCheck className="w-4 h-4" />
                     <span>Akun Administrator Utama (Owner)</span>
                   </h2>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                         Nama Pemilik (Owner)
                       </label>
                       <input
@@ -494,12 +494,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                         value={adminFullName}
                         onChange={(e) => setAdminFullName(e.target.value)}
                         placeholder="Contoh: Pemilik Toko"
-                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
                         Username
                       </label>
                       <input
@@ -508,15 +508,15 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                         value={adminUsername}
                         onChange={(e) => setAdminUsername(e.target.value)}
                         placeholder="Contoh: admin"
-                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        PIN Masuk Admin (4-6 Angka) <span className="text-rose-400">*</span>
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                        PIN Masuk Admin (4-6 Angka) <span className="text-rose-600 dark:text-rose-400">*</span>
                       </label>
                       <input
                         type="password"
@@ -525,13 +525,13 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                         value={adminPin}
                         onChange={(e) => setAdminPin(e.target.value.replace(/\D/g, ''))}
                         placeholder="Contoh: 123456"
-                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500 font-bold tracking-widest"
+                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500 font-bold tracking-widest"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Ulangi PIN Admin <span className="text-rose-400">*</span>
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                        Ulangi PIN Admin <span className="text-rose-600 dark:text-rose-400">*</span>
                       </label>
                       <input
                         type="password"
@@ -540,28 +540,28 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                         value={adminPinConfirm}
                         onChange={(e) => setAdminPinConfirm(e.target.value.replace(/\D/g, ''))}
                         placeholder="Ulangi PIN di atas"
-                        className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500 font-bold tracking-widest"
+                        className="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500 font-bold tracking-widest"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Akun Kasir Pertama (Opsional & Direkomendasikan) */}
-                <div className="bg-slate-950/40 p-5 rounded-2xl border border-slate-800/80 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div className="bg-slate-50/40 dark:bg-slate-950/40 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={createInitialCashier}
                         onChange={(e) => setCreateInitialCashier(e.target.checked)}
-                        className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
+                        className="rounded text-emerald-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                       />
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>Sekaligus Buat Akun Kasir Pertama</span>
                       </span>
                     </label>
-                    <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10">
                       Rekomendasi
                     </span>
                   </div>
@@ -570,7 +570,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                     <div className="space-y-3 pt-1">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">
+                          <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
                             Nama Kasir
                           </label>
                           <input
@@ -579,12 +579,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                             value={cashierFullName}
                             onChange={(e) => setCashierFullName(e.target.value)}
                             placeholder="Contoh: Kasir 1"
-                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                            className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">
+                          <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
                             PIN Masuk Kasir (4 Digit)
                           </label>
                           <input
@@ -594,21 +594,21 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                             value={cashierPin}
                             onChange={(e) => setCashierPin(e.target.value.replace(/\D/g, ''))}
                             placeholder="Contoh: 1234"
-                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500 tracking-wider font-bold"
+                            className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500 tracking-wider font-bold"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">
+                          <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">
                             Pilihan Shift Kerja
                           </label>
                           <select
                             disabled={cashierIsFlexible}
                             value={cashierShiftSchedule}
                             onChange={(e) => setCashierShiftSchedule(e.target.value)}
-                            className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40"
+                            className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40"
                           >
                             <option value="Jam Kerja Standar (07:30 - 16:30)">Jam Kerja Standar (07:30 - 16:30)</option>
                             <option value="Shift Fleksibel">Shift Fleksibel</option>
@@ -616,12 +616,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                         </div>
 
                         <div className="flex items-center pt-5">
-                          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
                             <input
                               type="checkbox"
                               checked={cashierIsFlexible}
                               onChange={(e) => setCashierIsFlexible(e.target.checked)}
-                              className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
+                              className="rounded text-emerald-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                             />
                             <span>Mode Shift Fleksibel</span>
                           </label>
@@ -634,13 +634,13 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
             </div>
 
             {/* Checklist Inisialisasi */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-300">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-700 dark:text-slate-300">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={seedUnits}
                   onChange={(e) => setSeedUnits(e.target.checked)}
-                  className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
+                  className="rounded text-emerald-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                 />
                 <span>Tambahkan satuan standar (PCS, Meter, Roll)</span>
               </label>
@@ -650,7 +650,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                   type="checkbox"
                   checked={seedCategories}
                   onChange={(e) => setSeedCategories(e.target.checked)}
-                  className="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-700"
+                  className="rounded text-emerald-500 focus:ring-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                 />
                 <span>Tambahkan kategori standar (Aksesoris, Jasa, Laptop, Sparepart)</span>
               </label>
@@ -671,12 +671,12 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
         {/* Tab 2: Pulihkan Database */}
         {activeMode === 'restore' && (
           <form onSubmit={handleRestoreSubmit} className="p-6 md:p-8 space-y-6">
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-200 space-y-1">
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-200 space-y-1">
               <p className="font-bold flex items-center gap-2">
-                <Database className="w-4 h-4 text-blue-400" />
+                <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 Punya Cadangan Database Sebelumnya di Drive D: atau Flashdisk?
               </p>
-              <p className="text-blue-300/80">
+              <p className="text-blue-700/80 dark:text-blue-300/80">
                 Pilih file cadangan (.sparkdb atau .json) yang pernah Anda ekspor sebelumnya. Seluruh profil toko, master produk, kategori, riwayat transaksi, dan user akan dipulihkan secara instan.
               </p>
             </div>
@@ -684,7 +684,7 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
             {/* File Dropzone */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="p-8 border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-2xl bg-slate-950/70 hover:bg-slate-950 flex flex-col items-center justify-center cursor-pointer transition text-center space-y-3"
+              className="p-8 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500/60 rounded-2xl bg-slate-50/70 dark:bg-slate-950/70 hover:bg-slate-50 dark:hover:bg-slate-950 flex flex-col items-center justify-center cursor-pointer transition text-center space-y-3"
             >
               <input
                 ref={fileInputRef}
@@ -694,21 +694,21 @@ export const FirstTimeSetup: React.FC<FirstTimeSetupProps> = ({ onSetupComplete 
                 className="hidden"
               />
 
-              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400">
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <UploadCloud className="w-8 h-8" />
               </div>
 
               <div>
-                <p className="text-sm font-bold text-white">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
                   {restoreFile ? restoreFile.name : 'Klik untuk Memilih File Cadangan Database'}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Mendukung file .sparkdb atau .json (dari Drive D:, E:, atau Folder Dokumen)
                 </p>
               </div>
 
               {restoreStatus && (
-                <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
+                <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
                   {restoreStatus}
                 </div>
               )}

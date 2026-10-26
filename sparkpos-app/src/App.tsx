@@ -232,9 +232,9 @@ export default function App() {
 
   if (!isReady) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen w-screen bg-slate-950 text-slate-100">
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <div className="w-10 h-10 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
-        <h2 className="text-base font-bold text-white tracking-wide">Menyiapkan SparkPOS...</h2>
+        <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-wide">Menyiapkan SparkPOS...</h2>
         <p className="text-xs text-slate-500 mt-1">Menginisialisasi basis data lokal & hardware kasir</p>
       </div>
     );

@@ -397,7 +397,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
           <div className="flex items-center gap-3">
             {isSaved && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold animate-in fade-in">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold animate-in fade-in">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Pengaturan Berhasil Disimpan!</span>
               </div>
@@ -407,10 +407,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-white text-xs font-bold transition shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-700 dark:text-rose-300 hover:text-slate-900 dark:hover:text-white text-xs font-bold transition shadow-sm"
                 title="Keluar dari akun Administrator dan kembali ke layar login kasir"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 <span>Logout / Ganti ke Layar Kasir</span>
               </button>
             )}
@@ -419,14 +419,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
         {/* Permission Banner if Non-Admin */}
         {!isAdmin && (
-          <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Lock className="w-5 h-5 text-slate-400 shrink-0" />
+              <Lock className="w-5 h-5 text-slate-500 dark:text-slate-400 shrink-0" />
               <div className="text-xs">
-                <span className="font-semibold text-slate-200 block">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                   Anda masuk sebagai Non-Admin (Kasir)
                 </span>
-                <span className="text-slate-400">
+                <span className="text-slate-500 dark:text-slate-400">
                   Perubahan nama aplikasi, logo toko, dan pengaturan sistem hanya dapat diedit oleh akun Administrator.
                 </span>
               </div>
@@ -436,7 +436,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               <button
                 type="button"
                 onClick={onRequestAdminAccess}
-                className="px-3.5 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 transition shrink-0"
+                className="px-3.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition shrink-0"
               >
                 Buka Akses Admin
               </button>
@@ -449,11 +449,11 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             {/* Kolom Kiri: Branding, Identitas Toko, Printer & Pajak */}
             <div className="lg:col-span-7 space-y-6">
               {/* Card 1: Branding & Logo */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   1. Branding Aplikasi & Logo Toko (Khusus Admin)
                 </h2>
               </div>
@@ -465,7 +465,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             <div className="grid grid-cols-2 gap-5 items-start">
               {/* App Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   Nama Aplikasi / Brand Kasir
                 </label>
                 <input
@@ -475,23 +475,23 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   onChange={(e) => setProfile({ ...profile, appName: e.target.value })}
                   placeholder="Contoh: SparkPOS atau TokoKu POS"
                   required
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 />
-                <p className="text-[11px] font-medium text-slate-400 mt-1">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                   Nama ini akan tampil di bagian header aplikasi dan nota penjualan.
                 </p>
               </div>
 
               {/* Logo Upload & Preview */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   Logo Toko / Icon Aplikasi
                 </label>
                 <div className="flex items-center gap-4">
                   {/* Preview Box */}
-                  <div className="w-16 h-16 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
                     {profile.appLogo ? (
                       <img
                         src={profile.appLogo}
@@ -516,13 +516,13 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     <div className="flex items-center gap-2">
                       <label
                         htmlFor="logo-upload-input"
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 transition ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200 transition ${
                           !isAdmin
                             ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer hover:bg-slate-750'
+                            : 'cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750'
                         }`}
                       >
-                        <Upload className="w-3.5 h-3.5 text-slate-400" />
+                        <Upload className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                         <span>{profile.appLogo ? 'Ganti Logo' : 'Upload Logo Toko'}</span>
                       </label>
 
@@ -530,7 +530,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                         <button
                           type="button"
                           onClick={handleRemoveLogo}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-850 hover:bg-rose-500/10 border border-slate-800 text-slate-400 hover:text-rose-400 text-xs transition"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-rose-500/10 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>Hapus</span>
@@ -547,17 +547,17 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
 
           {/* Card 2: Identitas Toko & Header Struk */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Store className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 2. Profil & Identitas Toko (Header Struk)
               </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Nama Toko / Usaha
                 </label>
                 <input
@@ -567,14 +567,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   onChange={(e) => setProfile({ ...profile, storeName: e.target.value })}
                   placeholder="Contoh: TOKO BERKAH JAYA"
                   required
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Alamat Lengkap Toko
                 </label>
                 <input
@@ -583,14 +583,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   value={profile.address}
                   onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                   placeholder="Contoh: Jl. Merdeka No. 45, Jakarta Selatan"
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   No. Telepon / WhatsApp
                 </label>
                 <input
@@ -599,7 +599,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   value={profile.phone}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                   placeholder="Contoh: 0812-3456-7890"
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 />
@@ -607,7 +607,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-200 mb-1">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                 Catatan Kaki Struk (Receipt Footer)
               </label>
               <textarea
@@ -616,7 +616,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 value={profile.receiptFooter}
                 onChange={(e) => setProfile({ ...profile, receiptFooter: e.target.value })}
                 placeholder="Pesan terima kasih atau syarat penukaran barang..."
-                className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-mono ${
+                className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-mono ${
                   !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -624,11 +624,11 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
 
           {/* Card 3: Konfigurasi Printer Thermal ESC/POS */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   3. Hardware Printer Kasir & Laci Uang (Thermal ESC/POS)
                 </h2>
               </div>
@@ -636,14 +636,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 <button
                   type="button"
                   onClick={() => handleTestPrint('58mm')}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200 transition"
                 >
                   Uji Struk 58mm
                 </button>
                 <button
                   type="button"
                   onClick={() => handleTestPrint('A4')}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200 transition"
                 >
                   Uji Faktur A4
                 </button>
@@ -651,10 +651,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
 
             {/* Pemilihan printer: dicetak langsung tanpa dialog */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 p-4 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold text-slate-200">Printer untuk cetak otomatis</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Printer untuk cetak otomatis</p>
                   <p className="text-[11px] text-slate-500">
                     {isTauriRuntime()
                       ? `${printers.length} printer terdeteksi. Struk dan faktur akan langsung tercetak ke printer pilihan tanpa menampilkan menu print.`
@@ -665,7 +665,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   type="button"
                   onClick={refreshPrinters}
                   disabled={isScanningPrinters}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition disabled:opacity-50 shrink-0"
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200 transition disabled:opacity-50 shrink-0"
                 >
                   {isScanningPrinters ? 'Mendeteksi...' : 'Deteksi Ulang'}
                 </button>
@@ -673,14 +673,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Printer Struk Thermal 58mm
                   </label>
                   <select
                     disabled={!isAdmin}
                     value={profile.thermalPrinterName || ''}
                     onChange={(e) => setProfile({ ...profile, thermalPrinterName: e.target.value || undefined })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                   >
                     <option value="">
                       {suggestedPrinters.thermal
@@ -698,14 +698,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Printer Faktur A4 / F4
                   </label>
                   <select
                     disabled={!isAdmin}
                     value={profile.a4PrinterName || ''}
                     onChange={(e) => setProfile({ ...profile, a4PrinterName: e.target.value || undefined })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
                   >
                     <option value="">
                       {suggestedPrinters.a4
@@ -723,19 +723,19 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 </div>
               </div>
 
-              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   disabled={!isAdmin}
                   checked={!!profile.thermalAutoCut}
                   onChange={(e) => setProfile({ ...profile, thermalAutoCut: e.target.checked })}
-                  className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
+                  className="w-4 h-4 rounded text-emerald-500 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                 />
                 <span>Printer thermal punya pemotong kertas otomatis (auto-cutter)</span>
               </label>
 
               {printMessage && (
-                <p className={`text-xs font-semibold ${printMessage.ok ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <p className={`text-xs font-semibold ${printMessage.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {printMessage.text}
                 </p>
               )}
@@ -743,7 +743,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Default Print Kasir (Pengaturan Cetak Nota Bawaan)
                 </label>
                 <select
@@ -765,7 +765,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                       autoPrintReceipt: val !== 'NONE',
                     });
                   }}
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
@@ -779,31 +779,31 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               <div className="space-y-3 pt-1">
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     disabled={!isAdmin}
                     checked={profile.autoKickDrawer}
                     onChange={(e) => setProfile({ ...profile, autoKickDrawer: e.target.checked })}
-                    className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
+                    className="w-4 h-4 rounded text-emerald-500 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                   />
                   <span>Buka Laci Uang Otomatis (Kick RJ11 Cash Drawer)</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     disabled={!isAdmin}
                     checked={profile.autoPrintReceipt}
                     onChange={(e) => setProfile({ ...profile, autoPrintReceipt: e.target.checked })}
-                    className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
+                    className="w-4 h-4 rounded text-emerald-500 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                   />
                   <span>
                     Cetak Struk Otomatis (Nonaktifkan jika toko Anda menggunakan nota manual kertas)
                   </span>
                 </label>
 
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-300">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     disabled={!isAdmin}
@@ -811,7 +811,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     onChange={(e) =>
                       setProfile({ ...profile, showLogoOnReceipt: e.target.checked })
                     }
-                    className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-800"
+                    className="w-4 h-4 rounded text-emerald-500 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                   />
                   <span>Tampilkan Logo Gambar di Bagian Atas Struk</span>
                 </label>
@@ -820,17 +820,17 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
 
           {/* Card 4: Pajak PPN */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <DollarSign className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 4. Kebijakan Pajak (PPN)
               </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Tarif Pajak PPN (%)
                 </label>
                 <div className="relative">
@@ -843,18 +843,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     onChange={(e) =>
                       setProfile({ ...profile, taxPercent: parseFloat(e.target.value) || 0 })
                     }
-                    className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-bold ${
+                    className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-bold ${
                       !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                     }`}
                   />
-                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-bold">
+                  <span className="absolute right-3.5 top-2.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
                     %
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
                   Skema Perhitungan Pajak
                 </label>
                 <select
@@ -863,7 +863,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   onChange={(e) =>
                     setProfile({ ...profile, isTaxInclusive: e.target.value === 'inclusive' })
                   }
-                  className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
+                  className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
@@ -878,11 +878,11 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
         {/* Kolom Kanan: Database, Backup Drive D:, Restore & Uninstall */}
         <div className="lg:col-span-5 space-y-6">
           {/* Card 5: Pencadangan & Pemulihan Database (Drive D:, USB, Restore) */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   5. Pencadangan & Penyimpanan Database (Drive D: / Eksternal)
                 </h2>
               </div>
@@ -891,17 +891,17 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </span>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Anda dapat mencadangkan seluruh data transaksi, master produk, pelanggan, dan pengaturan ke Drive D:, flashdisk, atau folder mana pun di komputer Anda agar data tetap aman saat instal ulang Windows.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
-                  <HardDrive className="w-4 h-4 text-emerald-400" />
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <HardDrive className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Simpan / Cadangkan ke File (Pilih Drive D:)</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Menyimpan file cadangan (.sparkdb). Jendela Windows akan terbuka untuk memilih Drive D:\ atau folder tujuan Anda.
                 </p>
                 <button
@@ -915,12 +915,12 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                 </button>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
-                  <UploadCloud className="w-4 h-4 text-blue-400" />
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <UploadCloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>Pulihkan (Restore) dari File Cadangan</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Memulihkan data toko dan transaksi dari file cadangan .sparkdb atau .json yang ada di Drive D:\ atau USB.
                 </p>
                 <input
@@ -934,7 +934,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   type="button"
                   disabled={!isAdmin}
                   onClick={() => restoreFileInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-850 hover:bg-slate-800 disabled:opacity-60 text-slate-200 text-xs font-semibold transition border border-slate-700"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60 text-slate-800 dark:text-slate-200 text-xs font-semibold transition border border-slate-300 dark:border-slate-700"
                 >
                   <UploadCloud className="w-4 h-4" />
                   <span>Pilih File Cadangan & Pulihkan</span>
@@ -943,31 +943,31 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
 
             {/* Info & Pengaturan Lokasi Database Aktif */}
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2.5">
                   <div className={`p-2 rounded-xl border mt-0.5 ${
                     dbPathInfo?.isCustom 
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                      : 'bg-zinc-800 border-zinc-700 text-zinc-300'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                      : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                   }`}>
                     <HardDrive className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-white text-xs">Lokasi Database Aktif:</span>
+                      <span className="font-bold text-slate-900 dark:text-white text-xs">Lokasi Database Aktif:</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                         dbPathInfo?.isCustom
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700'
                       }`}>
                         {dbPathInfo?.isCustom ? `HDD / Drive ${dbPathInfo.driveLetter || 'Kustom'}` : 'Sistem Standar (Drive C:)'}
                       </span>
                     </div>
-                    <p className="font-mono text-emerald-400 text-[11px] mt-1 break-all bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <p className="font-mono text-emerald-600 dark:text-emerald-400 text-[11px] mt-1 break-all bg-white/90 dark:bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
                       {dbPathInfo?.activePath || '%LOCALAPPDATA%\\com.sparkpos.desktop\\EBWebView'}
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-1.5">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                       {dbPathInfo?.isCustom
                         ? 'Database aktif tersimpan di Drive terpisah pilihan Anda. Aman saat install ulang Windows.'
                         : 'Database saat ini di folder lokal sistem. Anda dapat memindahkannya ke Drive D: atau HDD eksternal.'}
@@ -978,18 +978,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
               {/* Status Ringkasan Data Aktif */}
               {dbPathInfo?.itemCounts && (
-                <div className="grid grid-cols-3 gap-2 py-2 px-3 bg-slate-900/60 rounded-xl border border-slate-800/80 text-[11px]">
+                <div className="grid grid-cols-3 gap-2 py-2 px-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-[11px]">
                   <div>
                     <span className="text-slate-500 block text-[10px]">Produk Katalog</span>
-                    <span className="font-bold text-white">{dbPathInfo.itemCounts.products} item</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{dbPathInfo.itemCounts.products} item</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[10px]">Riwayat Penjualan</span>
-                    <span className="font-bold text-white">{dbPathInfo.itemCounts.transactions} transaksi</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{dbPathInfo.itemCounts.transactions} transaksi</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[10px]">Order Servis</span>
-                    <span className="font-bold text-white">{dbPathInfo.itemCounts.serviceOrders} tiket</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{dbPathInfo.itemCounts.serviceOrders} tiket</span>
                   </div>
                 </div>
               )}
@@ -1011,7 +1011,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     type="button"
                     disabled={!isAdmin}
                     onClick={handleResetToDefaultPath}
-                    className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white text-xs font-medium transition"
+                    className="py-2 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition"
                     title="Kembalikan lokasi penyimpanan ke Drive C: default"
                   >
                     Reset ke Default
@@ -1022,26 +1022,26 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
           </div>
 
           {/* Card 6: Persiapan Uninstall & Pembersihan Bersih Database */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-rose-900/40 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300/40 dark:border-rose-900/40 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   6. Persiapan Uninstall Aplikasi & Hapus Bersih Database
                 </h2>
               </div>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 Pembersihan Total
               </span>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Sebelum Anda menghapus / uninstall aplikasi SparkPOS melalui <strong>Windows Settings atau Control Panel</strong>, Anda dapat memilih apakah ingin menghapus total seluruh riwayat database atau mencadangkannya terlebih dahulu beserta mencatat alasan penghapusan aplikasi.
             </p>
 
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
               <div>
-                <h3 className="text-xs font-bold text-white">Opsi Hapus Total Database & Alasan Uninstall</h3>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">Opsi Hapus Total Database & Alasan Uninstall</h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   Pilihan wipe bersih total data toko, kasir, dan stok sebelum di-uninstall dari komputer.
                 </p>
@@ -1054,7 +1054,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   setConfirmWipeText('');
                   setIsUninstallModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs transition disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold text-xs transition disabled:opacity-50"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Buka Opsi Hapus Bersih</span>
@@ -1064,13 +1064,13 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
         </div>
 
         {/* Action Bar (Full Width) */}
-        <div className="lg:col-span-12 flex items-center justify-between pt-4 border-t border-slate-800">
+        <div className="lg:col-span-12 flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
             {isAdmin && (
               <button
                 type="button"
                 onClick={handleResetData}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 text-xs font-medium transition"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-300/50 dark:hover:border-rose-900/50 text-xs font-medium transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset Database (Kembali ke Setup Awal)</span>
@@ -1081,9 +1081,9 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                 <span>Logout dari Akun Ini</span>
               </button>
             )}
@@ -1106,18 +1106,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
       {/* MODAL UNINSTALL & HAPUS BERSIH DATABASE */}
       {isUninstallModalOpen && (
         <div ref={dlgUninstallRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     Pembersihan Database Sebelum Uninstall
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Konfirmasi penghapusan data dan pencatatan alasan
                   </p>
                 </div>
@@ -1126,7 +1126,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUninstallModalOpen(false)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1136,7 +1136,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
               {/* Mode Pilihan: Backup First atau Direct Wipe */}
               <div className="space-y-2">
-                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
+                <label className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] block">
                   1. Pilihan Tindakan Database:
                 </label>
 
@@ -1144,8 +1144,8 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   <label
                     className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
                       uninstallWipeMode === 'backup_first'
-                        ? 'bg-slate-850 border-emerald-500/50 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-slate-50 dark:bg-slate-850 border-emerald-500/50 text-white'
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                     }`}
                   >
                     <input
@@ -1156,10 +1156,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                       className="mt-0.5 text-emerald-500 focus:ring-0"
                     />
                     <div>
-                      <span className="font-bold block text-white">
+                      <span className="font-bold block text-slate-900 dark:text-white">
                         Simpan Cadangan (.sparkdb) ke Drive D: lalu Hapus Bersih
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         Direkomendasikan agar data riwayat penjualan dan stok tetap bisa dipulihkan kembali jika Anda menginstall ulang nanti.
                       </span>
                     </div>
@@ -1168,8 +1168,8 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                   <label
                     className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition ${
                       uninstallWipeMode === 'wipe_only'
-                        ? 'bg-slate-850 border-rose-500/50 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-slate-50 dark:bg-slate-850 border-rose-500/50 text-white'
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
                     }`}
                   >
                     <input
@@ -1180,10 +1180,10 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                       className="mt-0.5 text-rose-500 focus:ring-0"
                     />
                     <div>
-                      <span className="font-bold block text-rose-300">
+                      <span className="font-bold block text-rose-700 dark:text-rose-300">
                         Hapus Bersih Total Tanpa Membuat Cadangan (Wipe Permanen)
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         Seluruh produk, data kasir, transaksi penjualan, dan pengaturan toko akan dihapus permanen.
                       </span>
                     </div>
@@ -1192,16 +1192,16 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               {/* Alasan Dihapus / Uninstall */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] block flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>2. Alasan Penghapusan / Uninstall:</span>
                 </label>
 
                 <select
                   value={uninstallReason}
                   onChange={(e) => setUninstallReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                 >
                   <option value="Pindah ke komputer / kasir baru">Pindah ke komputer / mesin kasir baru</option>
                   <option value="Toko tutup / berhenti operasional">Toko tutup / berhenti operasional</option>
@@ -1218,32 +1218,32 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     placeholder="Tuliskan alasan Anda..."
                     value={customReason}
                     onChange={(e) => setCustomReason(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mt-2"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 mt-2"
                   />
                 )}
               </div>
 
               {/* Konfirmasi Teks */}
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-2">
-                <span className="text-rose-300 font-semibold block text-[11px]">
-                  Ketik kata <strong className="text-white font-mono bg-rose-950/80 px-1.5 py-0.5 rounded">HAPUS</strong> untuk mengonfirmasi pembersihan data:
+                <span className="text-rose-700 dark:text-rose-300 font-semibold block text-[11px]">
+                  Ketik kata <strong className="text-white font-mono bg-rose-50/80 dark:bg-rose-950/80 px-1.5 py-0.5 rounded">HAPUS</strong> untuk mengonfirmasi pembersihan data:
                 </span>
                 <input
                   type="text"
                   placeholder="Ketik HAPUS"
                   value={confirmWipeText}
                   onChange={(e) => setConfirmWipeText(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-rose-500/40 rounded-xl text-xs text-white font-bold tracking-widest focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-rose-500/40 rounded-xl text-xs text-slate-900 dark:text-white font-bold tracking-widest focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setIsUninstallModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
               >
                 Batal
               </button>
@@ -1265,18 +1265,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
       {/* MODAL PEMINDAHAN LOKASI DATABASE (DRIVE D: / HDD) */}
       {isMoveDbModalOpen && (
         <div ref={dlgMoveDbRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                   <HardDrive className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     Pindahkan Lokasi Database
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Simpan database di Drive D:, HDD, atau folder eksternal
                   </p>
                 </div>
@@ -1285,7 +1285,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               <button
                 type="button"
                 onClick={() => setIsMoveDbModalOpen(false)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1293,18 +1293,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
 
             {/* Modal Body */}
             <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
-                <span className="font-bold text-slate-200 block text-[11px] uppercase tracking-wider">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-1.5">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block text-[11px] uppercase tracking-wider">
                   Lokasi Aktif Saat Ini:
                 </span>
-                <p className="font-mono text-emerald-400 text-xs break-all bg-slate-900 p-2 rounded-lg border border-slate-800">
+                <p className="font-mono text-emerald-600 dark:text-emerald-400 text-xs break-all bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
                   {dbPathInfo?.activePath || '%LOCALAPPDATA%\\com.sparkpos.desktop\\EBWebView'}
                 </p>
               </div>
 
               {/* Tentukan Path Folder Tujuan */}
               <div className="space-y-2">
-                <label className="font-bold text-slate-200 uppercase tracking-wider text-[11px] block">
+                <label className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] block">
                   Pilih Folder / Drive Tujuan Baru:
                 </label>
                 <div className="flex gap-2">
@@ -1313,14 +1313,14 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     value={targetFolderPath}
                     onChange={(e) => setTargetFolderPath(e.target.value)}
                     placeholder="Contoh: D:\SparkPOS_Database"
-                    className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                   <button
                     type="button"
                     onClick={handlePickFolder}
-                    className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition whitespace-nowrap"
+                    className="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition whitespace-nowrap"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-emerald-400" />
+                    <UploadCloud className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Pilih Folder</span>
                   </button>
                 </div>
@@ -1333,7 +1333,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                       key={path}
                       type="button"
                       onClick={() => setTargetFolderPath(path)}
-                      className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-mono transition"
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono transition"
                     >
                       {path}
                     </button>
@@ -1342,7 +1342,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
               </div>
 
               {/* Box Opsi Auto-Copy (Zero Data Loss) */}
-              <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2.5">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
                 <label className="flex items-start gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1351,32 +1351,32 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
                     className="mt-0.5 text-emerald-500 focus:ring-0 rounded"
                   />
                   <div>
-                    <span className="font-bold text-white block">
+                    <span className="font-bold text-slate-900 dark:text-white block">
                       Otomatis Salin Seluruh Data ke Lokasi Baru (Zero Data Loss)
                     </span>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                       Seluruh produk, riwayat transaksi, data kasir, dan order servis saat ini akan langsung dicopy ke folder baru secara utuh.
                     </span>
                   </div>
                 </label>
 
                 {dbPathInfo?.itemCounts && (
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800 text-[11px]">
-                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                      <span className="text-slate-400">Produk: </span>
-                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.products} item</strong>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px]">
+                    <div className="bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400">Produk: </span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">{dbPathInfo.itemCounts.products} item</strong>
                     </div>
-                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                      <span className="text-slate-400">Transaksi: </span>
-                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.transactions} struk</strong>
+                    <div className="bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400">Transaksi: </span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">{dbPathInfo.itemCounts.transactions} struk</strong>
                     </div>
-                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                      <span className="text-slate-400">Servis: </span>
-                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.serviceOrders} tiket</strong>
+                    <div className="bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400">Servis: </span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">{dbPathInfo.itemCounts.serviceOrders} tiket</strong>
                     </div>
-                    <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                      <span className="text-slate-400">Karyawan: </span>
-                      <strong className="text-emerald-400">{dbPathInfo.itemCounts.employees} akun</strong>
+                    <div className="bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400">Karyawan: </span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">{dbPathInfo.itemCounts.employees} akun</strong>
                     </div>
                   </div>
                 )}
@@ -1384,12 +1384,12 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <button
                 type="button"
                 disabled={isMigratingDb}
                 onClick={() => setIsMoveDbModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition disabled:opacity-50"
               >
                 Batal
               </button>

@@ -113,7 +113,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ storeProfile, onLoginS
         >
           {themeMode === 'system' && <Monitor className="w-3.5 h-3.5 text-sky-500" />}
           {themeMode === 'light' && <Sun className="w-3.5 h-3.5 text-amber-500" />}
-          {themeMode === 'dark' && <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+          {themeMode === 'dark' && <Moon className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
           <span className="text-[11px]">
             {themeMode === 'system'
               ? 'Sistem'

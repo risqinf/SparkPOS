@@ -288,7 +288,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           >
             <ClipboardCheck className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span>Stock Opname</span>
-            {!isAdmin && <Lock className="w-3 h-3 text-slate-400" />}
+            {!isAdmin && <Lock className="w-3 h-3 text-slate-500 dark:text-slate-400" />}
           </button>
 
           {/* History */}
@@ -362,7 +362,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Produk</span>
-            {!isAdmin && <Lock className="w-3 h-3 text-emerald-200" />}
+            {!isAdmin && <Lock className="w-3 h-3 text-emerald-700 dark:text-emerald-200" />}
           </button>
         </div>
       </div>
@@ -421,16 +421,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             <span
                               className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider ${
                                 p.condition === 'MATOT'
-                                  ? 'bg-rose-950/60 text-rose-400 border border-rose-800/80'
+                                  ? 'bg-rose-50/60 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300/80 dark:border-rose-800/80'
                                   : p.condition === 'MINUS'
-                                  ? 'bg-amber-950/60 text-amber-400 border border-amber-800/80'
-                                  : 'bg-blue-950/60 text-blue-400 border border-blue-800/80'
+                                  ? 'bg-amber-50/60 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-800/80'
+                                  : 'bg-blue-50/60 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-300/80 dark:border-blue-800/80'
                               }`}
                             >
                               {p.condition}
                             </span>
                           ) : (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-emerald-950/60 text-emerald-400 border border-emerald-800/80">
+                            <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-emerald-50/60 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-800/80">
                               BARU
                             </span>
                           )}
@@ -506,7 +506,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           {/* Opname */}
                           <button
                             onClick={() => handleOpenOpname(p)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="Penyesuaian Stok Fisik (Opname)"
                           >
                             <ClipboardCheck className="w-4 h-4" />
@@ -518,7 +518,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                               setSelectedProductForHistory(p);
                               setIsHistoryOpen(true);
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="Lihat Riwayat Mutasi Kartu Stok"
                           >
                             <History className="w-4 h-4" />
@@ -527,7 +527,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           {/* Edit */}
                           <button
                             onClick={() => handleOpenEditProduct(p)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="Edit Data Produk (Admin)"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -536,7 +536,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           {/* Delete */}
                           <button
                             onClick={() => handleDeleteProduct(p)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                             title="Hapus Produk (Admin)"
                           >
                             <Trash2 className="w-4 h-4" />

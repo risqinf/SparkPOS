@@ -33,26 +33,26 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="px-5 py-4 bg-slate-850 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-emerald-400" />
+            <History className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {product ? `Riwayat Mutasi: ${product.name}` : 'Semua Riwayat Mutasi Stok'}
               </h2>
               {product && (
-                <div className="text-xs text-slate-400">
-                  Barcode: <span className="font-mono text-emerald-400">{product.barcode}</span> •
-                  Stok Sekarang: <span className="font-bold text-white">{product.stock} {product.unitName}</span>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Barcode: <span className="font-mono text-emerald-600 dark:text-emerald-400">{product.barcode}</span> •
+                  Stok Sekarang: <span className="font-bold text-slate-900 dark:text-white">{product.stock} {product.unitName}</span>
                 </div>
               )}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -67,7 +67,7 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
             </div>
           ) : (
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="px-3 py-2.5 rounded-l-lg">Waktu</th>
                   {!product && <th className="px-3 py-2.5">Produk</th>}
@@ -77,7 +77,7 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
                   <th className="px-3 py-2.5 rounded-r-lg">Keterangan / Ref</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {movements.map((m) => {
                   const isOut = m.type === 'OUT_SALE' || m.type === 'ADJUSTMENT_OUT';
                   const dateStr = new Date(m.createdAt).toLocaleString('id-ID', {
@@ -86,17 +86,17 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
                   });
 
                   return (
-                    <tr key={m.id} className="hover:bg-slate-800/40">
-                      <td className="px-3 py-3 text-slate-400 whitespace-nowrap">{dateStr}</td>
+                    <tr key={m.id} className="hover:bg-slate-100/40 dark:hover:bg-slate-800/40">
+                      <td className="px-3 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">{dateStr}</td>
                       {!product && (
-                        <td className="px-3 py-3 font-semibold text-slate-200">{m.productName}</td>
+                        <td className="px-3 py-3 font-semibold text-slate-800 dark:text-slate-200">{m.productName}</td>
                       )}
                       <td className="px-3 py-3">
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
                             isOut
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                           }`}
                         >
                           {isOut ? (
@@ -119,15 +119,15 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
                       </td>
                       <td
                         className={`px-3 py-3 text-right font-bold ${
-                          isOut ? 'text-rose-400' : 'text-emerald-400'
+                          isOut ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         {isOut ? `-${m.quantity}` : `+${m.quantity}`}
                       </td>
-                      <td className="px-3 py-3 text-right font-mono font-bold text-slate-200">
+                      <td className="px-3 py-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
                         {m.balanceAfter}
                       </td>
-                      <td className="px-3 py-3 text-slate-400">
+                      <td className="px-3 py-3 text-slate-500 dark:text-slate-400">
                         <span className="font-mono text-slate-500 mr-1.5">{m.referenceNo}</span>
                         <span>{m.notes}</span>
                       </td>
@@ -140,10 +140,10 @@ export const StockHistoryModal: React.FC<StockHistoryModalProps> = ({ product, o
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-slate-850 border-t border-slate-800 flex justify-end">
+        <div className="px-5 py-3 bg-slate-50 dark:bg-slate-850 border-t border-slate-200 dark:border-slate-800 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-750 font-semibold text-xs transition"
+            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750 font-semibold text-xs transition"
           >
             Tutup
           </button>
