@@ -36,6 +36,8 @@ import {
   Transaction,
   StoreProfile,
   ServiceOrder,
+  StockMovement,
+  Product,
   CashFlow,
   DailyCashRegister,
   Employee,
@@ -57,6 +59,7 @@ import {
   formatLocalDateTime,
   formatLocalDateOnly,
 } from '../../services/dateUtils';
+import { exportKasHarian, exportKeuntungan, exportPembelian, LedgerSource } from '../../services/ledgerExport';
 import { CASH_OUT_CATEGORIES, CASH_IN_CATEGORIES, noteExample } from '../../services/cashCategories';
 import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react';
 import { useDialog } from '../../hooks/useDialog';
@@ -116,6 +119,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [dailyRegisters, setDailyRegisters] = useState<DailyCashRegister[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Filter States: Default to 'all' so kasir & owner see all transactions by default
@@ -167,13 +173,17 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const loadData = async (isBackground = false) => {
     if (!isBackground) setIsLoading(true);
     try {
-      const [txs, services, flows, registers, emps] = await Promise.all([
+      const [txs, services, flows, registers, emps, moves, prods] = await Promise.all([
         db.transactions.reverse().sortBy('createdAt'),
         db.serviceOrders.toArray(),
         db.cashFlows.toArray(),
         db.dailyCashRegister.toArray(),
         db.employees.toArray(),
+        db.stockMovements.toArray(),
+        db.products.toArray(),
       ]);
+      setStockMovements(moves);
+      setAllProducts(prods);
       setTransactions(txs);
       setServiceOrders(services);
       setCashFlows(flows);
@@ -566,6 +576,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     };
   };
 
+  const getLedgerSource = (): LedgerSource => ({
+    storeName: storeProfile.storeName || 'SparkPOS',
+    transactions,
+    serviceOrders,
+    cashFlows,
+    stockMovements,
+    products: allProducts,
+  });
+
+  const handleExportLedger = (kind: 'kas' | 'untung' | 'beli') => {
+    setIsExportMenuOpen(false);
+    const range = { start: dateRange.start, end: dateRange.end };
+    const src = getLedgerSource();
+    if (kind === 'kas') exportKasHarian(src, range);
+    else if (kind === 'untung') exportKeuntungan(src, range);
+    else exportPembelian(src, range);
+    const label = { kas: 'Laporan Kas Harian', untung: 'Laporan Keuntungan', beli: 'Laporan Pembelian' }[kind];
+    showToast(`${label} (${dateRange.start} s/d ${dateRange.end}) berhasil diunduh!`);
+  };
+
   // 1. Ekspor dalam bentuk File (.xlsx Excel Asli)
   const handleExportExcelFile = () => {
     const data = getExportData();
@@ -827,17 +857,62 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             <span>{isCopied ? 'Tersalin!' : 'Salin Clipboard (Excel)'}</span>
           </button>
 
-          {/* DUAL EXPORT 2: Unduh File Excel (.xlsx Native) */}
-          <button
-            type="button"
-            onClick={handleExportExcelFile}
-            disabled={filteredRecords.length === 0}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-            title="Unduh laporan keuangan lengkap beserta rincian produk dalam bentuk file Excel (.xlsx) resmi yang langsung rapih di Excel & LibreOffice"
-          >
-            <FileDown className="w-4 h-4" />
-            <span>Unduh File (.xlsx)</span>
-          </button>
+          {/* Unduh laporan (format buku toko) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsExportMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isExportMenuOpen}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
+              title="Unduh laporan Excel sesuai periode yang dipilih"
+            >
+              <FileDown className="w-4 h-4" />
+              <span>Unduh Laporan (.xlsx)</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            {isExportMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setIsExportMenuOpen(false)} />
+                <div
+                  role="menu"
+                  onKeyDown={(e) => e.key === 'Escape' && setIsExportMenuOpen(false)}
+                  className="absolute right-0 mt-1.5 z-40 w-72 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden"
+                >
+                  {[
+                    { k: 'kas', t: 'Laporan Kas Harian', d: 'TGL · NAMA · DEBIT · CREDIT, per bulan' },
+                    { k: 'untung', t: 'Laporan Keuntungan', d: 'Modal, harga jual, profit, rata-rata/hari + pengeluaran' },
+                    { k: 'beli', t: 'Laporan Pembelian', d: 'Pembelian unit/barang + kolom tambahan modal' },
+                  ].map((m, i) => (
+                    <button
+                      key={m.k}
+                      role="menuitem"
+                      type="button"
+                      autoFocus={i === 0}
+                      onClick={() => handleExportLedger(m.k as 'kas' | 'untung' | 'beli')}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800 focus:bg-emerald-50 dark:focus:bg-slate-800 focus:outline-none border-b last:border-b-0 border-slate-100 dark:border-slate-800"
+                    >
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">{m.t}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">{m.d}</div>
+                    </button>
+                  ))}
+                  <button
+                    role="menuitem"
+                    type="button"
+                    onClick={() => {
+                      setIsExportMenuOpen(false);
+                      handleExportExcelFile();
+                    }}
+                    disabled={filteredRecords.length === 0}
+                    className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:outline-none bg-slate-50/60 dark:bg-slate-950/40 disabled:opacity-40"
+                  >
+                    <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Rekap Lengkap (format lama)</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Ringkasan + rincian per transaksi</div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
