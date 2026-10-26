@@ -56,10 +56,10 @@ export function calculateWarrantyExpiry(
 export function detectOptimalPaperFormat(
   tx: Transaction,
   configuredPaperWidth: '58mm' | '80mm' | 'A4' | 'F4' | 'auto' = 'auto'
-): '58mm' | '80mm' | 'A4' {
+): '58mm' | 'A4' {
   if (configuredPaperWidth && configuredPaperWidth !== 'auto') {
-    if (configuredPaperWidth === 'F4') return 'A4';
-    return configuredPaperWidth;
+    if (configuredPaperWidth === 'F4' || configuredPaperWidth === 'A4') return 'A4';
+    return '58mm';
   }
 
   const hasLaptopOrBigTicket = tx.items.some(
@@ -77,7 +77,7 @@ export function detectOptimalPaperFormat(
     return 'A4';
   }
 
-  return '80mm';
+  return '58mm';
 }
 
 export function padBetween(left: string, right: string, width: number): string {

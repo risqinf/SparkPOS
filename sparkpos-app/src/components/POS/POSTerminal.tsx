@@ -32,12 +32,12 @@ import {
   Employee,
 } from '../../types/pos';
 import { calculateCartSummary, formatRupiah } from '../../services/cartCalculator';
-import { barcodeScanner, playSuccessBeep, playErrorBeep } from '../../services/scanner';
+import { barcodeScanner, playSuccessBeep, playErrorBeep, playCashDrawerKickSound } from '../../services/scanner';
 import { db, getActiveProducts } from '../../services/storage';
 import { PaymentModal } from './PaymentModal';
 import { HoldCartModal } from './HoldCartModal';
 import { DiscountModal } from './DiscountModal';
-import { ReceiptModal } from './ReceiptModal';
+import { PrintableReceipt } from './PrintableReceipt';
 
 interface POSTerminalProps {
   storeProfile: StoreProfile;
@@ -76,15 +76,22 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   const [orderDiscountPercent, setOrderDiscountPercent] = useState<number>(0);
   const [orderDiscountNominal, setOrderDiscountNominal] = useState<number>(0);
 
-  // Modals
+  // Modals & Print Job
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
-  const [completedTransaction, setCompletedTransaction] = useState<Transaction | null>(null);
+  const [directPrintJob, setDirectPrintJob] = useState<{
+    tx: Transaction;
+    format: '58mm' | 'A4';
+  } | null>(null);
+
+  // Keyboard navigation & element references
+  const [selectedCatalogIndex, setSelectedCatalogIndex] = useState<number>(-1);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const payButtonRef = useRef<HTMLButtonElement>(null);
+  const customerNameInputRef = useRef<HTMLInputElement>(null);
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   // Load products and categories from local DB
   const loadCatalog = async () => {
@@ -97,6 +104,21 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   useEffect(() => {
     loadCatalog();
   }, []);
+
+  // Reset selected catalog highlight when query or category changes
+  useEffect(() => {
+    setSelectedCatalogIndex(-1);
+  }, [searchQuery, selectedCategory]);
+
+  // Auto-scroll selected row into view when navigating with Arrow keys
+  useEffect(() => {
+    if (selectedCatalogIndex >= 0) {
+      const el = document.getElementById(`catalog-row-${selectedCatalogIndex}`);
+      if (el) {
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [selectedCatalogIndex]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
@@ -294,12 +316,12 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
     showToast(`Antrean "${cart.label}" berhasil dimuat kembali!`);
   };
 
-  // Confirm and Save Transaction
+  // Confirm and Save Transaction (Direct print without preview modal)
   const handlePaymentSuccess = async (
     payments: PaymentEntry[],
     paidAmount: number,
     changeAmount: number,
-    autoPrint: boolean
+    printFormat: '58mm' | 'A4' | null
   ) => {
     try {
       const now = new Date().toISOString();
@@ -386,12 +408,23 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       setOrderDiscountNominal(0);
       setIsPaymentOpen(false);
 
-      // Show Receipt Modal only if autoPrint is enabled (Supports stores using manual paper receipts)
-      if (autoPrint) {
-        setCompletedTransaction(newTx);
-        showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak struk...`, 'success');
+      // Direct Silent Print without Preview Modal
+      if (printFormat) {
+        if (storeProfile.autoKickDrawer) {
+          playCashDrawerKickSound();
+        }
+        setDirectPrintJob({ tx: newTx, format: printFormat });
+        showToast(`Transaksi ${invoiceNumber} Berhasil! Mencetak nota (${printFormat})...`, 'success');
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            setDirectPrintJob(null);
+            barcodeInputRef.current?.focus();
+          }, 500);
+        }, 150);
       } else {
         showToast(`Transaksi ${invoiceNumber} Berhasil Disimpan (Mode Nota Manual / Tanpa Struk)`, 'success');
+        barcodeInputRef.current?.focus();
       }
     } catch (err: any) {
       console.error('Failed to complete transaction:', err);
@@ -485,11 +518,34 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
+                if (e.key === 'Tab' && !e.shiftKey) {
+                  e.preventDefault();
+                  payButtonRef.current?.focus();
+                  return;
+                }
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setSelectedCatalogIndex((prev) =>
+                    filteredProducts.length > 0 ? Math.min(filteredProducts.length - 1, prev + 1) : -1
+                  );
+                  return;
+                }
+                if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setSelectedCatalogIndex((prev) => Math.max(-1, prev - 1));
+                  return;
+                }
                 if (e.key === 'Enter') {
-                  handleBarcodeLookup(searchQuery);
+                  e.preventDefault();
+                  if (selectedCatalogIndex >= 0 && selectedCatalogIndex < filteredProducts.length) {
+                    const selectedProd = filteredProducts[selectedCatalogIndex];
+                    addToCart(selectedProd, 1);
+                  } else {
+                    handleBarcodeLookup(searchQuery);
+                  }
                 }
               }}
-              placeholder="Scan barcode scanner atau ketik nama/SKU produk... (Enter)"
+              placeholder="Scan barcode atau ketik nama/SKU... (↓/↑ navigasi, Enter pilih, Tab ke Bayar)"
               className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner font-medium"
             />
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-2.5" />
@@ -497,8 +553,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
 
           {searchQuery && (
             <button
+              tabIndex={-1}
               onClick={() => setSearchQuery('')}
-              className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
             >
               Reset
             </button>
@@ -508,8 +565,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         {/* Category Filter Pills (Horizontal Scroll) */}
         <div className="flex items-center gap-1.5 pb-2 mb-2 overflow-x-auto no-scrollbar shrink-0">
           <button
+            tabIndex={-1}
             onClick={() => setSelectedCategory(null)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
               selectedCategory === null
                 ? 'bg-slate-900 dark:bg-slate-800 border border-slate-900 dark:border-slate-700 text-white shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200'
@@ -521,9 +579,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             const count = products.filter((p) => p.categoryId === cat.id).length;
             return (
               <button
+                tabIndex={-1}
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-slate-900 dark:bg-slate-800 border border-slate-900 dark:border-slate-700 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200'
@@ -565,17 +624,21 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800/80 text-xs">
-                  {filteredProducts.map((p) => {
+                  {filteredProducts.map((p, idx) => {
                     const isService = p.isService || p.categoryName?.toLowerCase() === 'jasa';
                     const isOutOfStock = !isService && p.stock <= 0;
                     const isLowStock = !isService && p.stock > 0 && p.stock <= p.minStock;
+                    const isHighlighted = idx === selectedCatalogIndex;
 
                     return (
                       <tr
                         key={p.id}
+                        id={`catalog-row-${idx}`}
                         onClick={() => !isOutOfStock && addToCart(p, 1)}
                         className={`transition group cursor-pointer ${
-                          isOutOfStock
+                          isHighlighted
+                            ? 'ring-2 ring-emerald-500 bg-emerald-100 dark:bg-emerald-950/80 font-bold'
+                            : isOutOfStock
                             ? 'opacity-40 bg-slate-50/50 dark:bg-slate-950/40 cursor-not-allowed'
                             : 'hover:bg-emerald-50/50 dark:hover:bg-slate-800/60'
                         }`}
@@ -634,6 +697,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                         </td>
                         <td className="py-2.5 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <button
+                            tabIndex={-1}
                             type="button"
                             disabled={isOutOfStock}
                             onClick={() => addToCart(p, 1)}
@@ -752,8 +816,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                 {/* Qty Controls */}
                 <div className="flex items-center gap-1 shrink-0 bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800">
                   <button
+                    tabIndex={-1}
                     onClick={() => updateItemQuantity(item.productId, -1)}
-                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
@@ -761,8 +826,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                     {item.quantity}
                   </span>
                   <button
+                    tabIndex={-1}
                     onClick={() => updateItemQuantity(item.productId, 1)}
-                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                    className="p-1 rounded text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -774,8 +840,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
                     {formatRupiah(item.subtotal)}
                   </div>
                   <button
+                    tabIndex={-1}
                     onClick={() => removeItem(item.productId)}
-                    className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-500 transition"
+                    className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-500 transition cursor-pointer"
                   >
                     Hapus
                   </button>
@@ -791,17 +858,28 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition">
             <User className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5" />
             <input
+              ref={customerNameInputRef}
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab' && !e.shiftKey) {
+                  e.preventDefault();
+                  payButtonRef.current?.focus();
+                } else if (e.key === 'Tab' && e.shiftKey) {
+                  e.preventDefault();
+                  barcodeInputRef.current?.focus();
+                }
+              }}
               placeholder="Nama Pelanggan (Opsional - dicetak di nota)..."
               className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
             />
             {customerName && (
               <button
+                tabIndex={-1}
                 type="button"
                 onClick={() => setCustomerName('')}
-                className="text-slate-500 hover:text-slate-300 text-xs px-1.5"
+                className="text-slate-500 hover:text-slate-300 text-xs px-1.5 cursor-pointer"
                 title="Hapus nama pelanggan"
               >
                 <X className="w-3.5 h-3.5" />
@@ -821,9 +899,10 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             {/* Diskon Order */}
             <div className="flex justify-between items-center text-slate-800 dark:text-slate-200 font-semibold">
               <button
+                tabIndex={-1}
                 onClick={() => setIsDiscountOpen(true)}
                 disabled={cartItems.length === 0}
-                className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline disabled:opacity-50 font-medium"
+                className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline disabled:opacity-50 font-medium cursor-pointer"
               >
                 <Tag className="w-3 h-3" />
                 <span>
@@ -865,18 +944,31 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
             </span>
           </div>
 
-          {/* Big Checkout Pay Button */}
+          {/* Big Checkout Pay Button (Tab directly lands here, Enter to Pay) */}
           <button
-            onClick={() => setIsPaymentOpen(true)}
+            ref={payButtonRef}
+            onClick={() => cartItems.length > 0 && setIsPaymentOpen(true)}
             disabled={cartItems.length === 0}
-            className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md ${
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                barcodeInputRef.current?.focus();
+                barcodeInputRef.current?.select();
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (cartItems.length > 0) {
+                  setIsPaymentOpen(true);
+                }
+              }
+            }}
+            className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md focus:outline-none focus:ring-4 focus:ring-emerald-400 focus:scale-[1.01] ${
               cartItems.length === 0
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-300 dark:border-slate-700/60 cursor-not-allowed'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-[0.98]'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-[0.98] cursor-pointer'
             }`}
           >
             <CreditCard className="w-4 h-4" />
-            <span>BAYAR SEKARANG [F12] — {formatRupiah(cartSummary.grandTotal)}</span>
+            <span>BAYAR SEKARANG [F12 / Tab] — {formatRupiah(cartSummary.grandTotal)}</span>
           </button>
         </div>
       </div>
@@ -887,9 +979,20 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         <PaymentModal
           summary={cartSummary}
           customerName={customerName}
-          onClose={() => setIsPaymentOpen(false)}
+          onClose={() => {
+            setIsPaymentOpen(false);
+            barcodeInputRef.current?.focus();
+          }}
           onConfirmPayment={handlePaymentSuccess}
           defaultAutoPrint={storeProfile.autoPrintReceipt}
+          defaultPaperFormat={
+            storeProfile.defaultPrintFormat ||
+            (storeProfile.autoPrintReceipt === false
+              ? 'NONE'
+              : storeProfile.paperWidth === 'A4' || storeProfile.paperWidth === 'F4'
+              ? 'A4'
+              : '58mm')
+          }
         />
       )}
 
@@ -918,12 +1021,15 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         />
       )}
 
-      {completedTransaction && (
-        <ReceiptModal
-          transaction={completedTransaction}
-          storeProfile={storeProfile}
-          onClose={() => setCompletedTransaction(null)}
-        />
+      {/* Hidden Container for Direct Silent Printing without Preview Modal */}
+      {directPrintJob && (
+        <div className="hidden print:block">
+          <PrintableReceipt
+            transaction={directPrintJob.tx}
+            storeProfile={storeProfile}
+            paperFormat={directPrintJob.format}
+          />
+        </div>
       )}
     </div>
   );

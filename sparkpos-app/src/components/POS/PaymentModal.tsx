@@ -3,7 +3,6 @@ import {
   X,
   CreditCard,
   Banknote,
-  ArrowRight,
   CheckCircle2,
   Printer,
   Building2,
@@ -22,9 +21,10 @@ interface PaymentModalProps {
     payments: PaymentEntry[],
     paidAmount: number,
     changeAmount: number,
-    autoPrint: boolean
+    printFormat: '58mm' | 'A4' | null
   ) => void;
   defaultAutoPrint: boolean;
+  defaultPaperFormat?: '58mm' | 'A4' | 'NONE';
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -33,45 +33,75 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   onClose,
   onConfirmPayment,
   defaultAutoPrint,
+  defaultPaperFormat,
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
-  const [cashAmountStr, setCashAmountStr] = useState<string>(summary.grandTotal.toString());
+
+  // Cash payment: default 0, manual edit only, auto-formats with dots (e.g. 100.000)
+  const [cashAmount, setCashAmount] = useState<number>(0);
+  const [cashInputDisplay, setCashInputDisplay] = useState<string>('');
+
   const [transferRefNote, setTransferRefNote] = useState<string>('');
-  const [autoPrint, setAutoPrint] = useState<boolean>(defaultAutoPrint);
+
+  // Print format option: '58mm', 'A4', or null (unselected / no print)
+  const [selectedPrint, setSelectedPrint] = useState<'58mm' | 'A4' | null>(() => {
+    if (defaultPaperFormat === 'NONE' || defaultAutoPrint === false) return null;
+    return defaultPaperFormat === 'A4' ? 'A4' : '58mm';
+  });
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (selectedMethod === 'CASH') {
-      setCashAmountStr(summary.grandTotal.toString());
-    } else {
-      setCashAmountStr(summary.grandTotal.toString());
-    }
-  }, [summary.grandTotal, selectedMethod]);
-
-  const cashAmount = parseFloat(cashAmountStr) || 0;
-  const changeAmount = Math.max(0, cashAmount - summary.grandTotal);
-  const isUnderpaid = cashAmount < summary.grandTotal && selectedMethod === 'CASH';
-
-  // Quick cash buttons
-  const quickCashOptions = [
-    { label: 'Uang Pas', amount: summary.grandTotal },
-    { label: '+10.000', add: 10000 },
-    { label: '+20.000', add: 20000 },
-    { label: '+50.000', add: 50000 },
-    { label: '+100.000', add: 100000 },
-    { label: 'Rp 50.000', amount: 50000 },
-    { label: 'Rp 100.000', amount: 100000 },
-    { label: 'Rp 200.000', amount: 200000 },
-  ];
-
-  const handleQuickCash = (option: { amount?: number; add?: number }) => {
-    if (option.amount !== undefined) {
-      setCashAmountStr(option.amount.toString());
-    } else if (option.add !== undefined) {
-      const current = parseFloat(cashAmountStr) || 0;
-      setCashAmountStr((current + option.add).toString());
+  // When switching payment method
+  const handleSelectMethod = (method: 'CASH' | 'TRANSFER') => {
+    setSelectedMethod(method);
+    if (method === 'CASH') {
+      setCashAmount(0);
+      setCashInputDisplay('');
     }
   };
+
+  // Toggle print selection: if clicked again, deselects to null
+  const handleTogglePrint = (format: '58mm' | 'A4') => {
+    if (selectedPrint === format) {
+      setSelectedPrint(null);
+    } else {
+      setSelectedPrint(format);
+    }
+  };
+
+  // Restrict keys in cash input: allow only digits and navigation keys (block '.' and ',')
+  const handleCashKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Escape'].includes(
+        e.key
+      ) ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+    // Block dots, commas, symbols, letters
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  // Handle cash input change: format digits with thousand separator (.) automatically
+  const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, '');
+    if (!rawDigits) {
+      setCashAmount(0);
+      setCashInputDisplay('');
+      return;
+    }
+    const numeric = parseInt(rawDigits, 10);
+    setCashAmount(numeric);
+    // Format to 100.000 (Indonesian dots) without requiring user to type '.'
+    setCashInputDisplay(new Intl.NumberFormat('id-ID').format(numeric));
+  };
+
+  const changeAmount = Math.max(0, cashAmount - summary.grandTotal);
+  const isUnderpaid = selectedMethod === 'CASH' && cashAmount < summary.grandTotal;
 
   const handleComplete = () => {
     if (isUnderpaid || isSubmitting) return;
@@ -97,22 +127,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         payments,
         selectedMethod === 'CASH' ? cashAmount : summary.grandTotal,
         selectedMethod === 'CASH' ? changeAmount : 0,
-        autoPrint
+        selectedPrint
       );
     }, 200);
   };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       } else if (e.key === 'Enter' && !isUnderpaid && !isSubmitting) {
         handleComplete();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cashAmount, isUnderpaid, isSubmitting, selectedMethod, transferRefNote]);
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [cashAmount, isUnderpaid, isSubmitting, selectedMethod, transferRefNote, selectedPrint]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 select-none">
@@ -160,7 +190,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </span>
           </div>
 
-          {/* Payment Method Selector (Only 2 Choices: Tunai & Transfer) */}
+          {/* Payment Method Selector (Tunai & Transfer) */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
               Metode Pembayaran
@@ -168,7 +198,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setSelectedMethod('CASH')}
+                onClick={() => handleSelectMethod('CASH')}
                 className={`flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
                   selectedMethod === 'CASH'
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-md shadow-emerald-600/10'
@@ -181,7 +211,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => setSelectedMethod('TRANSFER')}
+                onClick={() => handleSelectMethod('TRANSFER')}
                 className={`flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 font-bold text-sm transition cursor-pointer ${
                   selectedMethod === 'TRANSFER'
                     ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-md shadow-emerald-600/10'
@@ -194,7 +224,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Tunai: Input Uang Diterima & Tombol Pecahan */}
+          {/* Tunai: Input Uang Diterima (Default 0, Manual Edit, Auto Formatted 100.000, No Quick Buttons) */}
           {selectedMethod === 'CASH' && (
             <div className="space-y-4">
               <div>
@@ -206,36 +236,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     Rp
                   </span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     autoFocus
-                    value={cashAmountStr}
-                    onChange={(e) => setCashAmountStr(e.target.value)}
-                    placeholder="Masukkan jumlah uang..."
+                    value={cashInputDisplay}
+                    onChange={handleCashChange}
+                    onKeyDown={handleCashKeyDown}
+                    placeholder="0"
                     className="w-full pl-12 pr-12 py-3 bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded-2xl text-2xl font-black text-slate-900 dark:text-white focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-500 font-mono transition shadow-inner"
                   />
                   {cashAmount >= summary.grandTotal && (
                     <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 absolute right-4 top-3.5" />
                   )}
                 </div>
-              </div>
-
-              {/* Quick Cash Buttons */}
-              <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 block">
-                  Pilihan Cepat Uang Kasir:
-                </span>
-                <div className="grid grid-cols-4 gap-2">
-                  {quickCashOptions.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleQuickCash(opt)}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Ketik nominal angka saja. Format ribuan (titik) otomatis diterapkan.
+                </p>
               </div>
 
               {/* Kembalian Calculation */}
@@ -296,21 +312,56 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           )}
 
-          {/* Print Receipt Toggle (Enable / Disable untuk toko yang menggunakan nota manual) */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-            <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={autoPrint}
-                onChange={(e) => setAutoPrint(e.target.checked)}
-                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 cursor-pointer"
-              />
-              <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Cetak struk nota belanja otomatis</span>
-            </label>
-            {!autoPrint && (
-              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pl-6">
-                Mode Nota Manual Aktif: Transaksi akan selesai langsung tanpa membuka dialog struk printer.
+          {/* Print Format Selector Box (58mm or A4/F4, 80mm removed, Click to toggle/deselect) */}
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Opsi Cetak Struk:</span>
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                {selectedPrint ? 'Klik tombol yang aktif untuk batal cetak' : 'Pilih jenis print atau biarkan kosong'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleTogglePrint('58mm')}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer ${
+                  selectedPrint === '58mm'
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30'
+                    : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <span>⚡ Print 58mm (Thermal)</span>
+                {selectedPrint === '58mm' && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleTogglePrint('A4')}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer ${
+                  selectedPrint === 'A4'
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30'
+                    : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <span>📄 Print A4 / F4 (Faktur)</span>
+                {selectedPrint === 'A4' && <CheckCircle2 className="w-4 h-4 text-white" />}
+              </button>
+            </div>
+
+            {!selectedPrint ? (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                <span>🚫 Tanpa Cetak: Transaksi selesai langsung tanpa print nota.</span>
+              </p>
+            ) : (
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>
+                  Otomatis mencetak langsung format {selectedPrint === 'A4' ? 'A4 / F4' : 'Thermal 58mm'}.
+                </span>
               </p>
             )}
           </div>

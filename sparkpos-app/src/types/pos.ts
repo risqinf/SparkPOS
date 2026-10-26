@@ -263,6 +263,7 @@ export interface StoreProfile {
   phone: string;
   receiptFooter: string;
   paperWidth: '58mm' | '80mm' | 'A4' | 'F4' | 'auto';
+  defaultPrintFormat?: '58mm' | 'A4' | 'NONE';
   taxPercent: number;
   isTaxInclusive: boolean;
   autoKickDrawer: boolean;

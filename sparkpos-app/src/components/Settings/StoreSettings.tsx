@@ -602,26 +602,37 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Format Kertas & Jenis Printer Bawaan
+                  Default Print Kasir (Pengaturan Cetak Nota Bawaan)
                 </label>
                 <select
                   disabled={!isAdmin}
-                  value={profile.paperWidth}
-                  onChange={(e) =>
-                    setProfile({ ...profile, paperWidth: e.target.value as any })
+                  value={
+                    profile.defaultPrintFormat ||
+                    (profile.autoPrintReceipt === false
+                      ? 'NONE'
+                      : profile.paperWidth === 'A4' || profile.paperWidth === 'F4'
+                      ? 'A4'
+                      : '58mm')
                   }
+                  onChange={(e) => {
+                    const val = e.target.value as '58mm' | 'A4' | 'NONE';
+                    setProfile({
+                      ...profile,
+                      defaultPrintFormat: val,
+                      paperWidth: val === 'A4' ? 'A4' : '58mm',
+                      autoPrintReceipt: val !== 'NONE',
+                    });
+                  }}
                   className={`w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-medium ${
                     !isAdmin ? 'opacity-60 cursor-not-allowed' : ''
                   }`}
                 >
-                  <option value="auto">✨ Auto-Detect (A4/F4 jika ada Laptop/Garansi, Thermal jika Aksesoris)</option>
-                  <option value="58mm">⚡ 58mm Mini Kasir Thermal (32 Kolom)</option>
-                  <option value="80mm">🧾 80mm Standar Kasir POS Thermal (42 Kolom)</option>
-                  <option value="A4">📄 A4 Kertas Standar Kantor (Faktur Komputer & Kartu Garansi)</option>
-                  <option value="F4">📄 F4 / Folio Kertas Standar Kantor</option>
+                  <option value="58mm">⚡ 58mm Mini Kasir Thermal (Default Struk)</option>
+                  <option value="A4">📄 A4 / F4 Faktur Standar Kantor</option>
+                  <option value="NONE">🚫 Tanpa Cetak (Mode Nota Manual Kertas)</option>
                 </select>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Mendukung printer thermal USB/LAN/Bluetooth maupun printer biasa kantor (Epson/Canon/HP).
+                  Pilihan ini menjadi opsi cetak bawaan saat kasir melakukan pembayaran. Format 80mm telah dihapus.
                 </p>
               </div>
 
