@@ -149,10 +149,11 @@ export async function ensureDatabaseCompatibility(): Promise<void> {
       );
       if (!hasPrinterCategory) {
         await db.categories.add({
+          id: 5,
           name: 'Printer & Tinta',
           icon: 'Printer',
           description: 'Printer, tinta printer botol, cartridge, toner, kertas',
-        } as Category);
+        });
       }
     }
 
