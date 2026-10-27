@@ -60,13 +60,12 @@ jobs:
           releaseBody: |
             ### SparkPOS Desktop v__VERSION__
 
-            - **Integrasi Notifikasi WhatsApp Servis (Smart Detect)**: Mengabari pelanggan langsung ke WhatsApp dari dashboard servis, nota cetak, maupun saat simpan tiket. Otomatis mendeteksi WhatsApp Web atau aplikasi WhatsApp Desktop Windows.
-            - **Template Pesan Sopan & Profesional**: 5 template pesan ramah berbahasa Indonesia (Tanda Terima Masuk, Estimasi Biaya & Persetujuan, Servis Selesai Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan / Garansi). Dilengkapi No. Tiket/Nota, keluhan, estimasi pengerjaan, rincian biaya, DP, sisa pembayaran, dan kontak toko.
-            - **Pratinjau & Edit Pesan**: Tinjau dan sesuaikan isi pesan sebelum dikirim, serta bersihkan format nomor telepon otomatis (+62).
-            - **Garansi & Manajemen Stok Fleksibel**: Masa garansi produk dapat diatur hari/bulan atau kustom dengan default `Non-Garansi`.
-            - **Kartu Garansi Khusus Unit Laptop & Layout Struk Rapi**: Kartu garansi pada nota khusus laptop, teks panjang membungkus rapi 32 kolom thermal, dan layout hemat kertas.
+            - **Kartu Garansi Toko Khusus Laptop, Sparepart & Printer**: Kartu garansi toko pada struk thermal kasir (58mm) maupun faktur resmi (A4) secara konsisten dan eksklusif hanya diberikan untuk barang kategori atau produk Laptop, Sparepart, dan Printer/Print. Produk Aksesoris dan Jasa tidak memicu kartu garansi toko.
+            - **Validasi Wajib Formulir Terima Servis**: Kolom wajib diisi pada formulir terima servis diperbarui menjadi Nama Pelanggan, Nomor WhatsApp / HP, dan Tipe Perangkat. Kolom keluhan kini opsional dengan fallback otomatis.
+            - **Integrasi Notifikasi WhatsApp Servis (Smart Detect)**: Mengabari pelanggan langsung ke WhatsApp dari dashboard servis, nota cetak, maupun saat simpan tiket dengan 5 template pesan ramah dan sopan.
+            - **Garansi & Manajemen Stok Fleksibel**: Masa garansi produk dapat diatur hari/bulan atau kustom dengan default Non-Garansi.
             - **Kategori Baru Printer & Tinta**: Kategori master Printer & Tinta dengan auto-migrasi database.
-            - **Laporan Keuangan Sederhana & Bersih**: Angka Rupiah jelas tanpa singkatan JT/Rb, ekspor kas harian rapi, dan judul toko Excel auto-fit tanpa terpotong.
+            - **Laporan Keuangan Sederhana & Bersih**: Angka Rupiah transparan tanpa singkatan, ekspor kas harian rapi, dan judul toko Excel auto-fit tanpa terpotong.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

@@ -210,12 +210,12 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
       setErrorMessage('Nama pelanggan wajib diisi!');
       return;
     }
-    if (!deviceType.trim()) {
-      setErrorMessage('Tipe perangkat (laptop/PC) wajib diisi!');
+    if (!customerPhone.trim()) {
+      setErrorMessage('Nomor WhatsApp / HP pelanggan wajib diisi!');
       return;
     }
-    if (!complaint.trim()) {
-      setErrorMessage('Keluhan kerusakan pelanggan wajib diisi!');
+    if (!deviceType.trim()) {
+      setErrorMessage('Tipe perangkat (laptop/printer/PC) wajib diisi!');
       return;
     }
 
@@ -227,10 +227,10 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
       const orderPayload: Omit<ServiceOrder, 'id'> = {
         ticketNumber,
         customerName: customerName.trim(),
-        customerPhone: customerPhone.trim() || undefined,
+        customerPhone: customerPhone.trim(),
         deviceType: deviceType.trim(),
         deviceSerial: deviceSerial.trim() || undefined,
-        complaint: complaint.trim(),
+        complaint: complaint.trim() || 'Pemeriksaan / Servis Unit',
         diagnosis: diagnosis.trim() || undefined,
         status,
         assignedTechId,
@@ -355,10 +355,13 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-slate-500 dark:text-slate-400 block mb-1">No. WhatsApp / HP</label>
+                  <label className="text-slate-500 dark:text-slate-400 block mb-1">
+                    No. WhatsApp / HP <span className="text-rose-600 dark:text-rose-400">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="Contoh: 081234567890"
+                    required
+                    placeholder="Contoh: 081234567890 (Wajib diisi)"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
@@ -668,12 +671,11 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-slate-500 dark:text-slate-400 font-semibold text-xs">
-                  Keluhan Pelanggan <span className="text-rose-600 dark:text-rose-400">*</span>
+                  Keluhan / Gejala Kerusakan (Opsional)
                 </label>
               </div>
               <textarea
                 rows={2}
-                required
                 placeholder="Contoh: Tinta putus-putus, lampu kedip, mati total..."
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}

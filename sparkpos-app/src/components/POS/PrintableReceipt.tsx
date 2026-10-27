@@ -1,6 +1,6 @@
 import React from 'react';
 import { Transaction, StoreProfile } from '../../types/pos';
-import { generateReceiptText, calculateWarrantyExpiry, isLaptopItem } from '../../services/printer';
+import { generateReceiptText, calculateWarrantyExpiry, isWarrantyEligibleItem } from '../../services/printer';
 import { formatRupiah } from '../../services/cartCalculator';
 import { ShieldCheck } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
 
   const warrantyItems = transaction.items.filter(
     (item) =>
-      isLaptopItem(item) &&
+      isWarrantyEligibleItem(item) &&
       item.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(item.warrantyPeriod.toLowerCase())
   );
@@ -165,18 +165,18 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
           </div>
         </div>
 
-        {/* KARTU GARANSI KHUSUS UNIT LAPTOP */}
+        {/* KARTU GARANSI KHUSUS UNIT LAPTOP / SPAREPART / PRINTER */}
         {warrantyItems.length > 0 && (
           <div className="p-3.5 rounded-lg border-2 border-emerald-600 bg-emerald-50/50 space-y-1.5 text-center">
             <div className="flex items-center justify-center gap-1.5 text-emerald-900 font-extrabold text-xs uppercase tracking-wide">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Kartu Garansi Resmi Unit Laptop</span>
+              <span>Kartu Garansi Resmi Toko (Laptop / Sparepart / Printer)</span>
             </div>
             <p className="text-xs text-slate-800 font-bold">
               Terimakasih atas kunjungannya, sertakan kartu garansi ini saat klaim.
             </p>
             <p className="text-[10px] text-slate-600">
-              Faktur ini merupakan bukti kartu garansi sah untuk unit laptop yang tertera. Mohon disimpan dengan baik.
+              Faktur ini merupakan bukti kartu garansi sah untuk unit laptop / sparepart / printer yang tertera. Mohon disimpan dengan baik.
             </p>
           </div>
         )}

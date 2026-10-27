@@ -72,6 +72,16 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 * **Rekonsiliasi Kasir:** Perhitungan otomatis uang tunai yang seharusnya ada di laci vs uang fisik riil, menampilkan selisih kas (Pas, Kas Lebih, atau Kas Minus).
 
 
+## Catatan Rilis v2.6.2
+
+**Garansi Toko Khusus Laptop, Sparepart & Printer**
+- Kartu garansi toko pada struk thermal kasir (58mm) maupun faktur resmi (A4) secara konsisten dan eksklusif hanya diberikan untuk barang kategori atau produk **Laptop, Sparepart, dan Printer/Print**.
+- Barang kategori Aksesoris dan Jasa tidak lagi memicu kartu garansi toko.
+
+**Validasi Wajib Formulir Terima Servis (Nama, Nomor HP & Tipe Perangkat)**
+- Kolom yang wajib diisi pada saat menerima servis unit (`ServiceOrderModal`) disesuaikan secara ketat: **Nama Pelanggan**, **Nomor WhatsApp / HP**, dan **Tipe Perangkat**.
+- Kolom keluhan kerusakan kini opsional (dapat dikosongkan dengan fallback pemeriksaan unit otomatis), sehingga pendaftaran servis lebih cepat dan praktis saat pelanggan terburu-buru.
+
 ## Catatan Rilis v2.6.1
 
 **Integrasi Notifikasi WhatsApp Servis (Otomatis & Deteksi WA Web / Desktop App)**

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer, Copy, Check, FileText, ShieldCheck } from 'lucide-react';
 import { Transaction, StoreProfile } from '../../types/pos';
-import { generateReceiptText, detectOptimalPaperFormat, isLaptopItem } from '../../services/printer';
+import { generateReceiptText, detectOptimalPaperFormat, isWarrantyEligibleItem } from '../../services/printer';
 import { printSaleReceipt, describeOutcome } from '../../services/printService';
 import { PrintableReceipt } from './PrintableReceipt';
 import { useDialog } from '../../hooks/useDialog';
@@ -54,7 +54,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   const warrantyItems = transaction.items.filter(
     (item) =>
-      isLaptopItem(item) &&
+      isWarrantyEligibleItem(item) &&
       item.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(item.warrantyPeriod.toLowerCase())
   );
@@ -74,7 +74,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 {warrantyItems.length > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" />
-                    <span>Ada Garansi Unit Laptop</span>
+                    <span>Ada Kartu Garansi Toko</span>
                   </span>
                 )}
               </h2>

@@ -79,6 +79,30 @@ export function isLaptopItem(item: { name: string; categoryName?: string }): boo
 }
 
 /**
+ * Memeriksa apakah produk berhak mendapatkan kartu garansi toko:
+ * Garansi HANYA untuk produk Laptop, Sparepart, dan Printer/Print saja.
+ * Produk Aksesoris dan Jasa tidak mendapatkan kartu garansi toko.
+ */
+export function isWarrantyEligibleItem(item: { name: string; categoryName?: string }): boolean {
+  const cat = (item.categoryName || '').toLowerCase();
+  const name = item.name.toLowerCase();
+
+  // 1. Laptop / Notebook
+  if (cat.includes('laptop') || cat.includes('notebook')) return true;
+  if (/\b(laptop|notebook|macbook|thinkpad|chromebook)\b/i.test(name)) return true;
+
+  // 2. Sparepart (RAM, SSD, LCD, baterai, motherboard, prosesor, psu, dll)
+  if (cat.includes('sparepart') || cat.includes('part') || cat.includes('komponen')) return true;
+  if (/\b(ram|ssd|hdd|harddisk|lcd|baterai|battery|motherboard|mobo|fan|processor|prosesor|vga|psu|power supply|keyboard internal)\b/i.test(name)) return true;
+
+  // 3. Printer / Print (Printer unit, cartridge, toner, printhead, tinta)
+  if (cat.includes('printer') || cat.includes('tinta') || cat.includes('print')) return true;
+  if (/\b(printer|print|epson|canon|hp laserjet|brother|deskjet|ink tank|ecotank|cartridge|toner|printhead|head)\b/i.test(name)) return true;
+
+  return false;
+}
+
+/**
  * Bungkus teks panjang menjadi beberapa baris (word-wrap) agar menurun rapi dan tidak terpotong di printer kasir
  */
 export function wrapText(text: string, width: number): string[] {
@@ -260,19 +284,19 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
   }
   lines.push(doubleDivider);
 
-  // 5.b Kartu Garansi (KHUSUS UNIT LAPTOP SAJA)
-  const laptopWarrantyItems = tx.items.filter(
+  // 5.b Kartu Garansi (KHUSUS LAPTOP, SPAREPART & PRINTER SAJA)
+  const warrantyItems = tx.items.filter(
     (i) =>
-      isLaptopItem(i) &&
+      isWarrantyEligibleItem(i) &&
       i.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(i.warrantyPeriod.toLowerCase())
   );
 
-  if (laptopWarrantyItems.length > 0) {
-    for (const cLine of centerTextLines('KARTU GARANSI UNIT LAPTOP', width)) {
+  if (warrantyItems.length > 0) {
+    for (const cLine of centerTextLines('KARTU GARANSI TOKO', width)) {
       lines.push(cLine);
     }
-    for (const it of laptopWarrantyItems) {
+    for (const it of warrantyItems) {
       const { expiryDateStr } = calculateWarrantyExpiry(tx.createdAt, it.warrantyPeriod);
       for (const nLine of wrapText(`* ${it.name}`, width)) {
         lines.push(nLine);
@@ -294,7 +318,7 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
     }
   }
 
-  if (laptopWarrantyItems.length > 0) {
+  if (warrantyItems.length > 0) {
     for (const cLine of centerTextLines('Terimakasih atas kunjungannya,', width)) {
       lines.push(cLine);
     }
