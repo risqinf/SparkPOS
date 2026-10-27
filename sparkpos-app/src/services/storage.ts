@@ -152,7 +152,7 @@ export async function ensureDatabaseCompatibility(): Promise<void> {
           name: 'Printer & Tinta',
           icon: 'Printer',
           description: 'Printer, tinta printer botol, cartridge, toner, kertas',
-        });
+        } as Category);
       }
     }
 
