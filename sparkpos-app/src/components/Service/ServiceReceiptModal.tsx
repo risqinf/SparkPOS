@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Copy, Check, FileText } from 'lucide-react';
+import { X, Printer, Copy, Check, FileText, MessageCircle } from 'lucide-react';
 import { ServiceOrder, StoreProfile } from '../../types/pos';
 import { generateServiceReceiptText } from '../../services/printer';
 import { printThermalText, isTauriRuntime, describeOutcome } from '../../services/printService';
@@ -9,12 +9,14 @@ interface ServiceReceiptModalProps {
   order: ServiceOrder;
   storeProfile: StoreProfile;
   onClose: () => void;
+  onOpenWhatsApp?: (order: ServiceOrder) => void;
 }
 
 export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
   order,
   storeProfile,
   onClose,
+  onOpenWhatsApp,
 }) => {
   const dialogRef = useDialog<HTMLDivElement>(true, onClose);
   const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(
@@ -115,13 +117,27 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
 
         {/* Action Buttons Toolbar */}
         <div className="px-4 py-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 gap-2">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Tersalin!' : 'Salin Teks Nota'}</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Tersalin!' : 'Salin Teks Nota'}</span>
+            </button>
+
+            {onOpenWhatsApp && (
+              <button
+                type="button"
+                onClick={() => onOpenWhatsApp(order)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition border border-emerald-300 dark:border-emerald-700 shadow-2xs"
+                title="Kirim pesan WhatsApp nota ke pelanggan"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Kirim WhatsApp</span>
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             {printStatus && (

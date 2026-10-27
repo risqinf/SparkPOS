@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Lock,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 import {
   ServiceOrder,
@@ -34,7 +35,7 @@ interface ServiceOrderModalProps {
   orderToEdit?: ServiceOrder | null;
   currentUser?: Employee | null;
   onClose: () => void;
-  onSaved: (order: ServiceOrder, printReceipt?: boolean) => void;
+  onSaved: (order: ServiceOrder, printReceipt?: boolean, openWhatsApp?: boolean) => void;
 }
 
 export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
@@ -203,7 +204,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
     setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
-  const handleSave = async (printReceipt = false) => {
+  const handleSave = async (printReceipt = false, openWhatsApp = false) => {
     setErrorMessage(null);
     if (!customerName.trim()) {
       setErrorMessage('Nama pelanggan wajib diisi!');
@@ -278,7 +279,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         );
       }
 
-      onSaved(finalOrder, printReceipt);
+      onSaved(finalOrder, printReceipt, openWhatsApp);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Gagal menyimpan tiket servis.');
     } finally {
@@ -987,8 +988,19 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             <button
               type="button"
               disabled={isSaving}
-              onClick={() => handleSave(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition"
+              onClick={() => handleSave(false, true)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-xs font-semibold transition cursor-pointer"
+              title="Simpan data dan langsung buka notifikasi WhatsApp ke pelanggan"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Simpan & Kirim WA</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => handleSave(true, false)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition"
               title="Simpan data dan langsung cetak nota tanda terima servis"
             >
               <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />

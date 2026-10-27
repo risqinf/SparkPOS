@@ -72,6 +72,15 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 * **Rekonsiliasi Kasir:** Perhitungan otomatis uang tunai yang seharusnya ada di laci vs uang fisik riil, menampilkan selisih kas (Pas, Kas Lebih, atau Kas Minus).
 
 
+## Catatan Rilis v2.6.1
+
+**Integrasi Notifikasi WhatsApp Servis (Otomatis & Deteksi WA Web / Desktop App)**
+- **Kirim Pesan WhatsApp Langsung**: Mengabari pelanggan secara langsung dari dashboard servis, nota cetak servis, maupun saat membuat/mengedit tiket servis.
+- **Deteksi Cerdas WhatsApp**: Pilihan kirim otomatis (membuka WhatsApp dan mendeteksi aplikasi Desktop atau WhatsApp Web), WhatsApp Web langsung di peramban, aplikasi WhatsApp Desktop Windows, atau salin teks pesan ke clipboard.
+- **Format Pesan Sopan & Terstruktur**: Template bahasa Indonesia yang ramah, sopan, dan profesional dengan No. Tiket/Nota, nama perangkat, keluhan, estimasi pengerjaan, rincian biaya & DP, garansi servis, dan alamat/kontak toko.
+- **5 Template Lengkap**: Tanda Terima Servis Masuk, Konfirmasi Diagnosa & Estimasi Biaya, Servis Selesai & Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan Unit / Garansi Aktif.
+- **Pratinjau & Edit Pesan**: Teks pesan dapat ditinjau dan diedit bebas sebelum dikirim dengan nomor HP otomatis terformat ke standar internasional (+62).
+
 ## Catatan Rilis v2.6.0
 
 **Garansi & Manajemen Stok Fleksibel**

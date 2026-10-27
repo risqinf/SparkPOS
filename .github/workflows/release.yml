@@ -60,11 +60,13 @@ jobs:
           releaseBody: |
             ### SparkPOS Desktop v__VERSION__
 
-            - **Garansi & Manajemen Stok Fleksibel**: Masa garansi produk di menu Stok kini dapat diatur secara fleksibel (pilihan hari/bulan atau input manual bebas), dengan default baru `Non-Garansi` (tidak lagi hardcoded 1 bulan). Produk non-garansi otomatis tidak memunculkan baris garansi pada nota.
-            - **Kartu Garansi Khusus Unit Laptop & Layout Struk Rapi**: Kartu garansi pada struk kasir kini khusus untuk pembelian unit laptop. Teks nota panjang otomatis membungkus (text wrap) rapi sesuai lebar thermal 32 karakter dan tidak terpotong ke samping. Format cetak A4/thermal dioptimalkan menghemat kertas.
-            - **Kategori Baru Printer & Tinta**: Kategori master `Printer & Tinta` untuk printer, tinta botol, cartridge, toner, dan kertas dengan auto-migrasi database.
-            - **Pembatalan Servis dengan Alasan & Bukti Nota**: Pembatalan tiket servis kini mencatat alasan detail (mis. dibatalkan pelanggan, sparepart kosong, rusak parah) dan dilengkapi cetak *Nota Pembatalan Servis*.
-            - **Laporan Keuangan Sederhana & Bersih**: Menghilangkan singkatan JT/Rb agar laporan bersih dan angka Rupiah jelas. Ekspor kas harian disederhanakan tanpa duplikasi baris. Ekspor Excel otomatis menggabungkan banner judul toko dan menyesuaikan lebar kolom. Riwayat transaksi menampilkan rincian pembayaran tunai, kembalian, dan kas bersih masuk secara transparan.
+            - **Integrasi Notifikasi WhatsApp Servis (Smart Detect)**: Mengabari pelanggan langsung ke WhatsApp dari dashboard servis, nota cetak, maupun saat simpan tiket. Otomatis mendeteksi WhatsApp Web atau aplikasi WhatsApp Desktop Windows.
+            - **Template Pesan Sopan & Profesional**: 5 template pesan ramah berbahasa Indonesia (Tanda Terima Masuk, Estimasi Biaya & Persetujuan, Servis Selesai Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan / Garansi). Dilengkapi No. Tiket/Nota, keluhan, estimasi pengerjaan, rincian biaya, DP, sisa pembayaran, dan kontak toko.
+            - **Pratinjau & Edit Pesan**: Tinjau dan sesuaikan isi pesan sebelum dikirim, serta bersihkan format nomor telepon otomatis (+62).
+            - **Garansi & Manajemen Stok Fleksibel**: Masa garansi produk dapat diatur hari/bulan atau kustom dengan default `Non-Garansi`.
+            - **Kartu Garansi Khusus Unit Laptop & Layout Struk Rapi**: Kartu garansi pada nota khusus laptop, teks panjang membungkus rapi 32 kolom thermal, dan layout hemat kertas.
+            - **Kategori Baru Printer & Tinta**: Kategori master Printer & Tinta dengan auto-migrasi database.
+            - **Laporan Keuangan Sederhana & Bersih**: Angka Rupiah jelas tanpa singkatan JT/Rb, ekspor kas harian rapi, dan judul toko Excel auto-fit tanpa terpotong.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
