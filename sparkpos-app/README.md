@@ -72,6 +72,13 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 * **Rekonsiliasi Kasir:** Perhitungan otomatis uang tunai yang seharusnya ada di laci vs uang fisik riil, menampilkan selisih kas (Pas, Kas Lebih, atau Kas Minus).
 
 
+## Catatan Rilis v2.6.3
+
+**Perbaikan Akurasi Perhitungan Laporan Keuangan & Saldo Kas Laci (Zero Selisih)**
+- **Koreksi Logika Kas Masuk & Kembalian**: Memperbaiki perhitungan penerimaan kas tunai (`cashSalesTotal`) dan ekspektasi kas laci kasir (`expectedCash`). Uang kembalian yang telah dikembalikan ke pelanggan tidak lagi dikurangkan ganda dari total belanja (`grandTotal`), sehingga nominal kas bersih masuk dari penjualan tunai tercatat 100% presisi senilai transaksi riil.
+- **Keseimbangan Finansial Sempurna**: Total Penerimaan Kas Tunai + Transfer Bank kini selalu seimbang sempurna (sama persis) dengan Total Omset Toko, menghilangkan selisih semu pada kartu ringkasan finansial maupun ekspor Excel.
+- **Sinkronisasi Otomatis Sesi Kasir (Self-Healing)**: Sesi shift aktif yang sebelumnya mengalami anomali selisih otomatis disinkronkan kembali secara akurat berdasarkan riwayat transaksi fisik, mengembalikan status kas laci menjadi seimbang (pas).
+
 ## Catatan Rilis v2.6.2
 
 **Garansi Toko Khusus Laptop, Sparepart & Printer**

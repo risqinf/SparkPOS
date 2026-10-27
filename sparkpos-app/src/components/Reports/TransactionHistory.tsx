@@ -447,11 +447,11 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
     // 1. Modal Awal Kasir:
     let openingCash = 0;
-    const matchingRegisters = dailyRegisters.filter(
-      (r) => r.date >= start && r.date <= end
-    );
+    const matchingRegisters = dailyRegisters
+      .filter((r) => r.date >= start && r.date <= end)
+      .sort((a, b) => a.date.localeCompare(b.date));
     if (matchingRegisters.length > 0) {
-      openingCash = matchingRegisters.reduce((sum, r) => sum + (r.openingCash || 0), 0);
+      openingCash = matchingRegisters[0].openingCash || 0;
     }
 
     // 2. Omset POS & Servis
@@ -474,16 +474,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       // Split payment precision support
       if (rec.originalPosTx?.payments && rec.originalPosTx.payments.length > 0) {
         for (const p of rec.originalPosTx.payments) {
-          if (p.method?.toUpperCase().includes('CASH')) {
-            const rawAmount = p.amount || 0;
-            const change = rec.originalPosTx.changeAmount || 0;
-            // Jika amount tercatat sebagai uang diterima (lebih besar dari total belanja), potong kembalian
-            const netCash = rawAmount > rec.originalPosTx.grandTotal
-              ? rec.originalPosTx.grandTotal
-              : Math.max(0, rawAmount - change);
-            cashSalesTotal += netCash;
+          const isCash = p.method?.toUpperCase().includes('CASH');
+          // Nilai bersih yang masuk untuk tagihan (maksimal sebesar grandTotal transaksi)
+          const netAmount = Math.min(p.amount || 0, rec.originalPosTx.grandTotal || rec.grandTotal);
+          if (isCash) {
+            cashSalesTotal += netAmount;
           } else {
-            transferSalesTotal += p.amount || 0;
+            transferSalesTotal += netAmount;
           }
         }
       } else {
@@ -670,7 +667,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
         const newPayments = [
           {
             method: editPaymentMethod as PaymentMethod,
-            amount: tx.paidAmount || tx.grandTotal,
+            amount: tx.grandTotal,
           },
         ];
 

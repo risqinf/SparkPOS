@@ -530,7 +530,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
       if (activeShift) {
         const cashPaymentTotal = payments
           .filter((p) => p.method === 'CASH')
-          .reduce((sum, p) => sum + (p.amount - changeAmount), 0);
+          .reduce((sum, p) => sum + Math.min(p.amount, cartSummary.grandTotal), 0);
         if (cashPaymentTotal > 0) {
           const updatedExpected = (activeShift.expectedCash || 0) + cashPaymentTotal;
           await db.shifts.update(activeShift.id, { expectedCash: updatedExpected });

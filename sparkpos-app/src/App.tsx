@@ -124,6 +124,25 @@ export default function App() {
         myOpenShift.openingCash = todayReg.openingCash;
         await db.shifts.update(myOpenShift.id, { openingCash: todayReg.openingCash });
       }
+      // Sinkronisasi expectedCash dengan transaksi tunai riil agar terbebas dari bug selisih kembalian
+      const shiftTxs = await db.transactions.where('shiftId').equals(myOpenShift.id).toArray();
+      const realCashFromTxs = shiftTxs
+        .filter((t) => t.status !== 'VOID' && t.status !== 'REFUNDED')
+        .reduce((sum, t) => {
+          const isCash = t.paymentMethod?.toUpperCase().includes('CASH');
+          if (t.payments && t.payments.length > 0) {
+            const cPay = t.payments
+              .filter((p) => p.method?.toUpperCase().includes('CASH'))
+              .reduce((s, p) => s + Math.min(p.amount || 0, t.grandTotal), 0);
+            return sum + cPay;
+          }
+          return sum + (isCash ? t.grandTotal : 0);
+        }, 0);
+      const accurateExpected = (myOpenShift.openingCash || 0) + realCashFromTxs;
+      if (myOpenShift.expectedCash !== accurateExpected) {
+        myOpenShift.expectedCash = accurateExpected;
+        await db.shifts.update(myOpenShift.id, { expectedCash: accurateExpected });
+      }
       setActiveShift(myOpenShift);
     } else {
       // Buat shift baru untuk kasir ini
@@ -194,6 +213,26 @@ export default function App() {
     }
     const allShifts = await db.shifts.toArray();
     const myOpenShift = allShifts.find((s) => !s.isClosed && s.cashierId === currentUser.id);
+    if (myOpenShift) {
+      const shiftTxs = await db.transactions.where('shiftId').equals(myOpenShift.id).toArray();
+      const realCashFromTxs = shiftTxs
+        .filter((t) => t.status !== 'VOID' && t.status !== 'REFUNDED')
+        .reduce((sum, t) => {
+          const isCash = t.paymentMethod?.toUpperCase().includes('CASH');
+          if (t.payments && t.payments.length > 0) {
+            const cPay = t.payments
+              .filter((p) => p.method?.toUpperCase().includes('CASH'))
+              .reduce((s, p) => s + Math.min(p.amount || 0, t.grandTotal), 0);
+            return sum + cPay;
+          }
+          return sum + (isCash ? t.grandTotal : 0);
+        }, 0);
+      const accurateExpected = (myOpenShift.openingCash || 0) + realCashFromTxs;
+      if (myOpenShift.expectedCash !== accurateExpected) {
+        myOpenShift.expectedCash = accurateExpected;
+        await db.shifts.update(myOpenShift.id, { expectedCash: accurateExpected });
+      }
+    }
     setActiveShift(myOpenShift || null);
   };
 
