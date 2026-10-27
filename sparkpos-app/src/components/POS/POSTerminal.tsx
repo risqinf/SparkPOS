@@ -180,6 +180,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
           condition: product.condition,
           warrantyPeriod: product.warrantyPeriod,
           serialNumber: product.serialNumber,
+          categoryName: product.categoryName,
         };
         return [...prev, newItem];
       }

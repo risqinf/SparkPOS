@@ -61,6 +61,10 @@
 
 /* Print styling for All Printers: 58mm/80mm Mini Thermal POS + A4/F4 Standard Paper */
 @media print {
+  @page {
+    size: auto;
+    margin: 4mm 6mm;
+  }
   body * {
     visibility: hidden !important;
   }
@@ -97,9 +101,9 @@
   #printable-receipt.paper-a4,
   #printable-receipt.paper-f4 {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
-    font-size: 12px !important;
-    line-height: 1.4 !important;
-    padding: 8mm 12mm !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    padding: 4mm 6mm !important;
     max-width: 210mm !important;
   }
 }

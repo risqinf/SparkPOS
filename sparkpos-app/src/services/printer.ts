@@ -49,8 +49,9 @@ export function calculateWarrantyExpiry(
 
 /**
  * Auto-detect ukuran kertas dan format printer paling optimal:
- * - Jika ada penjualan unit laptop, serial number, atau nominal besar (>= Rp 1.5jt) -> Format Faktur A4/F4
- * - Jika penjualan aksesoris/sparepart umum -> Format Struk Mini Kasir Thermal (58mm/80mm)
+ * - HANYA format Faktur A4/F4 jika pelanggan MEMBELI UNIT LAPTOP.
+ * - Pembelian produk printer, tinta, aksesoris, & sparepart lainnya tetap menggunakan
+ *   format Struk Mini Kasir Thermal (58mm) agar sangat menghemat kertas dan tidak makan 1 lembar terus-menerus.
  */
 export function detectOptimalPaperFormat(
   tx: Transaction,
@@ -61,34 +62,96 @@ export function detectOptimalPaperFormat(
     return '58mm';
   }
 
-  const hasLaptopOrBigTicket = tx.items.some(
-    (item) =>
-      item.name.toLowerCase().includes('laptop') ||
-      item.name.toLowerCase().includes('macbook') ||
-      item.name.toLowerCase().includes('thinkpad') ||
-      item.name.toLowerCase().includes('notebook') ||
-      item.name.toLowerCase().includes('pc ') ||
-      item.serialNumber ||
-      (item.warrantyPeriod && (item.unitPrice || 0) >= 1500000)
-  );
-
-  if (hasLaptopOrBigTicket || tx.grandTotal >= 2000000) {
+  // Hanya jika transaksi memiliki barang unit laptop
+  const hasLaptop = tx.items.some(isLaptopItem);
+  if (hasLaptop) {
     return 'A4';
   }
 
   return '58mm';
 }
 
+export function isLaptopItem(item: { name: string; categoryName?: string }): boolean {
+  const cat = (item.categoryName || '').toLowerCase();
+  const name = item.name.toLowerCase();
+  if (cat.includes('laptop') || cat.includes('notebook')) return true;
+  return /\b(laptop|notebook|macbook|thinkpad|chromebook)\b/i.test(name);
+}
+
+/**
+ * Bungkus teks panjang menjadi beberapa baris (word-wrap) agar menurun rapi dan tidak terpotong di printer kasir
+ */
+export function wrapText(text: string, width: number): string[] {
+  if (!text) return [];
+  const lines: string[] = [];
+  const rawLines = text.split('\n');
+
+  for (const rawLine of rawLines) {
+    if (rawLine.length <= width) {
+      lines.push(rawLine);
+      continue;
+    }
+
+    const words = rawLine.split(' ');
+    let currentLine = '';
+
+    for (const word of words) {
+      if (!currentLine) {
+        if (word.length <= width) {
+          currentLine = word;
+        } else {
+          for (let i = 0; i < word.length; i += width) {
+            lines.push(word.substring(i, i + width));
+          }
+        }
+      } else if (currentLine.length + 1 + word.length <= width) {
+        currentLine += ' ' + word;
+      } else {
+        lines.push(currentLine);
+        if (word.length <= width) {
+          currentLine = word;
+        } else {
+          for (let i = 0; i < word.length; i += width) {
+            if (i + width >= word.length) {
+              currentLine = word.substring(i);
+            } else {
+              lines.push(word.substring(i, i + width));
+            }
+          }
+        }
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+  }
+
+  return lines;
+}
+
 export function padBetween(left: string, right: string, width: number): string {
   const spaces = width - left.length - right.length;
-  if (spaces <= 0) return `${left} ${right}`;
-  return left + ' '.repeat(spaces) + right;
+  if (spaces >= 1) {
+    return left + ' '.repeat(spaces) + right;
+  }
+  // Jika panjang left + right melebihi lebar kertas, turunkan right ke baris berikutnya (rata kanan) agar tidak terpotong
+  const rightPad = Math.max(0, width - right.length);
+  return `${left}\n${' '.repeat(rightPad)}${right}`;
 }
 
 export function centerText(text: string, width: number): string {
-  if (text.length >= width) return text.substring(0, width);
+  if (text.length >= width) return text;
   const leftPad = Math.floor((width - text.length) / 2);
   return ' '.repeat(leftPad) + text;
+}
+
+export function centerTextLines(text: string, width: number): string[] {
+  const wrapped = wrapText(text, width);
+  return wrapped.map((line) => {
+    if (line.length >= width) return line;
+    const leftPad = Math.floor((width - line.length) / 2);
+    return ' '.repeat(leftPad) + line;
+  });
 }
 
 export function generateReceiptText(tx: Transaction, profile: StoreProfile): string {
@@ -97,13 +160,19 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
   const doubleDivider = '='.repeat(width);
   const lines: string[] = [];
 
-  // 1. Header
-  lines.push(centerText(profile.storeName.toUpperCase(), width));
+  // 1. Header Toko (Word-wrap ke bawah rapi jika panjang)
+  for (const sLine of centerTextLines(profile.storeName.toUpperCase(), width)) {
+    lines.push(sLine);
+  }
   if (profile.address) {
-    lines.push(centerText(profile.address, width));
+    for (const aLine of centerTextLines(profile.address, width)) {
+      lines.push(aLine);
+    }
   }
   if (profile.phone) {
-    lines.push(centerText(`Telp: ${profile.phone}`, width));
+    for (const pLine of centerTextLines(`Telp: ${profile.phone}`, width)) {
+      lines.push(pLine);
+    }
   }
   lines.push(doubleDivider);
 
@@ -116,7 +185,9 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
   lines.push(`Waktu    : ${dateStr}`);
   lines.push(`Kasir    : ${tx.cashierName}`);
   if (tx.customerName) {
-    lines.push(`Pelanggan: ${tx.customerName}`);
+    for (const cLine of wrapText(`Pelanggan: ${tx.customerName}`, width)) {
+      lines.push(cLine);
+    }
   }
   lines.push(divider);
 
@@ -126,7 +197,9 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
     if (item.condition && item.condition !== 'BARU') {
       itemName += ` [${item.condition}]`;
     }
-    lines.push(itemName);
+    for (const nLine of wrapText(itemName, width)) {
+      lines.push(nLine);
+    }
     let left = ` ${item.quantity} x ${formatRupiah(item.unitPrice)}`;
     if (item.discountAmount > 0) {
       left += ` (-${formatRupiah(item.discountAmount)})`;
@@ -135,11 +208,15 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
     lines.push(padBetween(left, right, width));
 
     if (item.serialNumber) {
-      lines.push(`  SN: ${item.serialNumber}`);
+      for (const snLine of wrapText(`  SN: ${item.serialNumber}`, width)) {
+        lines.push(snLine);
+      }
     }
     if (item.warrantyPeriod) {
       const { expiryDateStr } = calculateWarrantyExpiry(tx.createdAt, item.warrantyPeriod);
-      lines.push(`  Garansi: ${item.warrantyPeriod} (s/d ${expiryDateStr})`);
+      for (const wLine of wrapText(`  Garansi: ${item.warrantyPeriod} (s/d ${expiryDateStr})`, width)) {
+        lines.push(wLine);
+      }
     }
   }
   lines.push(divider);
@@ -159,10 +236,14 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
     const courierLabel = tx.shippingCourier ? `Ongkir (${tx.shippingCourier}):` : 'Ongkos Kirim:';
     lines.push(padBetween(courierLabel, formatRupiah(tx.shippingCost), width));
     if (tx.shippingTrackingNumber) {
-      lines.push(` Resi: ${tx.shippingTrackingNumber}`);
+      for (const rLine of wrapText(` Resi: ${tx.shippingTrackingNumber}`, width)) {
+        lines.push(rLine);
+      }
     }
     if (tx.shippingAddress) {
-      lines.push(` Alamat: ${tx.shippingAddress}`);
+      for (const aLine of wrapText(` Alamat: ${tx.shippingAddress}`, width)) {
+        lines.push(aLine);
+      }
     }
   }
 
@@ -179,31 +260,52 @@ export function generateReceiptText(tx: Transaction, profile: StoreProfile): str
   }
   lines.push(doubleDivider);
 
-  // 5.b Warranty Terms if Laptop / Hardware with warranty sold
-  const itemsWithWarranty = tx.items.filter(
+  // 5.b Kartu Garansi (KHUSUS UNIT LAPTOP SAJA)
+  const laptopWarrantyItems = tx.items.filter(
     (i) =>
+      isLaptopItem(i) &&
       i.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(i.warrantyPeriod.toLowerCase())
   );
-  if (itemsWithWarranty.length > 0) {
-    lines.push(centerText('KETENTUAN KARTU GARANSI TOKO', width));
-    lines.push('1. Nota ini berlaku sbg kartu garansi resmi.');
-    lines.push('2. Segel toko utuh, tdk rusak/robek/hilang.');
-    lines.push('3. Tdk kena cairan, jatuh, korsleting.');
-    lines.push('4. Klaim garansi wajib bawa unit & nota.');
+
+  if (laptopWarrantyItems.length > 0) {
+    for (const cLine of centerTextLines('KARTU GARANSI UNIT LAPTOP', width)) {
+      lines.push(cLine);
+    }
+    for (const it of laptopWarrantyItems) {
+      const { expiryDateStr } = calculateWarrantyExpiry(tx.createdAt, it.warrantyPeriod);
+      for (const nLine of wrapText(`* ${it.name}`, width)) {
+        lines.push(nLine);
+      }
+      for (const wLine of wrapText(`  Garansi: ${it.warrantyPeriod} (s/d ${expiryDateStr})`, width)) {
+        lines.push(wLine);
+      }
+    }
     lines.push(doubleDivider);
   }
 
-  // 6. Footer
+  // 6. Footer Toko
   if (profile.receiptFooter) {
     const footerLines = profile.receiptFooter.split('\n');
     for (const fLine of footerLines) {
-      lines.push(centerText(fLine.trim(), width));
+      for (const cLine of centerTextLines(fLine.trim(), width)) {
+        lines.push(cLine);
+      }
     }
   }
 
-  lines.push('');
-  lines.push(centerText('* Terimakasih *', width));
+  if (laptopWarrantyItems.length > 0) {
+    for (const cLine of centerTextLines('Terimakasih atas kunjungannya,', width)) {
+      lines.push(cLine);
+    }
+    for (const cLine of centerTextLines('sertakan kartu garansi', width)) {
+      lines.push(cLine);
+    }
+  } else {
+    for (const cLine of centerTextLines('Terimakasih atas kunjungannya', width)) {
+      lines.push(cLine);
+    }
+  }
   lines.push('');
 
   return lines.join('\n');
@@ -222,13 +324,26 @@ export function generateServiceReceiptText(
   const lines: string[] = [];
 
   // Header Toko
-  lines.push(centerText(profile.storeName.toUpperCase(), width));
-  if (profile.address) lines.push(centerText(profile.address, width));
-  if (profile.phone) lines.push(centerText(`Telp/WA: ${profile.phone}`, width));
+  for (const sLine of centerTextLines(profile.storeName.toUpperCase(), width)) {
+    lines.push(sLine);
+  }
+  if (profile.address) {
+    for (const aLine of centerTextLines(profile.address, width)) {
+      lines.push(aLine);
+    }
+  }
+  if (profile.phone) {
+    for (const pLine of centerTextLines(`Telp/WA: ${profile.phone}`, width)) {
+      lines.push(pLine);
+    }
+  }
   lines.push(doubleDivider);
 
   // Judul Nota Servis
-  lines.push(centerText('TANDA TERIMA SERVIS', width));
+  const isCancelled = order.status === 'DIBATALKAN';
+  for (const tLine of centerTextLines(isCancelled ? 'NOTA PEMBATALAN SERVIS' : 'TANDA TERIMA SERVIS', width)) {
+    lines.push(tLine);
+  }
   lines.push(divider);
 
   // Informasi Tiket
@@ -238,14 +353,30 @@ export function generateServiceReceiptText(
     timeStyle: 'short',
   });
   lines.push(`Tgl Masuk : ${dateStr}`);
-  lines.push(`Pelanggan : ${order.customerName}`);
+  for (const line of wrapText(`Pelanggan : ${order.customerName}`, width)) {
+    lines.push(line);
+  }
   if (order.customerPhone) lines.push(`No. HP/WA : ${order.customerPhone}`);
-  lines.push(`Perangkat : ${order.deviceType}`);
-  if (order.deviceSerial) lines.push(`No. Seri  : ${order.deviceSerial}`);
-  if (order.completeness) lines.push(`Kelengkpn : ${order.completeness}`);
-  if (order.physicalCondition) lines.push(`Kondisi   : ${order.physicalCondition}`);
+  for (const line of wrapText(`Perangkat : ${order.deviceType}`, width)) {
+    lines.push(line);
+  }
+  if (order.deviceSerial) {
+    for (const line of wrapText(`No. Seri  : ${order.deviceSerial}`, width)) {
+      lines.push(line);
+    }
+  }
+  if (order.completeness) {
+    for (const line of wrapText(`Kelengkpn : ${order.completeness}`, width)) {
+      lines.push(line);
+    }
+  }
+  if (order.physicalCondition) {
+    for (const line of wrapText(`Kondisi   : ${order.physicalCondition}`, width)) {
+      lines.push(line);
+    }
+  }
   if (order.devicePassword) lines.push(`Pass/PIN  : ${order.devicePassword}`);
-  if (order.warrantyDays && order.warrantyDays > 0) {
+  if (!isCancelled && order.warrantyDays && order.warrantyDays > 0) {
     lines.push(`Garansi   : ${order.warrantyDays} Hari`);
   }
   if (order.assignedTechName) lines.push(`Teknisi   : ${order.assignedTechName}`);
@@ -253,18 +384,36 @@ export function generateServiceReceiptText(
 
   // Keluhan & Diagnosa
   lines.push('Keluhan:');
-  lines.push(` ${order.complaint || '-'}`);
+  for (const line of wrapText(` ${order.complaint || '-'}`, width)) {
+    lines.push(line);
+  }
   if (order.diagnosis) {
     lines.push('Diagnosa:');
-    lines.push(` ${order.diagnosis}`);
+    for (const line of wrapText(` ${order.diagnosis}`, width)) {
+      lines.push(line);
+    }
   }
   lines.push(divider);
+
+  // Jika Dibatalkan: Cantumkan status dan alasan pembatalan
+  if (isCancelled) {
+    lines.push(padBetween('STATUS SERVIS:', 'DIBATALKAN', width));
+    if (order.cancelReason) {
+      lines.push('Alasan Pembatalan:');
+      for (const line of wrapText(` ${order.cancelReason}`, width)) {
+        lines.push(line);
+      }
+    }
+    lines.push(doubleDivider);
+  }
 
   // Rincian Komponen / Jasa jika sudah ada
   if (order.items && order.items.length > 0) {
     lines.push('Rincian Pengerjaan:');
     for (const item of order.items) {
-      lines.push(`${item.type === 'PART' ? '[PART]' : '[JASA]'} ${item.name}`);
+      for (const nLine of wrapText(`${item.type === 'PART' ? '[PART]' : '[JASA]'} ${item.name}`, width)) {
+        lines.push(nLine);
+      }
       const left = ` ${item.quantity} x ${formatRupiah(item.sellPrice)}`;
       const right = formatRupiah(item.subtotal);
       lines.push(padBetween(left, right, width));
@@ -282,7 +431,7 @@ export function generateServiceReceiptText(
   lines.push(
     padBetween(
       'Status Bayar :',
-      order.isPaid ? 'LUNAS' : order.downPayment && order.downPayment > 0 ? 'DP DITERIMA' : 'BELUM LUNAS',
+      order.isPaid ? 'LUNAS' : order.downPayment && order.downPayment > 0 ? 'DP DITERIMA' : isCancelled ? 'BATAL' : 'BELUM LUNAS',
       width
     )
   );
@@ -292,17 +441,27 @@ export function generateServiceReceiptText(
   lines.push(doubleDivider);
 
   // Ketentuan & Tanda Tangan
-  lines.push(centerText('Syarat Pengambilan Servis:', width));
-  lines.push('1. Wajib membawa nota tanda terima ini.');
-  lines.push('2. Barang tidak diambil >30 hari di luar');
-  lines.push('   tanggung jawab toko.');
-  if (order.warrantyDays && order.warrantyDays > 0) {
-    lines.push(`3. Garansi servis berlaku ${order.warrantyDays} hari.`);
+  if (isCancelled) {
+    for (const cLine of centerTextLines('Unit telah diserahkan kembali ke pelanggan.', width)) {
+      lines.push(cLine);
+    }
+  } else {
+    for (const cLine of centerTextLines('Syarat Pengambilan Servis:', width)) {
+      lines.push(cLine);
+    }
+    lines.push('1. Wajib membawa nota tanda terima ini.');
+    lines.push('2. Barang tidak diambil >30 hari di luar');
+    lines.push('   tanggung jawab toko.');
+    if (order.warrantyDays && order.warrantyDays > 0) {
+      lines.push(`3. Garansi servis berlaku ${order.warrantyDays} hari.`);
+    }
   }
   lines.push('');
   lines.push(padBetween('( Pelanggan )', '( Teknisi )', width));
   lines.push('');
-  lines.push(centerText('* Terimakasih Atas Kepercayaan Anda *', width));
+  for (const cLine of centerTextLines('Terimakasih atas kunjungannya', width)) {
+    lines.push(cLine);
+  }
   lines.push('');
 
   return lines.join('\n');

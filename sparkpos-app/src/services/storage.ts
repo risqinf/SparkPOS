@@ -86,12 +86,13 @@ export class SparkPOSDatabase extends Dexie {
 
 export const db = new SparkPOSDatabase();
 
-// 4 Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart)
+// 5 Kategori Baru (Aksesoris, Jasa, Laptop, Sparepart, Printer & Tinta)
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 1, name: 'Aksesoris', icon: 'Headphones', description: 'Kabel, charger, mouse, keyboard, headphone' },
   { id: 2, name: 'Jasa', icon: 'Wrench', description: 'Servis laptop, instalasi OS, maintenance (Stok ∞)' },
   { id: 3, name: 'Laptop', icon: 'Laptop', description: 'Unit laptop baru & second' },
   { id: 4, name: 'Sparepart', icon: 'Cpu', description: 'RAM, SSD, LCD, baterai, motherboard' },
+  { id: 5, name: 'Printer & Tinta', icon: 'Printer', description: 'Printer, tinta printer botol, cartridge, toner, kertas' },
 ];
 
 // 3 Satuan Baru (PCS, Meter, Roll)
@@ -123,7 +124,8 @@ export const DEFAULT_STORE_PROFILE: StoreProfile = {
 
 /**
  * Memastikan kompatibilitas database dari instalasi versi sebelumnya:
- * - Mengganti kategori lama (makanan/sembako) ke 4 kategori baru (Aksesoris, Jasa, Laptop, Sparepart)
+ * - Mengganti kategori lama (makanan/sembako) ke 5 kategori komputer & printer
+ * - Menambahkan kategori Printer & Tinta jika belum tersedia
  * - Mengganti satuan lama ke (PCS, Meter, Roll)
  * - Membersihkan sisa data dummy kasir Budi jika ada
  */
@@ -140,6 +142,18 @@ export async function ensureDatabaseCompatibility(): Promise<void> {
     if (hasOldCategories || existingCats.length === 0) {
       await db.categories.clear();
       await db.categories.bulkAdd(DEFAULT_CATEGORIES);
+    } else {
+      // Pastikan kategori Printer & Tinta tersedia di DB yang sudah berjalan
+      const hasPrinterCategory = existingCats.some((c) =>
+        ['printer', 'tinta'].some((kw) => c.name.toLowerCase().includes(kw))
+      );
+      if (!hasPrinterCategory) {
+        await db.categories.add({
+          name: 'Printer & Tinta',
+          icon: 'Printer',
+          description: 'Printer, tinta printer botol, cartridge, toner, kertas',
+        });
+      }
     }
 
     // 2. Periksa satuan lama
@@ -182,11 +196,21 @@ export async function ensureDatabaseCompatibility(): Promise<void> {
 
 /**
  * Mengambil produk aktif secara universal (Bebas dari bug perbandingan tipe IndexedDB)
+ * Otomatis memperkaya categoryName & unitName agar akurat saat deteksi garansi/nota.
  */
 export async function getActiveProducts(): Promise<Product[]> {
   try {
     const all = await db.products.toArray();
-    return all.filter((p) => p.isActive !== false);
+    const active = all.filter((p) => p.isActive !== false);
+    const cats = await db.categories.toArray();
+    const catMap = new Map<number, string>(cats.map((c) => [c.id, c.name]));
+    const units = await db.units.toArray();
+    const unitMap = new Map<number, string>(units.map((u) => [u.id, u.symbol || u.name]));
+    return active.map((p) => ({
+      ...p,
+      categoryName: p.categoryName || catMap.get(p.categoryId) || '',
+      unitName: p.unitName || unitMap.get(p.unitId) || 'PCS',
+    }));
   } catch (err) {
     console.error('Error getActiveProducts:', err);
     return [];

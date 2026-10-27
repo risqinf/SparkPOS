@@ -164,7 +164,67 @@ function serviceRevenueInfo(s: ServiceOrder): { date: string; revenue: number } 
   return { date: toLocalDateString(when), revenue };
 }
 
-function collectEntries(src: LedgerSource): Entry[] {
+/**
+ * Ekstraksi kas harian sederhana: 1 transaksi penjualan = 1 baris kas masuk (tidak dipecah per-item agar tidak dobel)
+ */
+function collectCashEntries(src: LedgerSource): Entry[] {
+  const out: Entry[] = [];
+
+  for (const tx of src.transactions) {
+    if (tx.status === 'VOID' || tx.status === 'REFUNDED') continue;
+    const date = toLocalDateString(tx.createdAt);
+    const ts = new Date(tx.createdAt).getTime();
+
+    const itemNames = (tx.items || [])
+      .map((it) => `${it.name}${it.quantity > 1 ? ` (${it.quantity}x)` : ''}`)
+      .join(', ');
+    const label = `Penjualan POS #${tx.invoiceNumber}${itemNames ? `: ${itemNames}` : ''}`;
+
+    out.push({
+      date,
+      ts,
+      kind: 'sale',
+      name: label,
+      debit: tx.grandTotal || 0,
+      credit: 0,
+      modal: (tx.items || []).reduce((acc, it) => acc + (it.buyPrice || 0) * it.quantity, 0),
+      jual: tx.grandTotal || 0,
+    });
+  }
+
+  for (const s of src.serviceOrders) {
+    const info = serviceRevenueInfo(s);
+    if (!info) continue;
+    out.push({
+      date: info.date,
+      ts: new Date(s.completedAt || s.pickedUpAt || s.updatedAt || s.createdAt).getTime(),
+      kind: 'service',
+      name: `Servis #${s.ticketNumber}: ${s.deviceType || ''}${s.customerName ? ` (${s.customerName})` : ''}`.trim(),
+      debit: info.revenue,
+      credit: 0,
+      modal: s.totalPartsCost || 0,
+      jual: info.revenue,
+    });
+  }
+
+  for (const f of src.cashFlows) {
+    const date = toLocalDateString(f.createdAt);
+    const ts = new Date(f.createdAt).getTime();
+    const label = (f.note && f.note.trim()) || f.category;
+    if (f.type === 'IN') {
+      out.push({ date, ts, kind: 'cashIn', name: `Kas Masuk: ${label}`, debit: f.amount, credit: 0, modal: 0, jual: 0 });
+    } else {
+      out.push({ date, ts, kind: 'cashOut', name: `Kas Keluar: ${label}`, debit: 0, credit: f.amount, modal: 0, jual: 0 });
+    }
+  }
+
+  return out.sort((a, b) => a.ts - b.ts);
+}
+
+/**
+ * Ekstraksi itemized untuk Laporan Keuntungan (per produk untuk analisis margin HPP vs Jual)
+ */
+function collectItemizedEntries(src: LedgerSource): Entry[] {
   const out: Entry[] = [];
 
   for (const tx of src.transactions) {
@@ -233,10 +293,10 @@ function writeDayColumn(sh: Sheet, firstRow: number, days: number[], font: strin
 }
 
 // ---------------------------------------------------------------------------
-// 1. LAPORAN KAS HARIAN
+// 1. LAPORAN KAS HARIAN (SEDERHANA, BERSIH, TANPA DOUBLE-DOUBLE)
 // ---------------------------------------------------------------------------
 export function exportKasHarian(src: LedgerSource, range: LedgerRange) {
-  const entries = collectEntries(src);
+  const entries = collectCashEntries(src);
   const wb = XLSX.utils.book_new();
   const months = monthsInRange(range);
   const multiYear = new Set(months.map((m) => m.year)).size > 1;
@@ -282,7 +342,7 @@ export function exportKasHarian(src: LedgerSource, range: LedgerRange) {
     sh.formula(t + 1, 2, `C${t + 1}-D${t + 1}`, debit - credit, body(F, 'right', YELLOW, true));
     sh.put(t + 1, 3, null, body(F, 'right', YELLOW));
 
-    XLSX.utils.book_append_sheet(wb, sh.finish([6, 78, 14, 14]), sheetName(mk, multiYear));
+    XLSX.utils.book_append_sheet(wb, sh.finish([8, 85, 16, 16]), sheetName(mk, multiYear));
   }
 
   downloadWorkbook(wb, `Laporan_Kas_Harian_${range.start}_sd_${range.end}`);
@@ -292,7 +352,7 @@ export function exportKasHarian(src: LedgerSource, range: LedgerRange) {
 // 2. LAPORAN KEUNTUNGAN
 // ---------------------------------------------------------------------------
 export function exportKeuntungan(src: LedgerSource, range: LedgerRange) {
-  const entries = collectEntries(src);
+  const entries = collectItemizedEntries(src);
   const wb = XLSX.utils.book_new();
   const months = monthsInRange(range);
   const multiYear = new Set(months.map((m) => m.year)).size > 1;
@@ -390,7 +450,7 @@ export function exportKeuntungan(src: LedgerSource, range: LedgerRange) {
     sh.put(sm + 2, 1, 'SISA PROFIT SETELAH PENGELUARAN', lab);
     sh.formula(sm + 2, 2, `C${sm + 1}-C${sm + 2}`, tJual - tModal - tCredit, lab, '"Rp"#,##0');
 
-    XLSX.utils.book_append_sheet(wb, sh.finish([6, 62, 12, 12, 14, 16, 18, 6, 62, 16]), sheetName(mk, multiYear));
+    XLSX.utils.book_append_sheet(wb, sh.finish([8, 70, 14, 14, 16, 18, 20, 8, 70, 18]), sheetName(mk, multiYear));
   }
 
   downloadWorkbook(wb, `Laporan_Keuntungan_${range.start}_sd_${range.end}`);

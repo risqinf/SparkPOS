@@ -119,7 +119,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     const payments: PaymentEntry[] = [
       {
         method: selectedMethod as PaymentMethod,
-        amount: selectedMethod === 'CASH' ? cashAmount : summary.grandTotal,
+        amount: summary.grandTotal,
         referenceNo: selectedMethod === 'TRANSFER' ? transferRefNote.trim() : undefined,
       },
     ];

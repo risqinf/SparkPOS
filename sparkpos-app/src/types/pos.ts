@@ -77,6 +77,7 @@ export interface ServiceOrder {
   startedAt?: string;         // Waktu mulai pengerjaan
   completedAt?: string;       // Waktu selesai
   pickedUpAt?: string;        // Waktu diambil oleh pelanggan
+  cancelReason?: string;      // Alasan pembatalan (e.g. "Dibatalkan Pelanggan", "Gagal Servis: Rusak Parah", dll)
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -154,6 +155,7 @@ export interface CartItem {
   condition?: ProductCondition;
   warrantyPeriod?: string;
   serialNumber?: string;
+  categoryName?: string;
 }
 
 export interface CartSummary {

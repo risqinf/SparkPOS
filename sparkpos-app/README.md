@@ -72,6 +72,30 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 * **Rekonsiliasi Kasir:** Perhitungan otomatis uang tunai yang seharusnya ada di laci vs uang fisik riil, menampilkan selisih kas (Pas, Kas Lebih, atau Kas Minus).
 
 
+## Catatan Rilis v2.6.0
+
+**Garansi & Manajemen Stok Fleksibel**
+- Masa garansi produk di menu Stok kini dapat diatur secara fleksibel (pilihan hari/bulan atau input manual bebas), dengan default baru `Non-Garansi` (tidak lagi hardcoded 1 bulan).
+- Produk non-garansi otomatis tidak memunculkan baris garansi pada struk dan nota kasir.
+
+**Kartu Garansi Khusus Unit Laptop & Layout Struk Rapi**
+- Kartu garansi pada struk kasir kini **khusus untuk pembelian unit laptop**. Pembelian printer, tinta, aksesoris, atau sparepart tidak memicu kartu garansi laptop.
+- Teks nota yang panjang otomatis membungkus (text wrap) rapi sesuai lebar thermal 32 karakter dan tidak terpotong ke samping.
+- Format cetak A4/thermal dioptimalkan untuk menghemat kertas (memotong kelebihan feed kertas kosong).
+
+**Kategori Baru: Printer & Tinta**
+- Menambahkan kategori master `Printer & Tinta` untuk printer, tinta botol, cartridge, toner, dan kertas dengan auto-migrasi database.
+
+**Pembatalan Servis dengan Alasan & Bukti Nota**
+- Pembatalan servis kini mencatat alasan detail (mis. dibatalkan pelanggan, sparepart kosong, motherboard rusak parah, dll).
+- Tersedia cetak *Nota Pembatalan Servis* sebagai tanda terima serah-terima kembali unit ke pelanggan.
+
+**Laporan Keuangan Sederhana & Bersih**
+- Menghilangkan badge notasi singkatan (JT/Rb) agar laporan keuangan lebih bersih, tegas, dan mudah dibaca (menampilkan angka Rupiah lengkap).
+- Ekspor kas harian disederhanakan: 1 transaksi penjualan = 1 baris kas masuk tanpa duplikasi baris item.
+- Ekspor Excel otomatis menggabungkan banner judul toko (merge cells) dan memperlebar kolom agar nama toko panjang tidak terpotong.
+- Riwayat transaksi kasir menampilkan rincian pembayaran tunai, kembalian yang dikeluarkan, dan kas bersih masuk secara transparan.
+
 ## Catatan Rilis v2.5.0
 
 **Cetak otomatis tanpa dialog**

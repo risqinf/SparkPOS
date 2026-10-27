@@ -68,7 +68,7 @@ function toAscii(text: string): string {
     .replace(/[‘’]/g, "'")
     .replace(/[–—]/g, '-')
     .replace(/•/g, '*')
-    .replace(/[^\x20-\x7e\n]/g, '?');
+    .replace(/[^\x20-\x7e\r\n]/g, '?');
 }
 
 export function buildEscPos(
@@ -76,9 +76,11 @@ export function buildEscPos(
   options: { cut?: boolean; kickDrawer?: boolean } = {}
 ): number[] {
   const bytes: number[] = [ESC, 0x40]; // init
-  const body = toAscii(text.replace(/\r/g, ''));
+  // Normalisasi semua baris baru ke \r\n (CR+LF) agar head printer kembali ke tepi kiri (menurun rapi, tidak melenceng)
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+  const body = toAscii(normalized);
   for (let i = 0; i < body.length; i++) bytes.push(body.charCodeAt(i));
-  bytes.push(0x0a, 0x0a, 0x0a);
+  bytes.push(0x0d, 0x0a, 0x0d, 0x0a, 0x0d, 0x0a);
   if (options.cut) bytes.push(GS, 0x56, 0x42, 0x00); // feed + partial cut
   if (options.kickDrawer) bytes.push(...DRAWER_KICK);
   return bytes;

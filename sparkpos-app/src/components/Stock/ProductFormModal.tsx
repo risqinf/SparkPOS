@@ -47,7 +47,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   );
   const [conditionNotes, setConditionNotes] = useState(product?.conditionNotes || '');
   const [completeness, setCompleteness] = useState(product?.completeness || '');
-  const [warrantyPeriod, setWarrantyPeriod] = useState(product?.warrantyPeriod || '1 Bulan Toko');
+  const [warrantyPeriod, setWarrantyPeriod] = useState(product?.warrantyPeriod || 'Non-Garansi');
   const [serialNumber, setSerialNumber] = useState(product?.serialNumber || '');
 
   // Pencatatan Kas Keluar (Beli unit = toko keluar uang)
@@ -109,7 +109,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         condition,
         conditionNotes: conditionNotes.trim() || undefined,
         completeness: completeness.trim() || undefined,
-        warrantyPeriod: warrantyPeriod.trim() || undefined,
+        warrantyPeriod: (warrantyPeriod.trim() && warrantyPeriod.trim() !== 'Non-Garansi') ? warrantyPeriod.trim() : undefined,
         serialNumber: serialNumber.trim() || undefined,
         isActive: true,
         updatedAt: now,
@@ -133,7 +133,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         condition,
         conditionNotes: conditionNotes.trim() || undefined,
         completeness: completeness.trim() || undefined,
-        warrantyPeriod: warrantyPeriod.trim() || undefined,
+        warrantyPeriod: (warrantyPeriod.trim() && warrantyPeriod.trim() !== 'Non-Garansi') ? warrantyPeriod.trim() : undefined,
         serialNumber: serialNumber.trim() || undefined,
         isActive: true,
         createdAt: now,
@@ -502,7 +502,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute left-2 top-2" />
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1.5">
-                    {['3 Hari Tes', '7 Hari Toko', '1 Bulan Toko', '3 Bulan Toko', '1 Tahun Resmi', 'Non Garansi'].map((w) => (
+                    {['Non-Garansi', '3 Hari Tes', '7 Hari Toko', '1 Bulan Toko', '3 Bulan Toko', '6 Bulan Toko', '1 Tahun Resmi'].map((w) => (
                       <button
                         type="button"
                         key={w}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer, Copy, Check, FileText, ShieldCheck } from 'lucide-react';
 import { Transaction, StoreProfile } from '../../types/pos';
-import { generateReceiptText, detectOptimalPaperFormat } from '../../services/printer';
+import { generateReceiptText, detectOptimalPaperFormat, isLaptopItem } from '../../services/printer';
 import { printSaleReceipt, describeOutcome } from '../../services/printService';
 import { PrintableReceipt } from './PrintableReceipt';
 import { useDialog } from '../../hooks/useDialog';
@@ -54,6 +54,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   const warrantyItems = transaction.items.filter(
     (item) =>
+      isLaptopItem(item) &&
       item.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(item.warrantyPeriod.toLowerCase())
   );

@@ -60,11 +60,11 @@ jobs:
           releaseBody: |
             ### SparkPOS Desktop v__VERSION__
 
-            - **Cetak otomatis tanpa dialog**: pilih printer thermal 58mm & A4 di Pengaturan > Printer Kasir (terdeteksi otomatis). Struk 58mm dikirim langsung via ESC/POS dan laci uang terbuka untuk pembayaran tunai; faktur A4 dicetak senyap. Tersedia tombol uji cetak.
-            - **Keyboard standar**: Tab normal, Esc & focus trap di semua modal, F2/Ctrl+K cari, F12/Ctrl+Enter bayar, navigasi baris keranjang, F1 bantuan, Ctrl+1..5 pindah menu. F5/Ctrl+R/Ctrl+P diblokir.
-            - **Laporan format buku toko**: Kas Harian, Keuntungan, dan Pembelian (sheet per bulan, rumus Excel hidup).
-            - **Uang kas masuk/keluar** tampil di Riwayat Transaksi (bisa dikoreksi/dihapus), dengan kategori & contoh keterangan baru.
-            - **Tema terang/gelap** konsisten di semua modal dan halaman.
+            - **Garansi & Manajemen Stok Fleksibel**: Masa garansi produk di menu Stok kini dapat diatur secara fleksibel (pilihan hari/bulan atau input manual bebas), dengan default baru `Non-Garansi` (tidak lagi hardcoded 1 bulan). Produk non-garansi otomatis tidak memunculkan baris garansi pada nota.
+            - **Kartu Garansi Khusus Unit Laptop & Layout Struk Rapi**: Kartu garansi pada struk kasir kini khusus untuk pembelian unit laptop. Teks nota panjang otomatis membungkus (text wrap) rapi sesuai lebar thermal 32 karakter dan tidak terpotong ke samping. Format cetak A4/thermal dioptimalkan menghemat kertas.
+            - **Kategori Baru Printer & Tinta**: Kategori master `Printer & Tinta` untuk printer, tinta botol, cartridge, toner, dan kertas dengan auto-migrasi database.
+            - **Pembatalan Servis dengan Alasan & Bukti Nota**: Pembatalan tiket servis kini mencatat alasan detail (mis. dibatalkan pelanggan, sparepart kosong, rusak parah) dan dilengkapi cetak *Nota Pembatalan Servis*.
+            - **Laporan Keuangan Sederhana & Bersih**: Menghilangkan singkatan JT/Rb agar laporan bersih dan angka Rupiah jelas. Ekspor kas harian disederhanakan tanpa duplikasi baris. Ekspor Excel otomatis menggabungkan banner judul toko dan menyesuaikan lebar kolom. Riwayat transaksi menampilkan rincian pembayaran tunai, kembalian, dan kas bersih masuk secara transparan.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

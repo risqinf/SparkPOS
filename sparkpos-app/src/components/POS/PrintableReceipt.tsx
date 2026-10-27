@@ -1,6 +1,6 @@
 import React from 'react';
 import { Transaction, StoreProfile } from '../../types/pos';
-import { generateReceiptText, calculateWarrantyExpiry } from '../../services/printer';
+import { generateReceiptText, calculateWarrantyExpiry, isLaptopItem } from '../../services/printer';
 import { formatRupiah } from '../../services/cartCalculator';
 import { ShieldCheck } from 'lucide-react';
 
@@ -24,6 +24,7 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
 
   const warrantyItems = transaction.items.filter(
     (item) =>
+      isLaptopItem(item) &&
       item.warrantyPeriod &&
       !['tidak ada', 'non-garansi', '-'].includes(item.warrantyPeriod.toLowerCase())
   );
@@ -32,10 +33,10 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
     return (
       <div
         id="printable-receipt"
-        className="paper-a4 bg-white text-slate-950 p-8 font-sans text-xs w-full max-w-[210mm] mx-auto space-y-6"
+        className="paper-a4 bg-white text-slate-950 p-4 sm:p-6 font-sans text-xs w-full max-w-[210mm] mx-auto space-y-3"
       >
         {/* Kop Faktur Toko */}
-        <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+        <div className="flex items-start justify-between border-b-2 border-slate-900 pb-2.5">
           <div className="space-y-1">
             <h1 className="text-xl font-black uppercase tracking-tight text-slate-950">
               {storeProfile.storeName || 'SPARKPOS COMPUTER'}
@@ -164,47 +165,34 @@ export const PrintableReceipt: React.FC<PrintableReceiptProps> = ({
           </div>
         </div>
 
-        {/* KARTU GARANSI & SYARAT KETENTUAN RESMI TOKO */}
+        {/* KARTU GARANSI KHUSUS UNIT LAPTOP */}
         {warrantyItems.length > 0 && (
-          <div className="p-4 rounded-lg border-2 border-emerald-600 bg-emerald-50/50 space-y-2">
-            <div className="flex items-center gap-1.5 text-emerald-900 font-extrabold text-xs uppercase tracking-wide">
+          <div className="p-3.5 rounded-lg border-2 border-emerald-600 bg-emerald-50/50 space-y-1.5 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-emerald-900 font-extrabold text-xs uppercase tracking-wide">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Kartu Garansi Resmi Unit Komputer / Laptop</span>
+              <span>Kartu Garansi Resmi Unit Laptop</span>
             </div>
-            <p className="text-[11px] text-slate-700 leading-relaxed">
-              Faktur ini merupakan <strong>bukti kartu garansi sah</strong> dari toko kami. Mohon simpan nota ini dengan baik untuk keperluan klaim garansi hardware.
+            <p className="text-xs text-slate-800 font-bold">
+              Terimakasih atas kunjungannya, sertakan kartu garansi ini saat klaim.
             </p>
-            <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-700 border-t border-emerald-200 pt-2">
-              <div>
-                <strong>Syarat & Ketentuan Klaim Garansi:</strong>
-                <ul className="list-disc list-inside mt-0.5 space-y-0.5">
-                  <li>Segel garansi toko pada baut/unit dalam keadaan utuh.</li>
-                  <li>Membawa unit laptop beserta charger dan nota ini.</li>
-                </ul>
-              </div>
-              <div>
-                <strong>Garansi Batal / Void Apabila:</strong>
-                <ul className="list-disc list-inside mt-0.5 space-y-0.5">
-                  <li>Kerusakan fisik (pecah, retak, terjatuh, engsel patah).</li>
-                  <li>Terkena cairan/air, terbakar, korsleting petir/listrik.</li>
-                </ul>
-              </div>
-            </div>
+            <p className="text-[10px] text-slate-600">
+              Faktur ini merupakan bukti kartu garansi sah untuk unit laptop yang tertera. Mohon disimpan dengan baik.
+            </p>
           </div>
         )}
 
         {/* Kolom Tanda Tangan */}
-        <div className="pt-6 grid grid-cols-2 text-center text-xs text-slate-800">
+        <div className="pt-3 grid grid-cols-2 text-center text-xs text-slate-800">
           <div>
             <p className="font-semibold">Tanda Terima Pelanggan,</p>
-            <div className="h-16"></div>
+            <div className="h-10"></div>
             <p className="font-bold underline">
               ( {transaction.customerName || '......................................'} )
             </p>
           </div>
           <div>
             <p className="font-semibold">Hormat Kami / Kasir,</p>
-            <div className="h-16"></div>
+            <div className="h-10"></div>
             <p className="font-bold underline">
               ( {transaction.cashierName || storeProfile.storeName} )
             </p>

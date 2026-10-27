@@ -55,7 +55,14 @@ export const ServiceReceiptModal: React.FC<ServiceReceiptModalProps> = ({
           <div className="flex items-center gap-2">
             <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Pratinjau Nota Servis ({order.ticketNumber})</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>{order.status === 'DIBATALKAN' ? 'Nota Pembatalan Servis' : 'Pratinjau Nota Servis'} ({order.ticketNumber})</span>
+                {order.status === 'DIBATALKAN' && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                    Dibatalkan
+                  </span>
+                )}
+              </h2>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">Siap dicetak ke printer kasir thermal</p>
             </div>
           </div>

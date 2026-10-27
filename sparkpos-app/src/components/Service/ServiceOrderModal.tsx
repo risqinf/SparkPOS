@@ -17,6 +17,7 @@ import {
   Package,
   ShieldCheck,
   Lock,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   ServiceOrder,
@@ -81,6 +82,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   const [discountAmount, setDiscountAmount] = useState('0');
   const [isPaid, setIsPaid] = useState(false);
   const [paidAmount, setPaidAmount] = useState('0');
+  const [cancelReason, setCancelReason] = useState('');
 
   // Supporting master data
   const [technicians, setTechnicians] = useState<Employee[]>([]);
@@ -124,6 +126,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         setDevicePassword(orderToEdit.devicePassword || '');
         setWarrantyDays(orderToEdit.warrantyDays !== undefined ? orderToEdit.warrantyDays.toString() : '14');
         setDownPayment(orderToEdit.downPayment !== undefined ? orderToEdit.downPayment.toString() : '0');
+        setCancelReason(orderToEdit.cancelReason || '');
       } else {
         const nextTicket = await generateServiceTicketNumber();
         setTicketNumber(nextTicket);
@@ -246,6 +249,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
             ? now
             : orderToEdit?.completedAt,
         pickedUpAt: status === 'DIAMBIL' && !orderToEdit?.pickedUpAt ? now : orderToEdit?.pickedUpAt,
+        cancelReason: status === 'DIBATALKAN' ? (cancelReason.trim() || 'Dibatalkan') : undefined,
         notes: notes.trim() || undefined,
         completeness: completeness.trim() || undefined,
         physicalCondition: physicalCondition.trim() || undefined,
@@ -457,6 +461,44 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     </select>
                   </div>
                 </div>
+
+                {status === 'DIBATALKAN' && (
+                  <div className="mt-2.5 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 rounded-xl space-y-2">
+                    <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-bold text-xs">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Alasan / Keterangan Pembatalan Servis:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={
+                          ['Dibatalkan Pelanggan (Biaya Tidak Cocok)', 'Dibatalkan Pelanggan (Tidak Jadi Servis)', 'Gagal Servis (Motherboard Matot / Parah)', 'Gagal Servis (Sparepart Kosong / Langka)'].includes(cancelReason)
+                            ? cancelReason
+                            : cancelReason ? 'LAINNYA' : ''
+                        }
+                        onChange={(e) => {
+                          if (e.target.value !== 'LAINNYA') {
+                            setCancelReason(e.target.value);
+                          }
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-rose-500"
+                      >
+                        <option value="">-- Pilih Kategori Alasan Batal --</option>
+                        <option value="Dibatalkan Pelanggan (Biaya Tidak Cocok)">Dibatalkan Pelanggan (Biaya Tidak Cocok)</option>
+                        <option value="Dibatalkan Pelanggan (Tidak Jadi Servis)">Dibatalkan Pelanggan (Tidak Jadi Servis / Unit Dibutuhkan)</option>
+                        <option value="Gagal Servis (Motherboard Matot / Parah)">Gagal Servis (Motherboard Matot / Rusak Parah)</option>
+                        <option value="Gagal Servis (Sparepart Kosong / Langka)">Gagal Servis (Sparepart Kosong / Tidak Tersedia)</option>
+                        <option value="LAINNYA">Lainnya (Ketik Manual)</option>
+                      </select>
+                      <input
+                        type="text"
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="Contoh: Dibatalkan user, gagal service IC power..."
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

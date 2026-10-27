@@ -8,7 +8,6 @@
 
 import XLSX from 'xlsx-js-style';
 import { Transaction, Product, ServiceOrder } from '../types/pos';
-import { formatCompactRupiah } from './cartCalculator';
 
 // ==========================================
 // EXECUTIVE DESIGN PALETTE & BORDERS
@@ -239,33 +238,41 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
   const isNetProfit = data.netProfit >= 0;
 
   // --- SHEET 1: RINGKASAN FINANSIAL EKSEKUTIF ---
+  const colAWidth = Math.max(54, data.storeName.length + 15);
   const summaryAoa: any[][] = [
-    [`LAPORAN KEUANGAN TERPADU - ${data.storeName.toUpperCase()}`, '', ''],
-    [`Periode Laporan: ${data.periodLabel}`, '', ''],
-    [`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`, '', ''],
-    [`Dicetak Oleh: ${data.printedBy}`, '', ''],
+    [`LAPORAN KEUANGAN TERPADU - ${data.storeName.toUpperCase()}`, ''],
+    [`Periode Laporan: ${data.periodLabel}`, ''],
+    [`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`, ''],
+    [`Dicetak Oleh: ${data.printedBy}`, ''],
     [],
-    ['INDIKATOR FINANSIAL & KAS', 'NOMINAL (RP)', 'NOTASI SINGKAT'],
-    ['Modal Awal Kasir Hari Ini', data.openingCash, formatCompactRupiah(data.openingCash)],
-    ['Total Omset Penjualan POS (Barang)', data.posRevenue, formatCompactRupiah(data.posRevenue)],
-    ['Total Pendapatan Jasa Servis', data.serviceRevenue, formatCompactRupiah(data.serviceRevenue)],
-    ['TOTAL OMSET KOTOR TOKO (POS + SERVIS)', data.totalRevenue, formatCompactRupiah(data.totalRevenue)],
-    ['Total Modal HPP (Barang & Sparepart)', data.totalCostHpp, formatCompactRupiah(data.totalCostHpp)],
-    ['Pengeluaran Operasional Kas Toko', data.operationalExpenses, formatCompactRupiah(data.operationalExpenses)],
+    ['INDIKATOR FINANSIAL & KAS', 'NOMINAL (RP)'],
+    ['Modal Awal Kasir Hari Ini', data.openingCash],
+    ['Total Omset Penjualan POS (Barang)', data.posRevenue],
+    ['Total Pendapatan Jasa Servis', data.serviceRevenue],
+    ['TOTAL OMSET KOTOR TOKO (POS + SERVIS)', data.totalRevenue],
+    ['Total Modal HPP (Barang & Sparepart)', data.totalCostHpp],
+    ['Pengeluaran Operasional Kas Toko', data.operationalExpenses],
     [
       isNetProfit
         ? 'TOTAL OMSET DIPOTONG MODAL & BIAYA (LABA BERSIH)'
         : 'TOTAL DEFISIT BERSIH HARI INI (RUGI BERSIH)',
       data.netProfit,
-      formatCompactRupiah(data.netProfit),
     ],
-    ['Penerimaan Tunai (Cash)', data.cashSalesTotal, formatCompactRupiah(data.cashSalesTotal)],
-    ['Penerimaan Transfer Bank', data.transferSalesTotal, formatCompactRupiah(data.transferSalesTotal)],
-    ['ESTIMASI SALDO KAS FISIK DI LACI KASIR', data.finalCashInDrawer, formatCompactRupiah(data.finalCashInDrawer)],
-    ['Total Transaksi Tercatat', data.transactions.length, `${data.transactions.length} Trx`],
+    ['Penerimaan Tunai (Cash)', data.cashSalesTotal],
+    ['Penerimaan Transfer Bank', data.transferSalesTotal],
+    ['ESTIMASI SALDO KAS FISIK DI LACI KASIR', data.finalCashInDrawer],
+    ['Total Transaksi Tercatat', data.transactions.length],
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryAoa);
+
+  // Auto Merge Title Banner across Column A and B so long store names (e.g. FALAH Komputer) never get cut off
+  wsSummary['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+  ];
 
   // Style Title Banner
   wsSummary['A1'].s = STYLE_TITLE_BANNER;
@@ -280,12 +287,12 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
   });
 
   // Table Header row (Row 6)
-  ['A6', 'B6', 'C6'].forEach((k) => {
+  ['A6', 'B6'].forEach((k) => {
     if (wsSummary[k]) {
       wsSummary[k].s = {
         ...STYLE_TABLE_HEADER,
         alignment: {
-          horizontal: k === 'B6' ? 'right' : k === 'C6' ? 'center' : 'left',
+          horizontal: k === 'B6' ? 'right' : 'left',
           vertical: 'center',
         },
       };
@@ -329,7 +336,6 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
 
     const cellA = wsSummary['A' + r];
     const cellB = wsSummary['B' + r];
-    const cellC = wsSummary['C' + r];
 
     if (cellA) {
       cellA.s = {
@@ -350,18 +356,9 @@ export function exportUnifiedFinancialReportToExcel(data: UnifiedFinancialExport
         border,
       };
     }
-
-    if (cellC) {
-      cellC.s = {
-        font: { name: 'Segoe UI', sz: 10, bold: isBold, color: { rgb: fontColor } },
-        fill: { fgColor: { rgb: bgRgb } },
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border,
-      };
-    }
   }
 
-  wsSummary['!cols'] = [{ wch: 48 }, { wch: 22 }, { wch: 18 }];
+  wsSummary['!cols'] = [{ wch: colAWidth }, { wch: 25 }];
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Finansial');
 
   // --- SHEET 2: DAFTAR TRANSAKSI ---
@@ -526,19 +523,19 @@ export async function copyUnifiedFinancialReportToClipboard(
   tsvLines.push(`Periode: ${cleanCell(data.periodLabel)}\tDicetak Oleh: ${cleanCell(data.printedBy)}`);
   tsvLines.push(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`);
   tsvLines.push('');
-  tsvLines.push('RINGKASAN FINANSIAL\tNOMINAL (RP)\tNOTASI SINGKAT');
-  tsvLines.push(`Modal Awal Kasir Hari Ini\t${data.openingCash}\t${formatCompactRupiah(data.openingCash)}`);
-  tsvLines.push(`Total Omset Penjualan POS\t${data.posRevenue}\t${formatCompactRupiah(data.posRevenue)}`);
-  tsvLines.push(`Total Pendapatan Jasa Servis\t${data.serviceRevenue}\t${formatCompactRupiah(data.serviceRevenue)}`);
-  tsvLines.push(`TOTAL OMSET TOKO\t${data.totalRevenue}\t${formatCompactRupiah(data.totalRevenue)}`);
-  tsvLines.push(`Total Modal HPP\t${data.totalCostHpp}\t${formatCompactRupiah(data.totalCostHpp)}`);
-  tsvLines.push(`Pengeluaran Kas Toko\t${data.operationalExpenses}\t${formatCompactRupiah(data.operationalExpenses)}`);
+  tsvLines.push('RINGKASAN FINANSIAL\tNOMINAL (RP)');
+  tsvLines.push(`Modal Awal Kasir Hari Ini\t${data.openingCash}`);
+  tsvLines.push(`Total Omset Penjualan POS\t${data.posRevenue}`);
+  tsvLines.push(`Total Pendapatan Jasa Servis\t${data.serviceRevenue}`);
+  tsvLines.push(`TOTAL OMSET TOKO\t${data.totalRevenue}`);
+  tsvLines.push(`Total Modal HPP\t${data.totalCostHpp}`);
+  tsvLines.push(`Pengeluaran Kas Toko\t${data.operationalExpenses}`);
   tsvLines.push(
-    `${isNetProfit ? 'LABA BERSIH TOKO (SURPLUS)' : 'RUGI / DEFISIT BERSIH TOKO (MINUS)'}\t${data.netProfit}\t${formatCompactRupiah(data.netProfit)}`
+    `${isNetProfit ? 'LABA BERSIH TOKO (SURPLUS)' : 'RUGI / DEFISIT BERSIH TOKO (MINUS)'}\t${data.netProfit}`
   );
-  tsvLines.push(`Penerimaan Tunai (Cash)\t${data.cashSalesTotal}\t${formatCompactRupiah(data.cashSalesTotal)}`);
-  tsvLines.push(`Penerimaan Transfer Bank\t${data.transferSalesTotal}\t${formatCompactRupiah(data.transferSalesTotal)}`);
-  tsvLines.push(`SALDO KAS DI LACI KASIR\t${data.finalCashInDrawer}\t${formatCompactRupiah(data.finalCashInDrawer)}`);
+  tsvLines.push(`Penerimaan Tunai (Cash)\t${data.cashSalesTotal}`);
+  tsvLines.push(`Penerimaan Transfer Bank\t${data.transferSalesTotal}`);
+  tsvLines.push(`SALDO KAS DI LACI KASIR\t${data.finalCashInDrawer}`);
   tsvLines.push('');
   tsvLines.push('TABEL RINCIAN TRANSAKSI');
   tsvLines.push(
@@ -629,72 +626,60 @@ export async function copyUnifiedFinancialReportToClipboard(
             </td>
           </tr>
           <tr style="background: #f8fafc; color: #475569; font-size: 11px;">
-            <td colspan="3" style="padding: 6px 12px; border: 1px solid #cbd5e1;">
+            <td colspan="2" style="padding: 6px 12px; border: 1px solid #cbd5e1;">
               Periode: <strong>${escapeHtml(data.periodLabel)}</strong> | Dicetak Oleh: <strong>${escapeHtml(data.printedBy)}</strong> | Waktu: ${new Date().toLocaleString('id-ID')}
             </td>
           </tr>
           <tr style="background: #1e293b; color: #ffffff; font-weight: bold;">
             <th style="border: 1px solid #94a3b8; padding: 7px 12px; text-align: left;">Indikator Finansial</th>
             <th style="border: 1px solid #94a3b8; padding: 7px 12px; text-align: right;">Nominal (Rp)</th>
-            <th style="border: 1px solid #94a3b8; padding: 7px 12px; text-align: center;">Notasi Singkat</th>
           </tr>
           <tr>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Modal Awal Kasir</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right; font-weight: bold;">Rp ${data.openingCash.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${formatCompactRupiah(data.openingCash)}</span></td>
           </tr>
           <tr style="background: #f8fafc;">
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Total Omset POS (Barang)</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right;">Rp ${data.posRevenue.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.posRevenue)}</span></td>
           </tr>
           <tr>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Total Omset Servis</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right;">Rp ${data.serviceRevenue.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.serviceRevenue)}</span></td>
           </tr>
           <tr style="font-weight: bold; background: #eff6ff; color: #1d4ed8;">
             <td style="border: 1px solid #93c5fd; padding: 7px 12px;">TOTAL OMSET TOKO (POS + SERVIS)</td>
             <td style="border: 1px solid #93c5fd; padding: 7px 12px; text-align: right;">Rp ${data.totalRevenue.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #93c5fd; padding: 7px 12px; text-align: center;"><span style="background: #dbeafe; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.totalRevenue)}</span></td>
           </tr>
           <tr>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Total Modal HPP (Barang & Part)</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right; color: #b45309;">Rp ${data.totalCostHpp.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.totalCostHpp)}</span></td>
           </tr>
           <tr style="background: #f8fafc;">
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Pengeluaran Kas Toko</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right; color: #e11d48;">Rp ${data.operationalExpenses.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #ffe4e6; color: #e11d48; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.operationalExpenses)}</span></td>
           </tr>
           ${
             isNetProfit
               ? `<tr style="font-weight: bold; background: #ecfdf5; color: #047857; font-size: 13px;">
                   <td style="border: 2px solid #059669; padding: 8px 12px;">LABA BERSIH TOKO (UNTUNG / SURPLUS)</td>
                   <td style="border: 2px solid #059669; padding: 8px 12px; text-align: right;">Rp ${data.netProfit.toLocaleString('id-ID')}</td>
-                  <td style="border: 2px solid #059669; padding: 8px 12px; text-align: center;"><span style="background: #d1fae5; color: #047857; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.netProfit)}</span></td>
                 </tr>`
               : `<tr style="font-weight: bold; background: #fff1f2; color: #be123c; font-size: 13px;">
                   <td style="border: 2px solid #e11d48; padding: 8px 12px;">RUGI / DEFISIT BERSIH TOKO (MINUS HARI INI)</td>
                   <td style="border: 2px solid #e11d48; padding: 8px 12px; text-align: right;">Rp ${data.netProfit.toLocaleString('id-ID')}</td>
-                  <td style="border: 2px solid #e11d48; padding: 8px 12px; text-align: center;"><span style="background: #ffe4e6; color: #be123c; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.netProfit)}</span></td>
                 </tr>`
           }
           <tr>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Penerimaan Tunai (Cash)</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right;">Rp ${data.cashSalesTotal.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.cashSalesTotal)}</span></td>
           </tr>
           <tr style="background: #f8fafc;">
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px;">Penerimaan Transfer Bank</td>
             <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: right;">Rp ${data.transferSalesTotal.toLocaleString('id-ID')}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 6px 12px; text-align: center;"><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.transferSalesTotal)}</span></td>
           </tr>
           <tr style="font-weight: bold; background: #e0f2fe; color: #0369a1; font-size: 13px;">
             <td style="border: 2px solid #0284c7; padding: 8px 12px;">SALDO KAS DI LACI (UANG FISIK KASIR)</td>
             <td style="border: 2px solid #0284c7; padding: 8px 12px; text-align: right;">Rp ${data.finalCashInDrawer.toLocaleString('id-ID')}</td>
-            <td style="border: 2px solid #0284c7; padding: 8px 12px; text-align: center;"><span style="background: #bae6fd; color: #0369a1; padding: 2px 8px; border-radius: 4px;">${formatCompactRupiah(data.finalCashInDrawer)}</span></td>
           </tr>
         </table>
 
@@ -1224,6 +1209,12 @@ export function exportMonthlyFinancialRecapToExcel(data: MonthlyRecapExportData)
   ];
 
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+  const colAWidth = Math.max(50, data.storeName.length + 15);
+  wsSummary['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+  ];
   wsSummary['A1'].s = STYLE_TITLE_BANNER;
   ['A5', 'B5', 'A15', 'B15'].forEach((k) => {
     if (wsSummary[k]) wsSummary[k].s = STYLE_TABLE_HEADER;
@@ -1257,7 +1248,7 @@ export function exportMonthlyFinancialRecapToExcel(data: MonthlyRecapExportData)
     }
   }
 
-  wsSummary['!cols'] = [{ wch: 45 }, { wch: 22 }];
+  wsSummary['!cols'] = [{ wch: colAWidth }, { wch: 24 }];
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Eksekutif');
 
   // Sheet 2: Tabel Rekap Harian
