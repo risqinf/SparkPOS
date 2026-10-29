@@ -206,12 +206,14 @@ export async function getActiveProducts(): Promise<Product[]> {
     const cats = await db.categories.toArray();
     const catMap = new Map<number, string>(cats.map((c) => [c.id, c.name]));
     const units = await db.units.toArray();
-    const unitMap = new Map<number, string>(units.map((u) => [u.id, u.symbol || u.name]));
-    return active.map((p) => ({
+    const enriched = active.map((p) => ({
       ...p,
       categoryName: p.categoryName || catMap.get(p.categoryId) || '',
       unitName: p.unitName || unitMap.get(p.unitId) || 'PCS',
     }));
+    return enriched.sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base', numeric: true })
+    );
   } catch (err) {
     console.error('Error getActiveProducts:', err);
     return [];

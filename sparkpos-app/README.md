@@ -98,6 +98,22 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 - **5 Template Lengkap**: Tanda Terima Servis Masuk, Konfirmasi Diagnosa & Estimasi Biaya, Servis Selesai & Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan Unit / Garansi Aktif.
 - **Pratinjau & Edit Pesan**: Teks pesan dapat ditinjau dan diedit bebas sebelum dikirim dengan nomor HP otomatis terformat ke standar internasional (+62).
 
+## Catatan Rilis v2.6.4
+
+**Pengurutan Stok Alfabetis (A-Z)**
+- Seluruh daftar produk pada Manajemen Stok, Kasir POS, dan Stock Opname otomatis diurutkan rapi berdasarkan abjad (A-Z) untuk mempercepat pencarian.
+
+**Sinkronisasi Status Servis & Laporan Keuangan**
+- Servis yang masuk (status Diterima, Dikerjakan, atau Selesai) berstatus pending dan tidak masuk ke laporan keuangan sampai unit diambil pelanggan atau dilunasi di awal.
+- Saat status diubah menjadi `DIAMBIL`, pendapatan servis otomatis masuk ke laporan keuangan pada hari unit diambil (bukan tanggal selesai pengerjaan kemarin).
+- Jika opsi `Tagihan Servis Sudah Lunas Dibayar` dicentang di awal, omset langsung masuk ke laporan keuangan hari itu juga, dan ketika status diubah menjadi diambil nanti tanggal laporan keuangan tetap konsisten sesuai tanggal pelunasan.
+
+**Koreksi Hari / Tanggal Laporan Keuangan**
+- Modal Koreksi Transaksi kini dilengkapi fitur pengubahan hari/tanggal transaksi (POS & Servis), memudahkan perbaikan jika pembayaran baru dilakukan hari ini atau tanggal salah tercatat.
+
+**Optimasi Ringan untuk Laptop Lama (RAM Rendah & HDD)**
+- Mengurangi interval background polling dari 5 detik ke 30 detik (visibility-aware event-driven), menghilangkan disk thrashing pada HDD lawas dan menekan penggunaan memori RAM.
+
 ## Catatan Rilis v2.6.0
 
 **Garansi & Manajemen Stok Fleksibel**

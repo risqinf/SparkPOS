@@ -155,6 +155,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [editCustomerName, setEditCustomerName] = useState<string>('');
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>('CASH');
   const [editNotes, setEditNotes] = useState<string>('');
+  const [editTransactionDate, setEditTransactionDate] = useState<string>('');
 
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const dlgCashRef = useDialog<HTMLDivElement>(isAddExpenseOpen, () => closeCashFlowModal());
@@ -204,10 +205,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       loadData(true);
     };
 
-    // Auto-sync polling every 5s so data is strictly realtime without closing shift
+    // Auto-sync polling: lightweight fallback timer (30s) only if window is visible,
+    // avoiding disk thrashing and high RAM consumption on older HDDs/low RAM PCs.
     const intervalTimer = setInterval(() => {
-      loadData(true);
-    }, 5000);
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadData(true);
+      }
+    }, 30000);
 
     if (typeof window !== 'undefined') {
       window.addEventListener('sparkpos_data_changed', handleUpdate);
@@ -326,13 +330,36 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       });
     }
 
-    // 2. Paid Service Orders
+    // 2. Paid / Picked Up Service Orders
     for (const s of serviceOrders) {
-      if (s.paidAmount > 0 || s.isPaid || s.status === 'SELESAI' || s.status === 'DIAMBIL') {
-        const orderTime = s.completedAt || s.pickedUpAt || s.updatedAt || s.createdAt;
-        const localDate = toLocalDateString(orderTime);
-        const revenue = s.paidAmount > 0 ? s.paidAmount : s.grandTotal || 0;
-        if (revenue <= 0) continue;
+      if (s.status === 'DIBATALKAN') continue;
+
+      // Syarat masuk laporan keuangan:
+      // - Sudah Lunas di awal (s.isPaid || s.paidAt)
+      // - ATAU status sudah DIAMBIL (customer ambil barang & bayar pelunasan)
+      // Jika status masih Diterima, Dikerjakan, atau Selesai (belum diambil & belum lunas) -> PENDING (tidak masuk laporan)
+      const isRecognized = s.isPaid || s.status === 'DIAMBIL';
+      if (!isRecognized) continue;
+
+      // Penentuan tanggal pengakuan keuangan:
+      // 1. Jika sudah lunas di awal, gunakan tanggal pembayaran awal (paidAt || createdAt).
+      //    Tanggal ini TIDAK AKAN BERUBAH meski nanti status berubah jadi DIAMBIL.
+      // 2. Jika baru dibayar saat diambil (status DIAMBIL), gunakan tanggal DIAMBIL (pickedUpAt),
+      //    BUKAN tanggal selesai pengerjaan teknisi (completedAt) kemarin!
+      let orderTime: string;
+      if (s.paidAt && s.status !== 'DIAMBIL') {
+        orderTime = s.paidAt;
+      } else if (s.paidAt && s.isPaid && (!s.pickedUpAt || new Date(s.paidAt).getTime() < new Date(s.pickedUpAt).getTime())) {
+        orderTime = s.paidAt;
+      } else if (s.status === 'DIAMBIL') {
+        orderTime = s.pickedUpAt || s.paidAt || s.updatedAt || s.createdAt;
+      } else {
+        orderTime = s.paidAt || s.createdAt;
+      }
+
+      const localDate = toLocalDateString(orderTime);
+      const revenue = s.paidAmount > 0 ? s.paidAmount : s.grandTotal || 0;
+      if (revenue <= 0) continue;
 
         const items = (s.items || []).map((i) => {
           const buyPrice = i.costPrice || 0;
@@ -656,12 +683,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     setEditCustomerName(rec.customerName || '');
     setEditPaymentMethod(rec.paymentMethod?.toUpperCase().includes('TRANSFER') ? 'TRANSFER' : 'CASH');
     setEditNotes(rec.notes || '');
+    setEditTransactionDate(rec.localDate || toLocalDateString(rec.createdAt));
   };
 
   const handleSaveTransactionCorrection = async () => {
     if (!transactionToEdit) return;
 
     try {
+      // Calculate updated timestamp based on editTransactionDate
+      let updatedTimestamp = transactionToEdit.createdAt;
+      if (editTransactionDate) {
+        const origDate = new Date(transactionToEdit.createdAt);
+        const timePart = !isNaN(origDate.getTime())
+          ? origDate.toTimeString().split(' ')[0]
+          : '12:00:00';
+        const newDateTime = new Date(`${editTransactionDate}T${timePart}`);
+        if (!isNaN(newDateTime.getTime())) {
+          updatedTimestamp = newDateTime.toISOString();
+        }
+      }
+
       if (transactionToEdit.type === 'POS' && transactionToEdit.originalPosTx) {
         const tx = transactionToEdit.originalPosTx;
         const newPayments = [
@@ -676,6 +717,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           paymentMethod: editPaymentMethod,
           payments: newPayments,
           notes: editNotes.trim() || undefined,
+          createdAt: updatedTimestamp,
         });
       } else if (transactionToEdit.type === 'SERVICE' && transactionToEdit.originalServiceOrder) {
         const srv = transactionToEdit.originalServiceOrder;
@@ -683,9 +725,16 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           customerName: editCustomerName.trim() || srv.customerName,
           paymentMethod: editPaymentMethod,
           notes: editNotes.trim() || srv.notes,
+          pickedUpAt: updatedTimestamp,
+          paidAt: updatedTimestamp,
+          createdAt: srv.createdAt && !srv.paidAt ? updatedTimestamp : srv.createdAt,
+          updatedAt: updatedTimestamp,
         });
       }
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sparkpos_data_changed'));
+      }
       await loadData();
       showToast(`Transaksi ${transactionToEdit.invoiceNumber} berhasil dikoreksi!`);
       setTransactionToEdit(null);
@@ -1693,6 +1742,27 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             </div>
 
             <div className="space-y-3">
+              {/* Tanggal / Hari Transaksi (Koreksi Hari Masuk Laporan Keuangan) */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Hari / Tanggal Transaksi:
+                  </label>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                    Koreksi Hari Laporan Keuangan
+                  </span>
+                </div>
+                <input
+                  type="date"
+                  value={editTransactionDate}
+                  onChange={(e) => setEditTransactionDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                />
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                  Ubah tanggal jika transaksi atau servis ini baru dibayar/diambil pada hari berbeda agar laporan keuangan akurat.
+                </span>
+              </div>
+
               {/* Nama Pelanggan */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">

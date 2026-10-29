@@ -60,11 +60,12 @@ jobs:
           releaseBody: |
             ### SparkPOS Desktop v__VERSION__
 
-            - **Perbaikan Akurasi Laporan Keuangan & Saldo Kas (Zero Selisih)**: Memperbaiki logika penerimaan kas masuk (`cashSalesTotal`) dan ekspektasi kas laci kasir (`expectedCash`). Uang kembalian yang telah diserahkan kembali ke pelanggan tidak lagi mengurangi nilai belanja transaksi secara ganda. Total Kas Tunai + Bank kini seimbang sempurna (100% klop) dengan Total Omset Toko.
-            - **Sinkronisasi Otomatis Sesi Kasir (Self-Healing)**: Sesi kasir yang aktif otomatis menyelaraskan nilai kas seharusnya berdasarkan riwayat transaksi fisik nyata, menormalkan status selisih kas menjadi seimbang.
-            - **Garansi Toko Khusus Laptop, Sparepart & Printer**: Kartu garansi pada struk kasir (58mm) maupun faktur (A4) eksklusif untuk Laptop, Sparepart, dan Printer. Aksesoris dan Jasa bebas kartu garansi.
-            - **Validasi Formulir Terima Servis**: Nama, Nomor WhatsApp, dan Tipe Perangkat wajib diisi, sementara keluhan kini opsional dengan fallback otomatis.
-            - **Integrasi Notifikasi WhatsApp Servis (Smart Detect)**: Notifikasi WhatsApp instan dengan deteksi WA Web / Desktop app dan 5 template pesan sopan.
+            - **Pengurutan Stok Produk Berdasarkan Abjad (A-Z)**: Seluruh katalog produk pada Manajemen Stok, Kasir POS, dan Stock Opname kini otomatis tersusun rapi secara alfabetis A-Z untuk mempermudah pencarian dan audit fisik.
+            - **Sinkronisasi Status Servis & Laporan Keuangan (Status Pending)**: Servis yang baru masuk (DITERIMA, DIKERJAKAN, maupun SELESAI) dan belum lunas akan berstatus pending dan tidak masuk ke laporan keuangan sampai unit benar-benar diambil pelanggan.
+            - **Otomatis Masuk Laporan Keuangan Saat Diambil (Sesuai Hari Pengambilan)**: Ketika status servis diubah menjadi DIAMBIL, pendapatan servis otomatis masuk ke laporan keuangan dengan tanggal sesuai hari pengambilan unit (bukan tanggal selesai pengerjaan teknisi di hari kemarin).
+            - **Pengakuan Lunas di Awal (Instant Recognition)**: Jika opsi "Tagihan Servis Sudah Lunas Dibayar" dicentang sejak awal penerimaan/pengerjaan, omset servis langsung masuk ke laporan keuangan hari itu juga. Ketika status berubah menjadi DIAMBIL di kemudian hari, tanggal laporan tidak akan berubah karena sudah tercatat saat pelunasan.
+            - **Koreksi Hari / Tanggal Transaksi pada Laporan Keuangan**: Modal Koreksi Transaksi kini dilengkapi fitur pengubahan hari/tanggal transaksi (POS maupun Servis) sehingga pengguna dapat menyesuaikan tanggal jika pembayaran baru dilakukan hari ini atau terdapat kekeliruan tanggal.
+            - **Optimasi Performa Ringan untuk Laptop Lama (RAM Kecil & HDD)**: Mengurangi beban I/O pembacaan disk IndexedDB berkala dari 5 detik menjadi 30 detik (visibility-aware event-driven), menjaga aplikasi tetap responsif, bebas lag, dan hemat memori RAM di perangkat PC/laptop jadul ber-HDD.
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

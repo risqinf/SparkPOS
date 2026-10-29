@@ -222,7 +222,31 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
-      const finalPaid = isPaid ? grandTotal : parseFloat(paidAmount) || 0;
+      const isMarkedPaid = isPaid || (parseFloat(paidAmount) >= grandTotal && grandTotal > 0);
+      const isTaken = status === 'DIAMBIL';
+
+      // Pelunasan:
+      // 1. Jika lunas di awal (centang bawah lunas), catat waktu pelunasan awal (paidAt)
+      // 2. Jika status DIAMBIL, otomatis lunas saat diambil (jika belum lunas di awal)
+      let effectivePaidAt: string | undefined = undefined;
+      if (isMarkedPaid) {
+        effectivePaidAt = orderToEdit?.paidAt || now;
+      } else if (isTaken) {
+        effectivePaidAt = orderToEdit?.paidAt || now;
+      }
+
+      let effectivePickedUpAt: string | undefined = undefined;
+      if (isTaken) {
+        effectivePickedUpAt = orderToEdit?.pickedUpAt || now;
+      } else {
+        effectivePickedUpAt = orderToEdit?.pickedUpAt;
+      }
+
+      const finalPaid = (isMarkedPaid || isTaken)
+        ? grandTotal
+        : (parseFloat(paidAmount) || 0);
+
+      const finalIsPaid = isMarkedPaid || isTaken || (finalPaid >= grandTotal && grandTotal > 0);
 
       const orderPayload: Omit<ServiceOrder, 'id'> = {
         ticketNumber,
@@ -241,7 +265,8 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         discountAmount: discountNum,
         grandTotal,
         paidAmount: finalPaid,
-        isPaid: isPaid || finalPaid >= grandTotal,
+        isPaid: finalIsPaid,
+        paidAt: effectivePaidAt,
         estimatedDate: estimatedDate || undefined,
         receivedAt: orderToEdit?.receivedAt || now,
         startedAt: status === 'DIKERJAKAN' && !orderToEdit?.startedAt ? now : orderToEdit?.startedAt,
@@ -249,7 +274,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
           (status === 'SELESAI' || status === 'DIAMBIL') && !orderToEdit?.completedAt
             ? now
             : orderToEdit?.completedAt,
-        pickedUpAt: status === 'DIAMBIL' && !orderToEdit?.pickedUpAt ? now : orderToEdit?.pickedUpAt,
+        pickedUpAt: effectivePickedUpAt,
         cancelReason: status === 'DIBATALKAN' ? (cancelReason.trim() || 'Dibatalkan') : undefined,
         notes: notes.trim() || undefined,
         completeness: completeness.trim() || undefined,
@@ -903,7 +928,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                 Pembayaran Pelanggan
               </span>
 
-              <label className="flex items-center gap-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isPaid}
@@ -911,11 +936,16 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                     setIsPaid(e.target.checked);
                     if (e.target.checked) setPaidAmount(grandTotal.toString());
                   }}
-                  className="rounded text-emerald-500 focus:ring-0"
+                  className="rounded text-emerald-500 focus:ring-0 mt-0.5"
                 />
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  Tagihan Servis Sudah Lunas Dibayar
-                </span>
+                <div>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 block">
+                    Tagihan Servis Sudah Lunas Dibayar
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                    Centang jika lunas di awal agar langsung masuk laporan keuangan hari ini (meski status Dikerjakan/Selesai). Saat unit diambil nanti, tanggal laporan keuangan tidak akan berubah.
+                  </span>
+                </div>
               </label>
 
               {!isPaid && (

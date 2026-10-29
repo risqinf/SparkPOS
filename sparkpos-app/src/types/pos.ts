@@ -72,6 +72,7 @@ export interface ServiceOrder {
   paidAmount: number;         // Nominal yang sudah dibayar
   paymentMethod?: string;     // Metode pembayaran (CASH, QRIS, TRANSFER)
   isPaid: boolean;            // Lunas atau belum
+  paidAt?: string;            // Waktu pelunasan / pembayaran masuk kas
   estimatedDate?: string;     // Estimasi tanggal selesai
   receivedAt: string;         // Tanggal masuk
   startedAt?: string;         // Waktu mulai pengerjaan

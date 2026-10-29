@@ -170,9 +170,10 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
     const now = new Date().toISOString();
     await updateServiceOrder(order.id, {
       status: 'DIAMBIL',
-      pickedUpAt: now,
+      pickedUpAt: order.pickedUpAt || now,
+      paidAt: order.paidAt || now,
       isPaid: true,
-      paidAmount: order.paidAmount || order.grandTotal,
+      paidAmount: order.paidAmount > 0 ? order.paidAmount : order.grandTotal,
       paymentMethod: order.paymentMethod || 'CASH',
     });
     if (typeof window !== 'undefined') {

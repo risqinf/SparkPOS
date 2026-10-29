@@ -95,10 +95,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     [physicalProducts]
   );
 
-  // Filtered List with useMemo and SN lookup
+  // Filtered List with useMemo and SN lookup (Sorted Alphabetically A-Z)
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       if (selectedCategoryId !== null && p.categoryId !== selectedCategoryId) {
         return false;
       }
@@ -115,6 +115,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         (p.supplierName && p.supplierName.toLowerCase().includes(q))
       );
     });
+
+    return list.sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base', numeric: true })
+    );
   }, [products, selectedCategoryId, searchQuery, filterLowStockOnly]);
 
   const handleDeleteProduct = async (product: Product) => {

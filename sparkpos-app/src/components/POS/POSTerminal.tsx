@@ -594,7 +594,7 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
   // Optimized memoized product catalog search (including serialNumber & barcode)
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       if (selectedCategory !== null && p.categoryId !== selectedCategory) {
         return false;
       }
@@ -606,6 +606,9 @@ export const POSTerminal: React.FC<POSTerminalProps> = ({
         (p.serialNumber && p.serialNumber.toLowerCase().includes(q))
       );
     });
+    return list.sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base', numeric: true })
+    );
   }, [products, selectedCategory, searchQuery]);
 
   return (

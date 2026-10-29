@@ -156,12 +156,30 @@ interface Entry {
   kind: 'sale' | 'service' | 'cashIn' | 'cashOut';
 }
 
-function serviceRevenueInfo(s: ServiceOrder): { date: string; revenue: number } | null {
-  if (!(s.paidAmount > 0 || s.isPaid || s.status === 'SELESAI' || s.status === 'DIAMBIL')) return null;
-  const when = s.completedAt || s.pickedUpAt || s.updatedAt || s.createdAt;
+function serviceRevenueInfo(s: ServiceOrder): { date: string; revenue: number; ts: number } | null {
+  if (s.status === 'DIBATALKAN') return null;
+
+  // Syarat masuk buku/laporan keuangan:
+  // - Sudah lunas di awal (s.isPaid || s.paidAt)
+  // - ATAU status sudah DIAMBIL (customer ambil barang & bayar pelunasan)
+  // Jika status masih Diterima, Dikerjakan, atau Selesai (belum diambil & belum lunas) -> PENDING (tidak masuk)
+  const isRecognized = s.isPaid || s.status === 'DIAMBIL';
+  if (!isRecognized) return null;
+
+  let when: string;
+  if (s.paidAt && s.status !== 'DIAMBIL') {
+    when = s.paidAt;
+  } else if (s.paidAt && s.isPaid && (!s.pickedUpAt || new Date(s.paidAt).getTime() < new Date(s.pickedUpAt).getTime())) {
+    when = s.paidAt;
+  } else if (s.status === 'DIAMBIL') {
+    when = s.pickedUpAt || s.paidAt || s.updatedAt || s.createdAt;
+  } else {
+    when = s.paidAt || s.createdAt;
+  }
+
   const revenue = s.paidAmount > 0 ? s.paidAmount : s.grandTotal || 0;
   if (revenue <= 0) return null;
-  return { date: toLocalDateString(when), revenue };
+  return { date: toLocalDateString(when), revenue, ts: new Date(when).getTime() };
 }
 
 /**
@@ -197,7 +215,7 @@ function collectCashEntries(src: LedgerSource): Entry[] {
     if (!info) continue;
     out.push({
       date: info.date,
-      ts: new Date(s.completedAt || s.pickedUpAt || s.updatedAt || s.createdAt).getTime(),
+      ts: info.ts,
       kind: 'service',
       name: `Servis #${s.ticketNumber}: ${s.deviceType || ''}${s.customerName ? ` (${s.customerName})` : ''}`.trim(),
       debit: info.revenue,
@@ -257,7 +275,7 @@ function collectItemizedEntries(src: LedgerSource): Entry[] {
     if (!info) continue;
     out.push({
       date: info.date,
-      ts: new Date(s.completedAt || s.pickedUpAt || s.updatedAt || s.createdAt).getTime(),
+      ts: info.ts,
       kind: 'service',
       name: `servis ${s.deviceType || ''}${s.customerName ? ` (${s.customerName})` : ''}`.trim(),
       debit: info.revenue, credit: 0,
