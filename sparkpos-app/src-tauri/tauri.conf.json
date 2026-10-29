@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "SparkPOS",
-  "version": "2.6.6",
+  "version": "2.6.7",
   "identifier": "com.sparkpos.desktop",
   "build": {
     "frontendDist": "../dist",

@@ -34,6 +34,8 @@ import {
   FlaskConical,
   X,
   MessageCircle,
+  Banknote,
+  CreditCard,
 } from 'lucide-react';
 import { ServiceOrder, ServiceStatus, Employee, StoreProfile } from '../../types/pos';
 import { getServiceOrders, deleteServiceOrder, updateServiceOrder } from '../../services/storage';
@@ -75,6 +77,10 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
   const dlgCancelRef = useDialog<HTMLDivElement>(!!cancelModalOrder, () => setCancelModalOrder(null));
   const [cancelReasonPreset, setCancelReasonPreset] = useState('Dibatalkan Pelanggan (Tidak Jadi Servis)');
   const [cancelReasonCustom, setCancelReasonCustom] = useState('');
+
+  const [pickupModalOrder, setPickupModalOrder] = useState<ServiceOrder | null>(null);
+  const dlgPickupRef = useDialog<HTMLDivElement>(!!pickupModalOrder, () => setPickupModalOrder(null));
+  const [pickupPaymentMethod, setPickupPaymentMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
 
   const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin';
   const isTeknisi = currentUser?.role === 'teknisi' || currentUser?.role === 'supervisor';
@@ -165,20 +171,26 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
     await loadOrders();
   };
 
-  const handleQuickPickup = async (order: ServiceOrder) => {
-    if (!order.id) return;
+  const handleQuickPickup = (order: ServiceOrder) => {
+    setPickupPaymentMethod(order.paymentMethod?.toUpperCase().includes('TRANSFER') ? 'TRANSFER' : 'CASH');
+    setPickupModalOrder(order);
+  };
+
+  const handleConfirmPickup = async () => {
+    if (!pickupModalOrder?.id) return;
     const now = new Date().toISOString();
-    await updateServiceOrder(order.id, {
+    await updateServiceOrder(pickupModalOrder.id, {
       status: 'DIAMBIL',
-      pickedUpAt: order.pickedUpAt || now,
-      paidAt: order.paidAt || now,
+      pickedUpAt: pickupModalOrder.pickedUpAt || now,
+      paidAt: pickupModalOrder.paidAt || now,
       isPaid: true,
-      paidAmount: order.paidAmount > 0 ? order.paidAmount : order.grandTotal,
-      paymentMethod: order.paymentMethod || 'CASH',
+      paidAmount: pickupModalOrder.paidAmount > 0 ? pickupModalOrder.paidAmount : pickupModalOrder.grandTotal,
+      paymentMethod: pickupPaymentMethod,
     });
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('sparkpos_data_changed'));
     }
+    setPickupModalOrder(null);
     await loadOrders();
   };
 
@@ -935,6 +947,146 @@ export const ServiceDashboard: React.FC<ServiceDashboardProps> = ({
               >
                 <XCircle className="w-4 h-4" />
                 <span>Konfirmasi Batalkan Servis</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Serahkan Unit & Pembayaran (Tunai vs Transfer Bank) */}
+      {pickupModalOrder && (
+        <div
+          ref={dlgPickupRef}
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+        >
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 bg-emerald-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-white/20">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold">Serah Terima Unit & Pelunasan</h3>
+                  <span className="text-[11px] text-emerald-100 font-mono">
+                    #{pickupModalOrder.ticketNumber} • {pickupModalOrder.customerName}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPickupModalOrder(null)}
+                className="p-1 rounded-lg text-emerald-100 hover:text-white hover:bg-white/20 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3.5 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span>Perangkat:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{pickupModalOrder.deviceType}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                  <span>Total Tagihan Servis:</span>
+                  <span className="font-bold text-slate-900 dark:text-white font-mono">
+                    {formatRupiah(pickupModalOrder.grandTotal)}
+                  </span>
+                </div>
+                {pickupModalOrder.downPayment && pickupModalOrder.downPayment > 0 ? (
+                  <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
+                    <span>DP yang Sudah Masuk:</span>
+                    <span className="font-bold font-mono">
+                      - {formatRupiah(pickupModalOrder.downPayment)}
+                    </span>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-700 font-bold">
+                  <span className="text-slate-700 dark:text-slate-300">
+                    {pickupModalOrder.isPaid ? 'Status Tagihan:' : 'Sisa Pelunasan Saat Ini:'}
+                  </span>
+                  <span className="font-mono text-sm text-emerald-600 dark:text-emerald-400">
+                    {pickupModalOrder.isPaid
+                      ? 'SUDAH LUNAS'
+                      : formatRupiah(Math.max(0, pickupModalOrder.grandTotal - (pickupModalOrder.downPayment || 0)))}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pilihan Metode Pembayaran */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 dark:text-slate-200 block">
+                    Pilih Metode Pembayaran Pelanggan:
+                  </label>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    {pickupPaymentMethod === 'TRANSFER' ? '🏦 Rekening Bank' : '💵 Kas di Laci'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPickupPaymentMethod('CASH')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      pickupPaymentMethod === 'CASH'
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-500'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Tunai (Cash)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Uang fisik masuk laci kasir (Kas Harian)
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPickupPaymentMethod('TRANSFER')}
+                    className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 cursor-pointer ${
+                      pickupPaymentMethod === 'TRANSFER'
+                        ? 'border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-1 ring-blue-500'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>Transfer Bank</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Masuk rekening bank (non-tunai)
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800/50 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>
+                  Unit akan berstatus <strong>DIAMBIL</strong> dan pendapatan otomatis dicatat ke laporan keuangan hari ini sesuai metode pembayaran yang dipilih.
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPickupModalOrder(null)}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPickup}
+                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Konfirmasi & Serahkan Unit</span>
               </button>
             </div>
           </div>

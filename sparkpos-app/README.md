@@ -98,6 +98,16 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 - **5 Template Lengkap**: Tanda Terima Servis Masuk, Konfirmasi Diagnosa & Estimasi Biaya, Servis Selesai & Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan Unit / Garansi Aktif.
 - **Pratinjau & Edit Pesan**: Teks pesan dapat ditinjau dan diedit bebas sebelum dikirim dengan nomor HP otomatis terformat ke standar internasional (+62).
 
+## Catatan Rilis v2.6.7
+
+**Metode Pembayaran Servis: Pilihan Tunai / Cash vs Transfer ke Bank**
+- **Pemilih Metode Pembayaran pada Tiket Servis**: Form Order Servis kini dilengkapi pemilih metode pembayaran (Tunai/Cash vs Transfer ke Bank) saat tagihan dilunasi atau saat menerima DP di awal.
+- **Konfirmasi Pelunasan & Serah Terima Cepat**: Saat kasir mengklik tombol "Serahkan Unit" pada unit yang telah selesai, sistem menampilkan modal konfirmasi serah terima dengan opsi 1-klik untuk memilih metode pelunasan pelanggan (Tunai / Cash atau Transfer Bank).
+- **Akurasi Saldo Laci Kasir & Bank Tanpa Selisih**:
+  - Servis yang dibayar tunai otomatis tercatat ke penerimaan kas fisik di laci kasir (`cashSalesTotal`).
+  - Servis yang dibayar via transfer otomatis masuk ke rekening bank / non-tunai (`transferSalesTotal`) tanpa mengotori hitungan uang fisik di laci kasir.
+- **Cetak Nota Servis Berinformasi Metode Bayar**: Struk tanda terima & bukti pengambilan servis kini mencantumkan keterangan metode bayar (TUNAI / CASH atau TRANSFER BANK).
+
 ## Catatan Rilis v2.6.6
 
 **Perbaikan Build CI/CD & Rilis Stabil Fitur WhatsApp Servis, Stok Alfabetis & Laporan Keuangan**

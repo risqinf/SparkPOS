@@ -19,6 +19,8 @@ import {
   Lock,
   AlertTriangle,
   MessageCircle,
+  Banknote,
+  CreditCard,
 } from 'lucide-react';
 import {
   ServiceOrder,
@@ -83,6 +85,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
   const [discountAmount, setDiscountAmount] = useState('0');
   const [isPaid, setIsPaid] = useState(false);
   const [paidAmount, setPaidAmount] = useState('0');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
   const [cancelReason, setCancelReason] = useState('');
 
   // Supporting master data
@@ -127,10 +130,12 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         setDevicePassword(orderToEdit.devicePassword || '');
         setWarrantyDays(orderToEdit.warrantyDays !== undefined ? orderToEdit.warrantyDays.toString() : '14');
         setDownPayment(orderToEdit.downPayment !== undefined ? orderToEdit.downPayment.toString() : '0');
+        setPaymentMethod(orderToEdit.paymentMethod?.toUpperCase().includes('TRANSFER') ? 'TRANSFER' : 'CASH');
         setCancelReason(orderToEdit.cancelReason || '');
       } else {
         const nextTicket = await generateServiceTicketNumber();
         setTicketNumber(nextTicket);
+        setPaymentMethod('CASH');
         if (currentUser?.role === 'teknisi' || currentUser?.role === 'owner') {
           setAssignedTechId(currentUser.id);
           setAssignedTechName(currentUser.fullName);
@@ -282,6 +287,7 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
         devicePassword: devicePassword.trim() || undefined,
         warrantyDays: parseInt(warrantyDays, 10) || 0,
         downPayment: parseFloat(downPayment) || 0,
+        paymentMethod: paymentMethod,
         createdAt: orderToEdit?.createdAt || now,
         updatedAt: now,
       };
@@ -975,6 +981,49 @@ export const ServiceOrderModal: React.FC<ServiceOrderModalProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Pilihan Metode Bayar: Tunai / Cash vs Transfer Bank */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    Metode Pembayaran Servis:
+                  </label>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    {paymentMethod === 'TRANSFER' ? '🏦 Rekening Bank' : '💵 Kas di Laci'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('CASH')}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      paymentMethod === 'CASH'
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Banknote className="w-4 h-4" />
+                    <span>Tunai (Cash)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('TRANSFER')}
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      paymentMethod === 'TRANSFER'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Transfer Bank</span>
+                  </button>
+                </div>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight">
+                  {paymentMethod === 'CASH'
+                    ? 'Uang fisik masuk ke laci kasir (terhitung dalam Kas Laci Kasir).'
+                    : 'Uang masuk ke rekening bank / non-tunai (tidak menambah uang fisik di laci).'}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1.5 text-xs">

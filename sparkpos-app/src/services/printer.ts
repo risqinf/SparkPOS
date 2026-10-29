@@ -459,6 +459,10 @@ export function generateServiceReceiptText(
       width
     )
   );
+  if (order.isPaid || (order.paidAmount && order.paidAmount > 0)) {
+    const isTf = order.paymentMethod?.toUpperCase().includes('TRANSFER');
+    lines.push(padBetween('Metode Bayar :', isTf ? 'TRANSFER BANK' : 'TUNAI / CASH', width));
+  }
   if (order.paidAmount > 0 && (!order.downPayment || order.paidAmount !== order.downPayment)) {
     lines.push(padBetween('Total Dibayar:', formatRupiah(order.paidAmount), width));
   }
