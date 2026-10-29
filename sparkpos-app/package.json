@@ -1,6 +1,6 @@
 {
   "name": "sparkpos-app",
-  "version": "2.6.5",
+  "version": "2.6.6",
   "type": "module",
   "description": "SparkPOS - Modern Offline-First Retail POS Desktop",
   "scripts": {

@@ -98,6 +98,17 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 - **5 Template Lengkap**: Tanda Terima Servis Masuk, Konfirmasi Diagnosa & Estimasi Biaya, Servis Selesai & Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan Unit / Garansi Aktif.
 - **Pratinjau & Edit Pesan**: Teks pesan dapat ditinjau dan diedit bebas sebelum dikirim dengan nomor HP otomatis terformat ke standar internasional (+62).
 
+## Catatan Rilis v2.6.6
+
+**Perbaikan Build CI/CD & Rilis Stabil Fitur WhatsApp Servis, Stok Alfabetis & Laporan Keuangan**
+- **Perbaikan Sintaks TypeScript**: Memperbaiki struktur penutup blok kode pada `TransactionHistory.tsx` sehingga proses kompilasi TypeScript dan pembuatan installer desktop Tauri berjalan lancar tanpa kendala.
+- **Rilis Lengkap Terintegrasi**: Menggabungkan seluruh pembaruan fitur dalam build stabil:
+  1. *Template WhatsApp Servis Resmi*: Tanda Terima Masuk, Konfirmasi Service, Selesai dan Siap Ambil, Kritik & Saran Google Maps.
+  2. *Pengurutan Stok Alfabetis (A-Z)*: Tersusun rapi pada Manajemen Stok, Kasir POS & Stock Opname.
+  3. *Siklus Pendapatan Servis Tepat Waktu*: Status pending saat Diterima/Dikerjakan/Selesai, otomatis masuk laporan keuangan saat Diambil (sesuai hari ambil) atau Lunas di Awal.
+  4. *Koreksi Hari / Tanggal Transaksi*: Fitur pengubahan tanggal transaksi pada modal koreksi laporan keuangan.
+  5. *Optimasi Ringan untuk Laptop Lama*: Interval background 30 detik (visibility-aware), hemat RAM dan ramah HDD jadul.
+
 ## Catatan Rilis v2.6.5
 
 **Pembaruan Template Notifikasi WhatsApp Servis Resmi**

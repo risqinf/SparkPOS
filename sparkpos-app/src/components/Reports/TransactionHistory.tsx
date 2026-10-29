@@ -361,43 +361,42 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       const revenue = s.paidAmount > 0 ? s.paidAmount : s.grandTotal || 0;
       if (revenue <= 0) continue;
 
-        const items = (s.items || []).map((i) => {
-          const buyPrice = i.costPrice || 0;
-          const sellPrice = i.sellPrice || 0;
-          const subtotal = i.subtotal || sellPrice * i.quantity;
-          const totalItemCost = buyPrice * i.quantity;
-          return {
-            name: `${i.name} [${i.type === 'PART' ? 'Sparepart' : 'Jasa'}]`,
-            quantity: i.quantity,
-            sellPrice,
-            buyPrice,
-            subtotal,
-            margin: subtotal - totalItemCost,
-          };
-        });
+      const items = (s.items || []).map((i) => {
+        const buyPrice = i.costPrice || 0;
+        const sellPrice = i.sellPrice || 0;
+        const subtotal = i.subtotal || sellPrice * i.quantity;
+        const totalItemCost = buyPrice * i.quantity;
+        return {
+          name: `${i.name} [${i.type === 'PART' ? 'Sparepart' : 'Jasa'}]`,
+          quantity: i.quantity,
+          sellPrice,
+          buyPrice,
+          subtotal,
+          margin: subtotal - totalItemCost,
+        };
+      });
 
-        const totalCost = s.totalPartsCost || 0;
-        const grossProfit = revenue - totalCost;
+      const totalCost = s.totalPartsCost || 0;
+      const grossProfit = revenue - totalCost;
 
-        list.push({
-          id: `srv-${s.id}`,
-          rawId: s.id || 0,
-          type: 'SERVICE',
-          invoiceNumber: s.ticketNumber,
-          createdAt: orderTime,
-          localDate,
-          cashierName: s.assignedTechName || 'Teknisi',
-          cashierId: s.assignedTechId || 1,
-          customerName: `${s.customerName}${s.deviceType ? ` (${s.deviceType})` : ''}`,
-          paymentMethod: s.paymentMethod || 'CASH',
-          notes: s.notes,
-          grandTotal: revenue,
-          totalCost,
-          grossProfit,
-          items,
-          originalServiceOrder: s,
-        });
-      }
+      list.push({
+        id: `srv-${s.id}`,
+        rawId: s.id || 0,
+        type: 'SERVICE',
+        invoiceNumber: s.ticketNumber,
+        createdAt: orderTime,
+        localDate,
+        cashierName: s.assignedTechName || 'Teknisi',
+        cashierId: s.assignedTechId || 1,
+        customerName: `${s.customerName}${s.deviceType ? ` (${s.deviceType})` : ''}`,
+        paymentMethod: s.paymentMethod || 'CASH',
+        notes: s.notes,
+        grandTotal: revenue,
+        totalCost,
+        grossProfit,
+        items,
+        originalServiceOrder: s,
+      });
     }
 
     // 3. Uang Kas Masuk / Keluar (tercatat di riwayat, tidak dihitung sebagai omset)
