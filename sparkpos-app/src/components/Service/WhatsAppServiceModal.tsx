@@ -48,7 +48,7 @@ export const WhatsAppServiceModal: React.FC<WhatsAppServiceModalProps> = ({
       case 'SELESAI':
         return 'SELESAI';
       case 'DIAMBIL':
-        return 'DIAMBIL';
+        return 'KRITIK';
       case 'DIBATALKAN':
         return 'BATAL';
       default:

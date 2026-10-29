@@ -60,6 +60,8 @@ jobs:
           releaseBody: |
             ### SparkPOS Desktop v__VERSION__
 
+            - **Pembaruan Format Template WhatsApp Servis**: Menyesuaikan template konfirmasi pesan WhatsApp resmi: Tanda Terima Masuk, Konfirmasi Service, Selesai dan Siap Ambil, Kritik & Saran Google Maps, serta Serah Terima Unit & Garansi Aktif.
+
             - **Pengurutan Stok Produk Berdasarkan Abjad (A-Z)**: Seluruh katalog produk pada Manajemen Stok, Kasir POS, dan Stock Opname kini otomatis tersusun rapi secara alfabetis A-Z untuk mempermudah pencarian dan audit fisik.
             - **Sinkronisasi Status Servis & Laporan Keuangan (Status Pending)**: Servis yang baru masuk (DITERIMA, DIKERJAKAN, maupun SELESAI) dan belum lunas akan berstatus pending dan tidak masuk ke laporan keuangan sampai unit benar-benar diambil pelanggan.
             - **Otomatis Masuk Laporan Keuangan Saat Diambil (Sesuai Hari Pengambilan)**: Ketika status servis diubah menjadi DIAMBIL, pendapatan servis otomatis masuk ke laporan keuangan dengan tanggal sesuai hari pengambilan unit (bukan tanggal selesai pengerjaan teknisi di hari kemarin).

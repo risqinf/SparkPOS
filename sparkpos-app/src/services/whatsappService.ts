@@ -7,8 +7,9 @@ export type WhatsAppTarget = 'auto' | 'web' | 'app';
 
 export type WhatsAppTemplateType =
   | 'TERIMA'    // Tanda Terima Unit Masuk
-  | 'ESTIMASI'  // Konfirmasi Diagnosa & Estimasi Biaya
-  | 'SELESAI'   // Servis Selesai & Siap Diambil
+  | 'ESTIMASI'  // Konfirmasi Service
+  | 'SELESAI'   // Selesai & Siap Ambil
+  | 'KRITIK'    // Kritik & Saran (Google Maps)
   | 'DIAMBIL'   // Konfirmasi Unit Telah Diambil (Masa Garansi Aktif)
   | 'BATAL';    // Pemberitahuan Servis Dibatalkan
 
@@ -23,24 +24,38 @@ export interface WhatsAppTemplateOption {
 export const WHATSAPP_TEMPLATES: WhatsAppTemplateOption[] = [
   {
     type: 'TERIMA',
-    label: 'Tanda Terima Masuk',
+    label: 'Tanda Terima',
     badge: 'Unit Baru Masuk',
-    description: 'Bukti tanda terima servis masuk, nomor tiket, keluhan & kelengkapan unit.',
+    description: 'Konfirmasi perangkat diterima, nomor nota, tanggal masuk, kelengkapan & keluhan.',
     recommendedFor: ['DITERIMA'],
   },
   {
     type: 'ESTIMASI',
-    label: 'Estimasi Biaya',
-    badge: 'Konfirmasi Pelanggan',
-    description: 'Kabar hasil diagnosa teknisi, estimasi kebutuhan sparepart/jasa & persetujuan biaya.',
+    label: 'Konfirmasi Service',
+    badge: 'Estimasi & Diagnosa',
+    description: 'Hasil diagnosa teknisi, estimasi pengerjaan/komponen, total biaya & garansi servis.',
     recommendedFor: ['DITERIMA', 'DIKERJAKAN'],
   },
   {
     type: 'SELESAI',
-    label: 'Selesai & Siap Diambil',
+    label: 'Selesai & Siap Ambil',
     badge: 'Unit Selesai',
-    description: 'Kabar gembira unit selesai diperbaiki, rincian biaya, DP, sisa tagihan & garansi servis.',
+    description: 'Pemberitahuan unit telah selesai, rincian tindakan, garansi, status lunas & syarat ambil.',
     recommendedFor: ['SELESAI'],
+  },
+  {
+    type: 'KRITIK',
+    label: 'Kritik & Saran',
+    badge: 'Ulasan Google Maps',
+    description: 'Ucapan terima kasih, permohonan kritik/saran, dan ajakan ulasan di Google Maps.',
+    recommendedFor: ['DIAMBIL'],
+  },
+  {
+    type: 'DIAMBIL',
+    label: 'Konfirmasi Garansi',
+    badge: 'Unit Diambil',
+    description: 'Tanda serah terima unit lunas & informasi ketentuan masa garansi servis.',
+    recommendedFor: ['DIAMBIL'],
   },
   {
     type: 'BATAL',
@@ -48,13 +63,6 @@ export const WHATSAPP_TEMPLATES: WhatsAppTemplateOption[] = [
     badge: 'Servis Dibatalkan',
     description: 'Pemberitahuan pembatalan servis beserta alasan & instruksi pengambilan kembali unit.',
     recommendedFor: ['DIBATALKAN'],
-  },
-  {
-    type: 'DIAMBIL',
-    label: 'Terima Kasih & Garansi',
-    badge: 'Unit Diambil',
-    description: 'Ucapan terima kasih telah mengambil unit, tanda terima lunas & pengingat masa garansi.',
-    recommendedFor: ['DIAMBIL'],
   },
 ];
 
@@ -140,23 +148,23 @@ export function generateWhatsAppMessage(
   profile: StoreProfile,
   templateType: WhatsAppTemplateType
 ): string {
-  const storeName = (profile.storeName || 'Toko Komputer & Servis').toUpperCase();
-  const customerName = order.customerName || 'Pelanggan';
+  const rawStoreName = profile.storeName?.trim();
+  const storeName = (rawStoreName && rawStoreName !== 'Nama Toko Saya' ? rawStoreName : 'FALAH KOMPUTER').toUpperCase();
+  const storeNameTitle = rawStoreName && rawStoreName !== 'Nama Toko Saya' ? rawStoreName : 'Falah Komputer';
   const ticketNumber = order.ticketNumber;
   const device = `${order.deviceType}${order.deviceSerial ? ` (SN: ${order.deviceSerial})` : ''}`;
-  const address = profile.address ? `\n📍 *Alamat Toko*: ${profile.address}` : '';
-  const phone = profile.phone ? `\n📞 *Hotline/WA*: ${profile.phone}` : '';
   const warranty = order.warrantyDays && order.warrantyDays > 0 ? `${order.warrantyDays} Hari` : 'Tidak Ada Garansi';
 
-  const entryDate = new Date(order.createdAt).toLocaleDateString('id-ID', {
+  const entryDate = new Date(order.receivedAt || order.createdAt).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
   const totalCost = formatRupiah(order.grandTotal);
-  const downPayment = order.downPayment && order.downPayment > 0 ? formatRupiah(order.downPayment) : 'Rp 0';
-  const remaining = formatRupiah(Math.max(0, order.grandTotal - (order.downPayment || 0)));
+  const dpAmount = order.downPayment || 0;
+  const downPayment = formatRupiah(dpAmount);
+  const remaining = formatRupiah(Math.max(0, order.grandTotal - dpAmount));
 
   // Rincian tindakan / sparepart
   const itemsText =
@@ -166,136 +174,122 @@ export function generateWhatsAppMessage(
 
   switch (templateType) {
     // -------------------------------------------------------------------------
-    // 1. TANDA TERIMA SERVIS MASUK
+    // 1. TANDA TERIMA
     // -------------------------------------------------------------------------
     case 'TERIMA': {
       return (
-`*TANDA TERIMA SERVIS - ${storeName}*
-_No. Nota / Tiket: #${ticketNumber}_
-
-Yth. Kak/Bpk/Ibu *${customerName}*,
-Terima kasih telah mempercayakan perbaikan perangkat Anda kepada kami di *${storeName}*.
-
-Berikut rincian tanda terima servis:
-📋 *No. Tiket*: #${ticketNumber}
+`*Assalamualaikum*
+*Kami dari ${storeName}*
+Ingin mengkonfirmasi bahwa perangkat anda dengan deskripsi :
+📋 *No. Nota*: #${ticketNumber}
 📅 *Tanggal Masuk*: ${entryDate}
 💻 *Perangkat*: ${device}
 📦 *Kelengkapan*: ${order.completeness || 'Unit Saja'}
-🔍 *Kondisi Fisik*: ${order.physicalCondition || 'Normal / Standar'}
+🔍 *Kondisi Fisik*: ${order.physicalCondition || 'kondisi mulus'}
 ⚠️ *Keluhan*: ${order.complaint || '-'}
-${order.diagnosis ? `🔎 *Diagnosa Awal*: ${order.diagnosis}\n` : ''}💵 *Uang Muka (DP)*: ${downPayment}
-
-Saat ini perangkat Anda telah tercatat dalam sistem antrean dan sedang dipersiapkan untuk pengecekan oleh teknisi kami. Kami akan segera menghubungi Anda jika ada perkembangan hasil pemeriksaan.
-
-_Harap simpan pesan ini atau membawa nota tanda terima fisik saat pengambilan unit._
-
-Terima kasih atas kepercayaannya. 🙏
-
-Salam hormat,
-*${storeName}*${address}${phone}`
+Saat ini perangkat Anda telah kami terima dan tercatat dalam sistem antrean. Kami akan segera menghubungi Anda setalah pengecekan dan diagnosa.
+Terimakasih,
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
       ).trim();
     }
 
     // -------------------------------------------------------------------------
-    // 2. KONFIRMASI DIAGNOSA & ESTIMASI BIAYA
+    // 2. KONFIRMASI SERVICE
     // -------------------------------------------------------------------------
     case 'ESTIMASI': {
       return (
-`*KONFIRMASI HASIL DIAGNOSA & ESTIMASI BIAYA - ${storeName}*
-_No. Nota / Tiket: #${ticketNumber}_
-
-Yth. Kak/Bpk/Ibu *${customerName}*,
-Semoga dalam keadaan sehat selalu. Teknisi kami telah selesai melakukan pengecekan awal pada perangkat Anda:
-
-📋 *No. Tiket*: #${ticketNumber}
+`*Assalamualaikum*
+*Kami dari ${storeName}*
+Ingin mengkonfirmasi bahwa perangkat anda dengan deskripsi :
+📋 *No. Nota*: #${ticketNumber}
 💻 *Perangkat*: ${device}
 ⚠️ *Keluhan Awal*: ${order.complaint || '-'}
-🔎 *Hasil Diagnosa*: ${order.diagnosis || 'Pengecekan komponen & pengetesan'}
-
+🔎 *Hasil Diagnosa*: ${order.diagnosis || 'perlu direset, pembuangan penuh dan dibersihkan'}
 *Estimasi Pengerjaan & Komponen:*
-${itemsText ? `${itemsText}\n` : ''}💰 *Total Estimasi Biaya*: *${totalCost}*
-${order.downPayment && order.downPayment > 0 ? `💵 *DP yang Sudah Masuk*: ${downPayment}\n` : ''}💳 *Sisa Pembayaran Nanti*: *${remaining}*
+${itemsText || '  • Pemeriksaan & Perbaikan Unit'}
+💰 *Total Estimasi Biaya*: *${totalCost}*
 🛡️ *Garansi Servis*: ${warranty}
-
 Mohon konfirmasi apakah perbaikan ini dapat kami lanjutkan sekarang?
 Silakan balas pesan ini dengan *SETUJU* atau hubungi kami jika ada yang ingin ditanyakan terlebih dahulu.
-
-Terima kasih atas perhatian dan kerjasamanya. 🙏
-
-Salam hormat,
-*${storeName}*${address}${phone}`
+Terimakasih,
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
       ).trim();
     }
 
     // -------------------------------------------------------------------------
-    // 3. SERVIS SELESAI & SIAP DIAMBIL
+    // 3. SELESAI DAN SIAP AMBIL
     // -------------------------------------------------------------------------
     case 'SELESAI': {
       return (
-`*PEMBERITAHUAN SERVIS SELESAI - ${storeName}*
-_No. Nota / Tiket: #${ticketNumber}_
-
-Kabar gembira untuk Kak/Bpk/Ibu *${customerName}*! 🎉
-Perbaikan perangkat Anda telah *SELESAI* dikerjakan oleh teknisi kami dan telah lolos tahap pengujian (*Quality Control*).
-
-Rincian servis:
+`*Assalamualaikum*
+*Kami dari ${storeName}*
+Ingin mengkonfirmasi bahwa perangkat anda dengan deskripsi :
 📋 *No. Tiket*: #${ticketNumber}
 💻 *Perangkat*: ${device}
-${itemsText ? `🔧 *Tindakan/Perbaikan*:\n${itemsText}\n` : ''}🛡️ *Garansi Servis*: *${warranty}*
+🔧 *Tindakan/Perbaikan*:
+${itemsText || '  • Perbaikan & Perawatan Unit'}
+🛡️ *Garansi Servis*: *${warranty}*
 💰 *Total Biaya*: *${totalCost}*
 💵 *DP yang Sudah Masuk*: ${downPayment}
 💳 *Sisa Tagihan*: *${order.isPaid ? 'Rp 0 (LUNAS)' : remaining}*
 📊 *Status Pembayaran*: *${order.isPaid ? 'LUNAS' : 'Belum Lunas'}*
-
-Perangkat sudah siap untuk diambil kembali di toko kami pada jam operasional toko.
+Perbaikan perangkat Anda telah *SELESAI* dikerjakan dan siap di ambil sekarang.
 *Syarat Pengambilan:*
-- Harap menunjukkan pesan WhatsApp ini atau membawa Nota Tanda Terima fisik saat penyerahan unit.
-
-Terima kasih atas kepercayaan Anda kepada *${storeName}*. Kami tunggu kehadirannya! 🙏
-
-Salam hangat,
-*${storeName}*${address}${phone}`
+* Membawa Nota Tanda Terima.
+Terimakasih,
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
       ).trim();
     }
 
     // -------------------------------------------------------------------------
-    // 4. PEMBATALAN SERVIS
+    // 4. KRITIK DAN SARAN (GOOGLE MAPS)
+    // -------------------------------------------------------------------------
+    case 'KRITIK': {
+      return (
+`🙏 TERIMA KASIH TELAH MEMERCAYAI ${storeName}! 💻
+Kami sangat menghargai setiap masukan dari pelanggan. Jika ada kritik dan saran untuk pelayanan kami, silakan sampaikan agar ${storeNameTitle} bisa terus meningkatkan kualitas pelayanan dan service menjadi lebih baik.
+⭐ BANTU KAMI DENGAN MEMBERIKAN ULASAN DI GOOGLE MAPS!
+Ulasan Anda sangat berarti bagi kami dan membantu pelanggan lain menemukan layanan komputer yang terpercaya.
+https://maps.app.goo.gl/wNxb1yAHrTtyA7Lu7
+Terima kasih atas kepercayaan dan dukungan Anda! 🙏
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
+      ).trim();
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. PEMBATALAN SERVIS
     // -------------------------------------------------------------------------
     case 'BATAL': {
       return (
-`*PEMBERITAHUAN PEMBATALAN SERVIS - ${storeName}*
-_No. Nota / Tiket: #${ticketNumber}_
-
-Yth. Kak/Bpk/Ibu *${customerName}*,
-Kami menginformasikan bahwa proses perbaikan perangkat Anda saat ini berstatus *DIBATALKAN*:
-
+`*Assalamualaikum*
+*Kami dari ${storeName}*
+Ingin mengkonfirmasi pembatalan pengerjaan perangkat anda dengan deskripsi :
 📋 *No. Tiket*: #${ticketNumber}
 💻 *Perangkat*: ${device}
 ❌ *Status*: Dibatalkan
-⚠️ *Alasan / Keterangan*: *${order.cancelReason || 'Dibatalkan oleh pelanggan / teknisi'}*
-${order.downPayment && order.downPayment > 0 ? `💵 *Catatan DP*: ${downPayment} (Dapat dikonfirmasi kembali di kasir toko)\n` : ''}
+⚠️ *Alasan / Keterangan*: *${order.cancelReason || 'Dibatalkan oleh pelanggan / kendala teknis'}*
+${order.downPayment && order.downPayment > 0 ? `💵 *Catatan DP*: ${downPayment}\n` : ''}
 Perangkat Anda sudah siap dan dapat diambil kembali di toko kami.
-Mohon membawa Nota Tanda Terima fisik atau menunjukkan pesan ini saat pengambilan unit.
-
-Kami mohon maaf atas ketidaknyamanan ini dan berterima kasih atas pengertian serta kerja sama Anda. 🙏
-
-Salam hormat,
-*${storeName}*${address}${phone}`
+*Syarat Pengambilan:*
+* Membawa Nota Tanda Terima.
+Terimakasih,
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
       ).trim();
     }
 
     // -------------------------------------------------------------------------
-    // 5. TERIMA KASIH UNIT TELAH DIAMBIL & GARANSI AKTIF
+    // 6. KONFIRMASI PENGAMBILAN & GARANSI AKTIF
     // -------------------------------------------------------------------------
     case 'DIAMBIL': {
       return (
-`*TERIMA KASIH ATAS KUNJUNGAN ANDA - ${storeName}*
-_No. Nota / Tiket: #${ticketNumber}_
-
-Yth. Kak/Bpk/Ibu *${customerName}*,
+`*Assalamualaikum*
+*Kami dari ${storeName}*
 Terima kasih telah mengambil kembali perangkat Anda di *${storeName}*. Unit Anda telah berhasil diserahkan dan dinyatakan selesai dengan baik.
-
-Rincian serah terima:
 📋 *No. Tiket*: #${ticketNumber}
 💻 *Perangkat*: ${device}
 💰 *Total Biaya*: ${totalCost} (${order.isPaid ? 'LUNAS' : 'Telah Diselesaikan'})
@@ -303,13 +297,13 @@ Rincian serah terima:
 _(Garansi berlaku terhitung sejak tanggal pengambilan unit)_
 
 *Ketentuan Garansi:*
-- Garansi berlaku untuk bagian/kerusakan yang sama dengan yang telah diperbaiki.
-- Segel servis toko dalam kondisi utuh dan tidak terkena cairan / benturan fisik.
+* Garansi berlaku untuk bagian/kerusakan yang sama dengan yang telah diperbaiki.
+* Segel servis toko dalam kondisi utuh dan tidak terkena cairan / benturan fisik.
 
-Jika ada kendala lebih lanjut mengenai perangkat Anda, jangan ragu untuk menghubungi kami kembali. Senang bisa membantu Anda! 🙏
-
-Salam hangat,
-*${storeName}*${address}${phone}`
+Jika ada kendala lebih lanjut mengenai perangkat Anda, jangan ragu untuk menghubungi kami kembali.
+Terimakasih,
+*${storeName}*
+SENIN-SABTU 07.30-16.30 WIB`
       ).trim();
     }
 

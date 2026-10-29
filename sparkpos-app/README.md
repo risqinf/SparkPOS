@@ -98,6 +98,15 @@ Aplikasi ini menggunakan **Tauri v2 + WebView2**. Saat di-build untuk Windows, u
 - **5 Template Lengkap**: Tanda Terima Servis Masuk, Konfirmasi Diagnosa & Estimasi Biaya, Servis Selesai & Siap Diambil, Pembatalan Servis, dan Konfirmasi Pengambilan Unit / Garansi Aktif.
 - **Pratinjau & Edit Pesan**: Teks pesan dapat ditinjau dan diedit bebas sebelum dikirim dengan nomor HP otomatis terformat ke standar internasional (+62).
 
+## Catatan Rilis v2.6.5
+
+**Pembaruan Template Notifikasi WhatsApp Servis Resmi**
+- Memperbarui format pesan konfirmasi WhatsApp menjadi lebih ringkas, sopan, dan terstruktur sesuai standar operasional:
+  1. *Tanda Terima Masuk*: Konfirmasi penerimaan unit, nomor nota, tanggal masuk, kelengkapan, kondisi fisik & keluhan.
+  2. *Konfirmasi Service*: Estimasi pengerjaan, rincian komponen/jasa, estimasi biaya & konfirmasi persetujuan perbaikan.
+  3. *Selesai dan Siap Ambil*: Rincian tindakan perbaikan, garansi servis, total biaya, status lunas & syarat pengambilan.
+  4. *Kritik & Saran*: Ucapan terima kasih serta ajakan ulasan rating di Google Maps.
+
 ## Catatan Rilis v2.6.4
 
 **Pengurutan Stok Alfabetis (A-Z)**
