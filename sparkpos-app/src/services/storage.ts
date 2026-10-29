@@ -206,6 +206,7 @@ export async function getActiveProducts(): Promise<Product[]> {
     const cats = await db.categories.toArray();
     const catMap = new Map<number, string>(cats.map((c) => [c.id, c.name]));
     const units = await db.units.toArray();
+    const unitMap = new Map<number, string>(units.map((u) => [u.id, u.symbol || u.name]));
     const enriched = active.map((p) => ({
       ...p,
       categoryName: p.categoryName || catMap.get(p.categoryId) || '',
